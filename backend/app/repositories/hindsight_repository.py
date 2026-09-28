@@ -53,7 +53,7 @@ class HindsightRepository:
             bank_id=f"source_{report.source_id}",
             content=report.text,
             context="historical source report",
-            timestamp=report.observed_at.isoformat(),
+            timestamp=report.observed_at,
             document_id=f"report_{report.report_id}",
             metadata={
                 "vin": report.vin,
