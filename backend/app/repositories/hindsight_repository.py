@@ -32,14 +32,15 @@ class HindsightRepository:
         )
 
     async def retain_report(self, report: VehicleReport) -> Any:
+        vehicle_id = report.vehicle_id or report.vin
         return await self._client.aretain(
-            bank_id=f"vehicle_{report.vin}",
+            bank_id=f"vehicle_{vehicle_id}",
             content=report.text,
             context="vehicle history report",
             timestamp=report.observed_at,
             document_id=f"report_{report.report_id}",
             metadata={
-                "vehicle_id": report.vehicle_id or report.vin,
+                "vehicle_id": vehicle_id,
                 "vin": report.vin,
                 "source_id": report.source_id,
                 "source_type": report.source_type,
@@ -53,7 +54,7 @@ class HindsightRepository:
                 "issue_candidate": report.issue_candidate,
                 "polarity": report.polarity,
             },
-            tags=["vehicle", f"vin:{report.vin}", f"source:{report.source_id}"],
+            tags=["vehicle", f"vehicle:{vehicle_id}", f"vin:{report.vin}", f"source:{report.source_id}"],
             retain_async=False,
         )
 
@@ -65,6 +66,7 @@ class HindsightRepository:
             timestamp=report.observed_at,
             document_id=f"report_{report.report_id}",
             metadata={
+                "vehicle_id": report.vehicle_id,
                 "vin": report.vin,
                 "source_id": report.source_id,
                 "source_type": report.source_type,
@@ -76,16 +78,16 @@ class HindsightRepository:
             retain_async=False,
         )
 
-    async def recall_vehicle(self, vin: str, query: str) -> list[MemoryEvidence]:
+    async def recall_vehicle(self, vehicle_id: str, query: str) -> list[MemoryEvidence]:
         response = await self._client.arecall(
-            bank_id=f"vehicle_{vin}",
+            bank_id=f"vehicle_{vehicle_id}",
             query=query,
             types=["world", "experience", "observation"],
             budget="mid",
             max_tokens=4096,
             include_source_facts=True,
             prefer_observations=True,
-            tags=[f"vin:{vin}"],
+            tags=[f"vehicle:{vehicle_id}"],
         )
         return self._normalize_recall(response)
 
@@ -102,9 +104,9 @@ class HindsightRepository:
         )
         return self._normalize_recall(response)
 
-    async def reflect(self, vin: str, assessment_context: str) -> str:
+    async def reflect(self, vehicle_id: str, assessment_context: str) -> str:
         response = await self._client.areflect(
-            bank_id=f"vehicle_{vin}",
+            bank_id=f"vehicle_{vehicle_id}",
             query=(
                 "Assess the accumulated evidence for the current vehicle finding. "
                 "Explain what changed compared with earlier reports."
