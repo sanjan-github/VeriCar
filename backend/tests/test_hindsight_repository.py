@@ -19,14 +19,7 @@ class FakeHindsight:
 
     async def arecall(self, **kwargs):
         self.calls.append(("recall", kwargs))
-        return {"results": [{
-            "id": "memory-1",
-            "text": "Hard 2-to-3 transmission shift.",
-            "type": "observation",
-            "metadata": {"source_id": "source-1"},
-            "tags": ["vin:TEST-VIN-001"],
-            "document_id": "report-report-1",
-        }]}
+        return {"results": [{"id": "memory-1", "text": "Hard 2-to-3 transmission shift.", "type": "observation", "metadata": {"source_id": "source-1"}, "tags": ["vehicle:VEH-001"], "document_id": "report-report-1"}]}
 
     async def areflect(self, **kwargs):
         self.calls.append(("reflect", kwargs))
@@ -40,14 +33,12 @@ class FakeHindsight:
 
 
 @pytest.mark.asyncio
-async def test_retain_report_uses_stable_identifiers():
+async def test_retain_report_uses_stable_vehicle_identifier():
     fake = FakeHindsight()
     repository = HindsightRepository(fake)
     report = VehicleReport(
-        report_id="report-1",
-        vin="TEST-VIN-001",
-        source_id="source-1",
-        source_type="inspector",
+        report_id="report-1", vehicle_id="VEH-001", vin="TEST-VIN-001",
+        source_id="source-1", source_type="inspector",
         text="Hard 2-to-3 transmission shift.",
         observed_at=datetime(2026, 9, 20, 10, 0, tzinfo=timezone.utc),
     )
@@ -56,9 +47,10 @@ async def test_retain_report_uses_stable_identifiers():
 
     name, kwargs = fake.calls[-1]
     assert name == "retain"
-    assert kwargs["bank_id"] == "vehicle_TEST-VIN-001"
+    assert kwargs["bank_id"] == "vehicle_VEH-001"
     assert kwargs["document_id"] == "report_report-1"
-    assert kwargs["metadata"]["source_type"] == "inspector"
+    assert kwargs["metadata"]["vehicle_id"] == "VEH-001"
+    assert kwargs["metadata"]["vin"] == "TEST-VIN-001"
     assert kwargs["timestamp"] == report.observed_at
     assert kwargs["retain_async"] is False
 
@@ -68,12 +60,13 @@ async def test_recall_normalizes_evidence_without_scoring_it():
     fake = FakeHindsight()
     repository = HindsightRepository(fake)
 
-    evidence = await repository.recall_vehicle("TEST-VIN-001", "transmission problems")
+    evidence = await repository.recall_vehicle("VEH-001", "transmission problems")
 
     assert len(evidence) == 1
     assert evidence[0].memory_id == "memory-1"
     assert evidence[0].text == "Hard 2-to-3 transmission shift."
     assert evidence[0].metadata["source_id"] == "source-1"
+    assert fake.calls[-1][1]["bank_id"] == "vehicle_VEH-001"
 
 
 @pytest.mark.asyncio
@@ -81,6 +74,6 @@ async def test_reflect_returns_only_hindsight_explanation_text():
     fake = FakeHindsight()
     repository = HindsightRepository(fake)
 
-    explanation = await repository.reflect("TEST-VIN-001", "assessment changed")
+    explanation = await repository.reflect("VEH-001", "assessment changed")
 
     assert explanation == "The later inspection added supporting evidence."
