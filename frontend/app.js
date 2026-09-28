@@ -183,6 +183,7 @@ async function checkBackend() {
 
 async function loadVehicle(vehicleId) {
   setStatus("Retrieving historical evidence…");
+  elements.emptyState.hidden = true;
   elements.vehicleView.hidden = true;
   elements.searchButton.disabled = true;
 
@@ -197,7 +198,7 @@ async function loadVehicle(vehicleId) {
     setStatus("", false);
   } catch (error) {
     setStatus(error.message || "Vehicle history could not be retrieved.");
-    elements.emptyState.hidden = false;
+    elements.emptyState.hidden = true;
     elements.vehicleView.hidden = true;
   } finally {
     elements.searchButton.disabled = false;
