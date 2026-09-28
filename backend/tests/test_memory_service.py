@@ -22,13 +22,13 @@ class FakeRepository:
         self.reports.append(("source", report.report_id))
         return {"bank": "source"}
 
-    async def recall_vehicle(self, vin, query):
+    async def recall_vehicle(self, vehicle_id, query):
         return []
 
     async def recall_source(self, source_id, query):
         return []
 
-    async def reflect(self, vin, assessment_context):
+    async def reflect(self, vehicle_id, assessment_context):
         return ""
 
     async def check_version(self):
@@ -39,11 +39,12 @@ class FakeRepository:
 
 
 @pytest.mark.asyncio
-async def test_retain_report_writes_vehicle_and_source_memory():
+async def test_retain_report_uses_vehicle_id_for_vehicle_memory():
     repository = FakeRepository()
     service = MemoryService(repository)
     report = VehicleReport(
         report_id="report-1",
+        vehicle_id="VEH-001",
         vin="TEST-VIN-001",
         source_id="source-1",
         source_type="inspector",
@@ -54,7 +55,7 @@ async def test_retain_report_writes_vehicle_and_source_memory():
     await service.retain_report(report)
 
     assert {bank["bank_id"] for bank in repository.banks} == {
-        "vehicle_TEST-VIN-001",
+        "vehicle_VEH-001",
         "source_source-1",
     }
     assert repository.reports == [
