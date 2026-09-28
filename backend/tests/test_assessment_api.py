@@ -14,6 +14,9 @@ class AssessmentMemoryService:
     async def recall_vehicle_history(self, vin, query):
         return self.evidence
 
+    async def recall_source_history(self, source_id, query):
+        return []
+
     async def close(self):
         return None
 

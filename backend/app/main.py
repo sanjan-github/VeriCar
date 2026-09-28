@@ -101,6 +101,7 @@ async def create_report(
 
     try:
         await memory_service.retain_report(vehicle_report)
+        await memory_service.resolve_source_outcomes(vehicle_report)
     except Exception as exc:
         logger.exception("Failed to persist report %s to memory", report_id)
         raise HTTPException(

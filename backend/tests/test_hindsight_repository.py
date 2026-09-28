@@ -56,6 +56,34 @@ async def test_retain_report_uses_stable_vehicle_identifier():
 
 
 @pytest.mark.asyncio
+async def test_retain_source_outcome_preserves_resolution_metadata():
+    fake = FakeHindsight()
+    repository = HindsightRepository(fake)
+    resolved_at = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    recorded_at = datetime(2026, 9, 22, tzinfo=timezone.utc)
+
+    await repository.retain_source_outcome(
+        source_id="SRC-1",
+        source_type="mechanic",
+        vehicle_id="VEH-1",
+        report_id="RPT-OLD",
+        triggering_report_id="RPT-NEW",
+        issue_candidate="transmission_shift_behavior",
+        resolution_status="corroborated",
+        resolved_at=resolved_at,
+        recorded_at=recorded_at,
+    )
+
+    _, kwargs = fake.calls[-1]
+    assert kwargs["bank_id"] == "source_SRC-1"
+    assert kwargs["document_id"] == "resolution_RPT-OLD_RPT-NEW"
+    assert kwargs["metadata"]["resolved_report_id"] == "RPT-OLD"
+    assert kwargs["metadata"]["triggering_report_id"] == "RPT-NEW"
+    assert kwargs["metadata"]["resolution_status"] == "corroborated"
+    assert kwargs["timestamp"] == resolved_at
+
+
+@pytest.mark.asyncio
 async def test_recall_normalizes_evidence_without_scoring_it():
     fake = FakeHindsight()
     repository = HindsightRepository(fake)

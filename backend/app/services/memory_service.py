@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from backend.app.models.memory import MemoryEvidence, VehicleReport
 from backend.app.repositories.hindsight_repository import HindsightRepository
 
@@ -50,6 +52,89 @@ class MemoryService:
     async def retain_source_report(self, report: VehicleReport):
         await self.ensure_source_bank(report.source_id)
         return await self._repository.retain_source_report(report)
+
+    async def resolve_source_outcomes(self, report: VehicleReport) -> None:
+        """Record clear independent corroboration or contradiction events."""
+        if not report.issue_candidate or report.polarity == "unresolved":
+            return
+
+        memories = await self.recall_vehicle_history(
+            report.vehicle_id or report.vin,
+            report.issue_candidate,
+        )
+        reports: dict[str, dict] = {}
+        for item in memories:
+            metadata = item.metadata or {}
+            report_id = metadata.get("report_id")
+            if not report_id:
+                continue
+            reports[str(report_id)] = metadata
+
+        reports[report.report_id] = {
+            "report_id": report.report_id,
+            "vehicle_id": report.vehicle_id or report.vin,
+            "source_id": report.source_id,
+            "source_type": report.source_type,
+            "issue_candidate": report.issue_candidate,
+            "polarity": report.polarity,
+        }
+
+        relevant = {
+            report_id: metadata
+            for report_id, metadata in reports.items()
+            if metadata.get("issue_candidate") == report.issue_candidate
+            and metadata.get("polarity") in {"supporting", "contradicting"}
+        }
+        resolved_at = report.observed_at
+        current_outcomes: set[str] = set()
+        current = relevant.get(report.report_id)
+        if current is None:
+            return
+
+        for report_id, metadata in relevant.items():
+            if report_id == report.report_id or metadata.get("source_id") == report.source_id:
+                continue
+            resolution_status = (
+                "corroborated"
+                if metadata["polarity"] == current["polarity"]
+                else "contradicted"
+            )
+            current_outcomes.add(resolution_status)
+            source_id = str(metadata.get("source_id", ""))
+            source_type = str(metadata.get("source_type", ""))
+            if not source_id or not source_type:
+                continue
+            await self.ensure_source_bank(source_id)
+            await self._repository.retain_source_outcome(
+                source_id=source_id,
+                source_type=source_type,
+                vehicle_id=str(metadata.get("vehicle_id", report.vehicle_id or report.vin)),
+                report_id=report_id,
+                triggering_report_id=report.report_id,
+                issue_candidate=report.issue_candidate,
+                resolution_status=resolution_status,
+                resolved_at=resolved_at,
+                recorded_at=report.submitted_at or datetime.now(timezone.utc),
+            )
+
+        if current_outcomes:
+            resolution_status = (
+                next(iter(current_outcomes))
+                if len(current_outcomes) == 1
+                else "unresolved"
+            )
+            await self.ensure_source_bank(report.source_id)
+            await self._repository.retain_source_outcome(
+                source_id=report.source_id,
+                source_type=report.source_type,
+                vehicle_id=report.vehicle_id or report.vin,
+                report_id=report.report_id,
+                triggering_report_id=report.report_id,
+                issue_candidate=report.issue_candidate,
+                resolution_status=resolution_status,
+                resolved_at=resolved_at,
+                recorded_at=report.submitted_at or datetime.now(timezone.utc),
+            )
 
     async def recall_vehicle_history(self, vehicle_id: str, query: str) -> list[MemoryEvidence]:
         return await self._repository.recall_vehicle(vehicle_id, query)

@@ -21,6 +21,9 @@ class FakeMemoryService:
         self.reports.append(report)
         return {"vehicle": "stored", "source": "stored"}
 
+    async def resolve_source_outcomes(self, report):
+        return None
+
 
 def make_app(memory_service: FakeMemoryService) -> FastAPI:
     app = FastAPI()

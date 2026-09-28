@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import datetime
 from typing import Any, Protocol
 
 from backend.app.models.memory import MemoryEvidence, VehicleReport
@@ -75,6 +76,51 @@ class HindsightRepository:
                 "polarity": report.polarity,
             },
             tags=["source", f"source:{report.source_id}", f"vin:{report.vin}"],
+            retain_async=False,
+        )
+
+    async def retain_source_outcome(
+        self,
+        *,
+        source_id: str,
+        source_type: str,
+        vehicle_id: str,
+        report_id: str,
+        triggering_report_id: str,
+        issue_candidate: str,
+        resolution_status: str,
+        resolved_at: datetime,
+        recorded_at: datetime,
+    ) -> Any:
+        """Append an auditable resolution event to the source's history bank."""
+        return await self._client.aretain(
+            bank_id=f"source_{source_id}",
+            content=(
+                f"Report {report_id} from source {source_id} was {resolution_status} "
+                f"by independent report {triggering_report_id} about {issue_candidate} "
+                f"for vehicle {vehicle_id}."
+            ),
+            context="historical source report outcome",
+            timestamp=resolved_at,
+            document_id=f"resolution_{report_id}_{triggering_report_id}",
+            metadata={
+                "event_type": "report_resolution",
+                "source_id": source_id,
+                "source_type": source_type,
+                "vehicle_id": vehicle_id,
+                "resolved_report_id": report_id,
+                "triggering_report_id": triggering_report_id,
+                "issue_candidate": issue_candidate,
+                "resolution_status": resolution_status,
+                "resolved_at": resolved_at.isoformat(),
+                "recorded_at": recorded_at.isoformat(),
+            },
+            tags=[
+                "source",
+                f"source:{source_id}",
+                f"vehicle:{vehicle_id}",
+                f"issue:{issue_candidate}",
+            ],
             retain_async=False,
         )
 
