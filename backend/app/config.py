@@ -14,5 +14,10 @@ class Settings:
     hindsight_timeout: float = float(os.getenv("HINDSIGHT_TIMEOUT", "30"))
     hindsight_startup_check: bool = os.getenv("HINDSIGHT_STARTUP_CHECK", "false").lower() == "true"
 
+    groq_base_url: str = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+    groq_api_key: str = os.getenv("GROQ_API_KEY", "")
+    groq_model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    groq_timeout: float = float(os.getenv("GROQ_TIMEOUT", "20"))
+
 
 settings = Settings()
