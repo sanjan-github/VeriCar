@@ -1,0 +1,1675 @@
+# 16 — Frontend Specification
+
+## 1. Purpose
+
+This document defines the frontend architecture, interaction model, visual system, component responsibilities, accessibility requirements, and API integration contract for VeriCar.
+
+The frontend is responsible for presenting vehicle history and evidence clearly. It must not become a conversational AI interface, generic analytics dashboard, or decorative visualization layer.
+
+The primary interaction model is:
+
+```text
+Vehicle history
+      ↓
+Evidence
+      ↓
+Assessment
+      ↓
+Explanation
+```
+
+The interface should make the underlying evidence easier to inspect, not hide it behind an AI-generated summary.
+
+---
+
+# 2. Frontend Principles
+
+The frontend must follow these principles:
+
+1. **Evidence before interpretation**
+2. **Timeline before score**
+3. **Progressive disclosure instead of information overload**
+4. **Persistent vehicle context**
+5. **Clear distinction between claims and findings**
+6. **Contradictions remain visible**
+7. **No unsupported precision**
+8. **Conventional interaction patterns**
+9. **Minimal visual decoration**
+10. **Readable information density**
+11. **Explicit system states**
+12. **No simulated intelligence**
+
+The application should feel like a serious research/history tool rather than a generated AI dashboard.
+
+---
+
+# 3. Visual Direction
+
+## 3.1 Design Objective
+
+The interface should resemble a mature information product.
+
+It should communicate:
+
+* evidence
+* history
+* traceability
+* inspection
+* records
+* confidence
+* chronology
+
+It should not communicate:
+
+* chatbot
+* futuristic AI
+* cryptocurrency dashboard
+* gaming interface
+* marketing landing page
+* generic SaaS template
+
+---
+
+# 4. Avoiding a "Vibecoded" UI
+
+The following patterns are explicitly discouraged.
+
+### Avoid excessive rounded cards
+
+Do not place every section inside a large rounded container.
+
+Poor pattern:
+
+```text
+┌─────────────────────────────┐
+│   ✨ AI VEHICLE INSIGHTS    │
+│                             │
+│       86% CONFIDENCE        │
+└─────────────────────────────┘
+```
+
+Preferred pattern:
+
+```text
+TRANSMISSION
+
+Elevated concern
+
+3 independent reports
+Observed across 99 days
+
+Evidence confidence       86%
+```
+
+Information should be allowed to exist directly on the page without unnecessary containers.
+
+---
+
+### Avoid excessive gradients
+
+Do not use:
+
+* gradient backgrounds
+* gradient text
+* glowing borders
+* neon confidence meters
+* glassmorphism
+* decorative blur effects
+
+Color should primarily communicate state and hierarchy.
+
+---
+
+### Avoid oversized hero sections
+
+The vehicle history page is an application workspace.
+
+The primary content should appear immediately.
+
+Do not waste the initial viewport on:
+
+```text
+Welcome to the future of vehicle intelligence
+```
+
+The user should reach the vehicle history quickly.
+
+---
+
+### Avoid fake dashboard metrics
+
+Do not introduce decorative metrics such as:
+
+```text
+TRUST
+92%
+
+SAFETY
+87%
+
+AI SCORE
+94%
+```
+
+unless each value has a defined calculation and a meaningful role in the evidence model.
+
+VeriCar has one evidence-confidence concept, not a collection of arbitrary scores.
+
+---
+
+### Avoid decorative AI imagery
+
+The application does not need:
+
+* robot illustrations
+* glowing brains
+* neural-network graphics
+* AI avatars
+* animated particles
+* abstract "intelligence" backgrounds
+
+The evidence itself is the visual content.
+
+---
+
+# 5. Application Structure
+
+The primary application structure is:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ VeriCar                                      Vehicle Lookup  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Vehicle context                                             │
+│ VIN / vehicle identifier                                    │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ History                                                     │
+│                                                             │
+│  Timeline                     Current assessment             │
+│  ─────────                    ─────────────────              │
+│  2026-08-14                   Transmission                   │
+│  Mechanic                     Elevated concern               │
+│  Transmission hesitation                                    │
+│                                                             │
+│  2026-06-20                   Evidence confidence            │
+│  Owner                        86%                            │
+│  No transmission issues                                     │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Supporting evidence                                         │
+│ Contradictory evidence                                      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+The exact visual implementation may change, but the information hierarchy should remain.
+
+---
+
+# 6. Navigation
+
+The initial application should use a small navigation surface.
+
+Recommended structure:
+
+```text
+VeriCar
+
+Vehicle History
+Add Report
+```
+
+Optional future sections:
+
+```text
+Sources
+Settings
+```
+
+Do not create navigation for functionality that does not exist.
+
+Avoid:
+
+```text
+Dashboard
+AI Insights
+Analytics
+Predictions
+Recommendations
+AI Assistant
+Reports
+Settings
+```
+
+unless those are actual product capabilities.
+
+---
+
+# 7. Vehicle Lookup
+
+Vehicle lookup is the primary entry point.
+
+## 7.1 Input
+
+The user should be able to enter a VIN or supported vehicle identifier.
+
+Example:
+
+```text
+Vehicle identifier
+
+[ 1HGCM82633A004352                  ]
+
+                         [ View history ]
+```
+
+The input should provide:
+
+* clear label
+* validation
+* useful error messages
+* keyboard accessibility
+* loading state
+
+Do not make the user interact with a decorative search component before accessing the vehicle.
+
+---
+
+# 8. Vehicle Context Header
+
+Once a vehicle is loaded, its identity should remain visible.
+
+Example:
+
+```text
+Vehicle history
+
+VIN
+1HGCM82633A004352
+
+Reports
+18
+
+Observed history
+2024-02-12 → 2026-08-14
+
+[ Add report ]
+```
+
+The header should provide context without becoming a dashboard.
+
+---
+
+# 9. Vehicle History Timeline
+
+The timeline is the primary visual component of the application.
+
+It represents what was reported and when.
+
+Example:
+
+```text
+2026-08-14
+MECHANIC
+
+Transmission hesitation during 2→3 shift.
+
+────────────────────────────────────────
+
+2026-06-20
+OWNER
+
+Transmission operating normally.
+
+────────────────────────────────────────
+
+2026-03-02
+INSPECTOR
+
+Minor transmission fluid leak observed.
+```
+
+Each event should expose:
+
+* date
+* source type
+* report text
+* report status
+* relevant issue/category when available
+
+---
+
+# 10. Timeline Ordering
+
+Default ordering:
+
+```text
+Newest
+  ↓
+Oldest
+```
+
+Users should be able to understand how the current assessment developed.
+
+The timeline must preserve chronological facts.
+
+Do not rewrite historical reports according to the current assessment.
+
+For example, if a later mechanic report indicates a transmission issue, an earlier owner report stating that the transmission operated normally must remain unchanged.
+
+---
+
+# 11. Timeline Event Design
+
+Timeline events should be visually distinguishable without excessive styling.
+
+Recommended hierarchy:
+
+```text
+DATE
+Source type
+
+Original report text
+
+Issue/category
+```
+
+Example:
+
+```text
+14 Aug 2026
+Mechanic
+
+"Noticeable hesitation between second and third gear."
+
+Transmission
+```
+
+The original report text should remain accessible.
+
+---
+
+# 12. Claims vs Findings
+
+The interface must distinguish between:
+
+### Claim
+
+Something reported by a source.
+
+Example:
+
+> "Transmission feels normal."
+
+### Finding
+
+A system-level interpretation supported by accumulated evidence.
+
+Example:
+
+> Transmission behavior shows repeated evidence of abnormal shifting.
+
+The UI should never visually present a claim as an established fact.
+
+---
+
+# 13. Current Assessment
+
+The current assessment should be presented separately from the raw timeline.
+
+Example:
+
+```text
+TRANSMISSION
+
+Elevated concern
+
+3 independent reports
+Observed across 99 days
+
+[ Why this assessment? ]
+
+Evidence confidence
+86%
+```
+
+The assessment is a synthesis of the evidence.
+
+It should not replace the evidence.
+
+---
+
+# 14. Assessment States
+
+Assessment labels should remain limited and understandable.
+
+Possible states:
+
+```text
+No significant evidence
+Limited evidence
+Moderate evidence
+Elevated concern
+Strong evidence
+Conflicting evidence
+```
+
+The final vocabulary should remain aligned with the scoring model.
+
+The frontend must not invent additional assessment categories independently.
+
+---
+
+# 15. Evidence Confidence
+
+Evidence confidence should use progressive disclosure.
+
+Collapsed:
+
+```text
+Evidence confidence
+86%
+```
+
+Expanded:
+
+```text
+Evidence confidence
+
+86%
+
+Based on:
+• 3 independent sources
+• repeated observations
+• source reliability history
+• supporting and contradictory evidence
+• observation span
+
+This is an evidence-strength estimate,
+not a probability or mechanical diagnosis.
+
+[ How is this calculated? ]
+```
+
+The user should be able to inspect why the value exists.
+
+---
+
+# 16. Confidence Explanation
+
+The frontend should provide the following explanation:
+
+> Evidence confidence describes the strength of the available evidence supporting a finding. It is not a probability that a mechanical problem exists and is not a mechanical diagnosis.
+
+The interface should not label the number:
+
+```text
+Probability
+```
+
+or:
+
+```text
+Chance of failure
+```
+
+---
+
+# 17. Supporting Evidence
+
+Supporting evidence should be directly inspectable.
+
+Example:
+
+```text
+SUPPORTING EVIDENCE
+
+3 reports support this finding
+
+14 Aug 2026 · Mechanic
+"Noticeable hesitation between second and third gear."
+
+08 Aug 2026 · Inspector
+"Transmission exhibited delayed engagement."
+
+02 Jun 2026 · Mechanic
+"Customer reports intermittent shifting hesitation."
+```
+
+Each evidence item should link back to its originating report.
+
+---
+
+# 18. Contradictory Evidence
+
+Contradictory evidence must remain visible.
+
+Example:
+
+```text
+CONTRADICTORY EVIDENCE
+
+Earlier reports described normal operation.
+
+20 Jun 2026 · Owner
+"Transmission operating normally."
+
+This report conflicts with later observations
+describing shifting hesitation.
+```
+
+The interface must not hide contradictory evidence simply because the current assessment has stronger support.
+
+---
+
+# 19. Unresolved Evidence
+
+Evidence that cannot currently be corroborated or contradicted should be shown as unresolved.
+
+Example:
+
+```text
+UNRESOLVED
+
+04 Apr 2026 · Owner
+
+"Occasional vibration at highway speeds."
+
+No later independent observation currently
+supports or contradicts this report.
+```
+
+This prevents unresolved claims from being presented as established findings.
+
+---
+
+# 20. Source History
+
+Source reliability should be accessible from an evidence item.
+
+Example:
+
+```text
+SOURCE RELIABILITY
+
+Mechanic source
+
+Estimated reliability
+91%
+
+Reports        18
+Corroborated   14
+Contradicted    2
+Unresolved      2
+
+This estimate is based on historical reporting
+behavior. It is not a measure of professional
+qualification.
+```
+
+The frontend must not describe this value as:
+
+```text
+Mechanic skill
+```
+
+or:
+
+```text
+Professional rating
+```
+
+---
+
+# 21. Source Type
+
+Supported source types:
+
+```text
+Owner
+Buyer
+Mechanic
+Inspector
+```
+
+Use consistent labels throughout the application.
+
+Avoid unnecessary visual badges.
+
+A small source label is sufficient:
+
+```text
+14 Aug 2026 · Mechanic
+```
+
+---
+
+# 22. Report Submission
+
+The report submission workflow should be simple.
+
+Example:
+
+```text
+Add report
+
+Vehicle
+1HGCM82633A004352
+
+Source
+[ Mechanic ▾ ]
+
+Observation date
+[ 14 Aug 2026 ]
+
+Report
+
+[ Describe what was observed...                 ]
+[                                               ]
+[                                               ]
+
+                              [ Save report ]
+```
+
+The user should not need to understand:
+
+* Hindsight
+* embeddings
+* retrieval
+* source reliability formulas
+* LLM processing
+* evidence weights
+
+Those are backend concerns.
+
+---
+
+# 23. Report Validation
+
+Frontend validation should provide immediate feedback for obvious input errors.
+
+Examples:
+
+```text
+Vehicle identifier is required.
+
+Source type is required.
+
+Observation date is required.
+
+Report text cannot be empty.
+```
+
+The backend remains authoritative for validation.
+
+Frontend validation must never replace backend validation.
+
+---
+
+# 24. Submission State
+
+During submission:
+
+```text
+Saving report…
+
+Processing historical evidence…
+```
+
+Avoid fake progress percentages.
+
+Do not display:
+
+```text
+AI is thinking...
+87%
+```
+
+unless the application actually has a measurable operation corresponding to that progress.
+
+---
+
+# 25. Successful Submission
+
+After successful submission:
+
+```text
+Report added
+
+The vehicle history has been updated.
+
+[ View updated history ]
+```
+
+The assessment should then be recalculated by the backend.
+
+---
+
+# 26. Empty History
+
+An empty vehicle history is different from a failed memory lookup.
+
+Empty history:
+
+```text
+No history yet
+
+No reports have been recorded for this vehicle.
+
+[ Add first report ]
+```
+
+This means the system successfully checked the vehicle and found no stored history.
+
+---
+
+# 27. Hindsight Unavailable
+
+If Hindsight cannot be reached, the frontend must not display:
+
+```text
+No history found
+```
+
+Instead:
+
+```text
+History temporarily unavailable
+
+VeriCar could not retrieve the vehicle's stored
+history.
+
+Your report has not been interpreted as evidence
+until historical memory can be retrieved.
+
+[ Retry ]
+```
+
+This distinction is mandatory.
+
+---
+
+# 28. LLM Unavailable
+
+If the LLM service fails but historical evidence and deterministic scoring are available:
+
+```text
+Assessment available
+
+The evidence calculation completed successfully.
+
+Automated explanation is temporarily unavailable.
+
+[ View evidence ]
+```
+
+The interface should continue to expose:
+
+* timeline
+* evidence
+* source history
+* deterministic assessment
+
+The LLM must not become a single point of failure for the entire interface.
+
+---
+
+# 29. Backend Error
+
+Unexpected errors should be explicit.
+
+Example:
+
+```text
+Something went wrong
+
+VeriCar could not complete this request.
+
+Request ID: 7f3c...
+
+[ Try again ]
+```
+
+Do not expose stack traces, internal service names, API keys, or implementation details.
+
+---
+
+# 30. Loading States
+
+Loading states should correspond to actual operations.
+
+Examples:
+
+```text
+Loading vehicle history…
+```
+
+```text
+Calculating evidence…
+```
+
+```text
+Loading source history…
+```
+
+Use restrained skeletons or inline progress indicators.
+
+Avoid full-screen animated loaders for ordinary API requests.
+
+---
+
+# 31. Responsive Design
+
+The application must support:
+
+* desktop
+* tablet
+* mobile
+
+Desktop should use the available width for evidence comparison.
+
+Mobile should prioritize chronological readability.
+
+Desktop:
+
+```text
+┌──────────────────────┬──────────────────────┐
+│ History              │ Current assessment   │
+│                      │                      │
+│ Timeline             │ Evidence confidence  │
+│                      │                      │
+│                      │ Supporting evidence  │
+└──────────────────────┴──────────────────────┘
+```
+
+Mobile:
+
+```text
+Vehicle
+↓
+Assessment
+↓
+Confidence
+↓
+Timeline
+↓
+Supporting evidence
+↓
+Contradictions
+```
+
+Do not simply shrink the desktop layout.
+
+---
+
+# 32. Responsive Timeline
+
+On small screens, timeline events should become a single readable column.
+
+Avoid horizontal scrolling for primary evidence.
+
+The user must be able to read:
+
+* date
+* source
+* observation
+* issue
+* status
+
+without manipulating the page horizontally.
+
+---
+
+# 33. Accessibility
+
+The frontend must support:
+
+* keyboard navigation
+* visible focus states
+* semantic HTML
+* accessible form labels
+* sufficient text contrast
+* meaningful button names
+* screen-reader-readable status messages
+* logical heading hierarchy
+* accessible expandable sections
+
+Do not rely solely on color.
+
+For example, contradictory evidence should not be represented only by red.
+
+Use:
+
+```text
+Contradictory evidence
+```
+
+as text.
+
+---
+
+# 34. Typography
+
+Typography should establish hierarchy rather than decoration.
+
+Recommended hierarchy:
+
+```text
+Application title
+Vehicle identifier
+Section heading
+Assessment label
+Body text
+Metadata
+```
+
+Avoid:
+
+* oversized marketing typography
+* all-caps paragraphs
+* excessive font weights
+* multiple decorative typefaces
+
+Numbers such as evidence confidence may receive stronger typographic emphasis, but should remain proportional to the surrounding content.
+
+---
+
+# 35. Color System
+
+Color should have semantic meaning.
+
+Suggested roles:
+
+```text
+Primary text
+Secondary text
+Border/divider
+Neutral background
+Informational
+Warning
+Error
+Success
+```
+
+Do not assign a different color to every category.
+
+Assessment colors should not imply certainty beyond the underlying evidence.
+
+---
+
+# 36. Borders and Surfaces
+
+Use borders and spacing to establish structure.
+
+Preferred:
+
+```text
+Section heading
+────────────────────────
+
+Content
+```
+
+rather than:
+
+```text
+╭──────────────────────────╮
+│  Section                 │
+│                          │
+│  Content                 │
+╰──────────────────────────╯
+```
+
+Cards should be reserved for genuinely independent interactive or informational units.
+
+---
+
+# 37. Spacing
+
+Spacing should establish hierarchy.
+
+Use larger spacing between:
+
+* major sections
+* assessment and evidence
+* timeline periods
+
+Use smaller spacing between:
+
+* metadata
+* labels
+* related values
+
+Avoid excessive empty space that makes the application resemble a landing page.
+
+---
+
+# 38. Component Responsibilities
+
+Suggested frontend structure:
+
+```text
+frontend/
+└── src/
+    ├── components/
+    │   ├── layout/
+    │   │   ├── AppShell
+    │   │   └── Header
+    │   │
+    │   ├── vehicle/
+    │   │   ├── VehicleLookup
+    │   │   ├── VehicleHeader
+    │   │   └── VehicleHistory
+    │   │
+    │   ├── timeline/
+    │   │   ├── Timeline
+    │   │   └── TimelineEvent
+    │   │
+    │   ├── assessment/
+    │   │   ├── Assessment
+    │   │   ├── EvidenceConfidence
+    │   │   └── AssessmentExplanation
+    │   │
+    │   ├── evidence/
+    │   │   ├── SupportingEvidence
+    │   │   ├── ContradictoryEvidence
+    │   │   └── UnresolvedEvidence
+    │   │
+    │   ├── sources/
+    │   │   └── SourceHistory
+    │   │
+    │   └── reports/
+    │       └── ReportForm
+    │
+    ├── services/
+    │   └── api
+    │
+    ├── pages/
+    │   ├── VehiclePage
+    │   └── ReportPage
+    │
+    └── styles/
+```
+
+The exact framework may differ.
+
+The component boundaries should remain responsibility-oriented rather than creating abstractions for their own sake.
+
+---
+
+# 39. Frontend State Model
+
+The frontend should distinguish at minimum:
+
+```text
+idle
+loading
+success
+empty
+error
+unavailable
+```
+
+For historical memory:
+
+```text
+history_loading
+history_available
+history_empty
+history_unavailable
+history_error
+```
+
+For explanation:
+
+```text
+explanation_available
+explanation_unavailable
+```
+
+This prevents different backend conditions from collapsing into one generic error state.
+
+---
+
+# 40. API Integration
+
+The frontend communicates only with the backend.
+
+```text
+Browser
+   |
+   | HTTP / JSON
+   v
+Python API
+   |
+   +--> Hindsight
+   |
+   +--> Evidence engine
+   |
+   +--> Groq
+```
+
+The browser must never directly call:
+
+* Hindsight
+* Groq
+* other private backend services
+
+API credentials must never be included in frontend code.
+
+---
+
+# 41. API Endpoints
+
+The initial frontend consumes:
+
+```http
+GET /health
+```
+
+```http
+POST /api/reports
+```
+
+```http
+GET /api/vehicles/{vehicle_id}
+```
+
+```http
+GET /api/vehicles/{vehicle_id}/assessment
+```
+
+The frontend should not assume that API responses contain fields that are not part of the backend contract.
+
+---
+
+# 42. Vehicle Response
+
+Conceptual response:
+
+```json
+{
+  "vehicle_id": "vehicle_123",
+  "report_count": 18,
+  "first_observed_at": "2024-02-12",
+  "last_observed_at": "2026-08-14",
+  "reports": []
+}
+```
+
+The actual schema is defined by the backend API contract.
+
+---
+
+# 43. Assessment Response
+
+Conceptual response:
+
+```json
+{
+  "vehicle_id": "vehicle_123",
+  "findings": [
+    {
+      "issue": "transmission",
+      "assessment": "elevated_concern",
+      "evidence_confidence": 86,
+      "supporting_evidence": [],
+      "contradictory_evidence": [],
+      "unresolved_evidence": []
+    }
+  ]
+}
+```
+
+The frontend renders these values.
+
+It does not calculate them independently.
+
+---
+
+# 44. Numerical Integrity
+
+The frontend must display backend-calculated values without modifying them.
+
+Do not:
+
+```javascript
+confidence * 100
+```
+
+unless the API explicitly returns a normalized fraction.
+
+Do not:
+
+```javascript
+Math.round(confidence)
+```
+
+unless rounding is explicitly part of the UI contract.
+
+The backend owns evidence calculations.
+
+---
+
+# 45. Date Integrity
+
+Dates must be displayed using the original observation date supplied by the backend.
+
+The frontend may format dates for readability:
+
+```text
+2026-08-14
+```
+
+as:
+
+```text
+14 Aug 2026
+```
+
+but must not alter the underlying date.
+
+---
+
+# 46. Explanation Rendering
+
+LLM-generated explanations must be rendered as explanations of structured evidence.
+
+Example:
+
+```text
+Why this assessment?
+
+Three independent reports describe transmission
+hesitation across a 99-day observation period.
+Two of the reports come from sources with established
+historical reporting reliability.
+
+An earlier owner report described normal operation,
+so the history contains a contradictory observation.
+```
+
+The UI should preserve the distinction between:
+
+```text
+Evidence
+```
+
+and:
+
+```text
+Explanation
+```
+
+---
+
+# 47. No Chatbot Interface
+
+VeriCar should not expose the LLM as a general-purpose chat interface.
+
+Avoid:
+
+```text
+Ask VeriCar anything about this car...
+```
+
+The product's purpose is evidence-based vehicle history analysis.
+
+A structured explanation is preferable to an open-ended chatbot.
+
+---
+
+# 48. No AI Typing Animation
+
+Do not simulate:
+
+```text
+AI is thinking...
+AI is analyzing...
+AI is reasoning...
+```
+
+unless there is a genuine user-facing operation that benefits from such feedback.
+
+For ordinary requests, use factual loading states:
+
+```text
+Retrieving history…
+```
+
+```text
+Calculating evidence…
+```
+
+---
+
+# 49. Interaction With Evidence
+
+Evidence should be inspectable without navigating away from the vehicle.
+
+For example:
+
+```text
+Transmission
+Elevated concern
+
+Evidence confidence
+86%
+
+[ View supporting evidence ]
+
+[ View contradictory evidence ]
+```
+
+Expanding these sections should reveal the underlying reports.
+
+The user should not have to leave the assessment page to understand why an assessment exists.
+
+---
+
+# 50. Assessment Change
+
+When a new report materially changes an assessment, the frontend should communicate the change using historical context.
+
+Example:
+
+```text
+Assessment changed
+
+Transmission evidence increased from
+Limited evidence to Elevated concern.
+
+New supporting evidence:
+14 Aug 2026 · Mechanic
+
+Earlier contradictory evidence remains available.
+```
+
+Do not present:
+
+```text
+AI changed its mind
+```
+
+The change is evidence-driven.
+
+---
+
+# 51. Auditability
+
+Every displayed finding should be traceable to underlying reports.
+
+A user should be able to follow:
+
+```text
+Finding
+   ↓
+Evidence
+   ↓
+Report
+   ↓
+Source
+   ↓
+Observation date
+```
+
+This is a core product requirement.
+
+---
+
+# 52. Error Recovery
+
+Errors should provide a clear next action where possible.
+
+Examples:
+
+```text
+History temporarily unavailable
+
+[ Retry ]
+```
+
+```text
+Unable to save report
+
+Check your connection and try again.
+
+[ Try again ]
+```
+
+Do not show generic:
+
+```text
+Something went wrong :)
+```
+
+or decorative error pages.
+
+---
+
+# 53. Data Freshness
+
+The frontend should not imply that an assessment is continuously live.
+
+When appropriate, display:
+
+```text
+Last updated
+14 Aug 2026, 10:42
+```
+
+This allows the user to understand when the current assessment was calculated.
+
+---
+
+# 54. Security Boundaries
+
+The frontend must never expose:
+
+* API keys
+* Hindsight credentials
+* Groq credentials
+* internal service URLs
+* internal exception traces
+* database credentials
+
+User-provided report text must be treated as untrusted input.
+
+The frontend must not execute user-provided content as code or HTML.
+
+---
+
+# 55. Performance
+
+The initial vehicle view should prioritize:
+
+1. vehicle identity
+2. current assessment
+3. evidence confidence
+4. timeline
+
+Secondary details may load progressively.
+
+Do not block the entire page because an optional explanation is unavailable.
+
+---
+
+# 56. Accessibility and Progressive Disclosure
+
+Progressive disclosure must not hide essential evidence.
+
+The following should be immediately visible:
+
+* current assessment
+* evidence confidence
+* number of relevant reports
+* observation span
+* major supporting/contradictory state
+
+The following may be expanded:
+
+* calculation explanation
+* complete source history
+* individual report details
+* unresolved evidence
+
+---
+
+# 57. Visual Quality Checklist
+
+Before accepting a frontend implementation, check:
+
+### Layout
+
+* Does the application look like a real information product?
+* Is the primary content visible without scrolling through a hero section?
+* Is spacing consistent?
+* Is the hierarchy obvious?
+
+### Information
+
+* Can the user see the timeline?
+* Can the user inspect supporting evidence?
+* Can the user inspect contradictory evidence?
+* Can the user identify the source?
+* Can the user identify when the observation occurred?
+
+### Visual restraint
+
+* Are gradients absent?
+* Are unnecessary rounded cards absent?
+* Are unnecessary shadows absent?
+* Are decorative AI graphics absent?
+* Are animated effects limited to functional feedback?
+
+### Trust
+
+* Are claims distinguishable from findings?
+* Are contradictions preserved?
+* Is evidence confidence clearly defined?
+* Are source reliability and professional qualification kept separate?
+* Is the interface avoiding unsupported certainty?
+
+---
+
+# 58. Frontend Acceptance Criteria
+
+The frontend is complete when:
+
+### Vehicle access
+
+* [ ] A user can enter a vehicle identifier.
+* [ ] Invalid identifiers receive useful validation.
+* [ ] A vehicle history can be loaded.
+* [ ] Empty history is distinguishable from unavailable history.
+
+### History
+
+* [ ] Reports appear chronologically.
+* [ ] Source type is visible.
+* [ ] Observation dates are visible.
+* [ ] Original report text remains accessible.
+* [ ] Historical reports are not rewritten according to current findings.
+
+### Assessment
+
+* [ ] Current findings are visible.
+* [ ] Evidence confidence is visible.
+* [ ] Confidence has an explanatory disclosure.
+* [ ] Supporting evidence is accessible.
+* [ ] Contradictory evidence is accessible.
+* [ ] Unresolved evidence is accessible.
+
+### Sources
+
+* [ ] Source type is visible.
+* [ ] Source history can be inspected.
+* [ ] Historical reliability is clearly described as reporting reliability.
+* [ ] The interface does not imply professional qualification.
+
+### Reporting
+
+* [ ] A user can submit a report.
+* [ ] Required fields are validated.
+* [ ] Submission state is visible.
+* [ ] Successful submission updates vehicle history.
+* [ ] Failed submission provides recovery.
+
+### Failure handling
+
+* [ ] Hindsight unavailability is explicitly represented.
+* [ ] LLM unavailability does not destroy the evidence view.
+* [ ] Backend errors do not expose internal implementation details.
+
+### Accessibility
+
+* [ ] Keyboard navigation works.
+* [ ] Form controls have labels.
+* [ ] Focus states are visible.
+* [ ] Status messages are accessible.
+* [ ] Color is not the only indicator of meaning.
+
+### Visual quality
+
+* [ ] The interface does not resemble a generic AI dashboard.
+* [ ] There are no unnecessary gradients.
+* [ ] There are no decorative AI illustrations.
+* [ ] There are no fake metrics.
+* [ ] Cards are used only where structurally useful.
+* [ ] The timeline and evidence remain the visual focus.
+
+---
+
+# 59. Definition of Done
+
+Doc 16 is implemented when a user can:
+
+```text
+Enter vehicle
+      ↓
+Load history
+      ↓
+Understand chronology
+      ↓
+See current assessment
+      ↓
+Inspect evidence confidence
+      ↓
+Inspect supporting evidence
+      ↓
+Inspect contradictory evidence
+      ↓
+Inspect source history
+      ↓
+Add another report
+      ↓
+See the assessment evolve
+```
+
+The interface should make the reasoning traceable without requiring the user to understand the underlying AI or memory infrastructure.
+
+The defining visual principle is:
+
+> **Show the evidence first. Let the assessment emerge from it.**
+
+---
+
+# 60. Scope Boundary
+
+This document defines frontend behavior and presentation.
+
+It does not define:
+
+* Hindsight internals
+* memory schemas
+* evidence-weight calculations
+* LLM prompts
+* model selection
+* backend persistence
+* deployment infrastructure
+
+Those responsibilities belong to the corresponding backend and infrastructure specifications.
