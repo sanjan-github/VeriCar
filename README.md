@@ -80,4 +80,25 @@ It does not calculate evidence confidence or produce a final assessment.
 
 ## Status
 
-The backend foundation and structured report-ingestion layer are implemented. Evidence processing, LLM reasoning, assessment APIs, and frontend functionality will be implemented incrementally.
+The backend, deterministic evidence engine, Hindsight integration, Groq explanation layer, assessment APIs, and browser UI are implemented. The current UI focuses on the transmission shift-behavior finding while the evidence model is validated against representative scenarios.
+
+## Run the application
+
+The browser UI is served by the FastAPI application; do not open `frontend/index.html` directly as a `file://` URL.
+
+```bash
+uvicorn backend.app.main:app --reload
+```
+
+Then open:
+
+`http://127.0.0.1:8000/`
+
+The application requires a reachable Hindsight service for historical retrieval and report persistence. Configure `HINDSIGHT_BASE_URL` and `HINDSIGHT_API_KEY` as required by the deployed Hindsight instance. Groq is optional: if its API is unavailable, the deterministic evidence assessment and timeline remain available.
+
+### Common local failure modes
+
+- **The page loads but review fails:** verify that Hindsight is running and that `HINDSIGHT_BASE_URL` is reachable.
+- **The browser shows a connection error:** verify that FastAPI is running on `127.0.0.1:8000`.
+- **Opening `frontend/index.html` directly does not work:** use the FastAPI URL above so the browser can call the backend API.
+- **Automated explanation is unavailable:** this does not invalidate the deterministic assessment; Groq is an optional explanation layer.
