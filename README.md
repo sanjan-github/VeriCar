@@ -112,9 +112,37 @@ If Groq is unavailable or returns invalid output, the deterministic assessment r
 
 If Hindsight is unavailable, the assessment endpoints return `503 MEMORY_UNAVAILABLE`.
 
+## Frontend
+
+The application is served from the FastAPI process at:
+
+`http://127.0.0.1:8000/`
+
+The current interface provides:
+
+- vehicle ID lookup
+- deterministic evidence assessment
+- evidence confidence details
+- supporting, contradicting, and unresolved timeline entries
+- evidence-backed Groq explanation when available
+- report submission for owner, buyer, mechanic, and inspector sources
+- explicit memory-unavailable handling
+- purchase-safety language without presenting an assessment as a diagnosis
+
+The frontend is vanilla HTML, CSS, and JavaScript. It has no API credentials and communicates with the backend through same-origin HTTP requests.
+
 ## Status
 
-The backend now supports:
+The application now supports:
+
+- structured report ingestion
+- persistent vehicle and source memory
+- historical recall
+- deterministic evidence reconstruction
+- evidence confidence and contradiction handling
+- deterministic vehicle assessment API
+- evidence-backed Groq explanation API
+- initial vehicle evidence frontend
 
 - structured report ingestion
 - persistent vehicle and source memory
