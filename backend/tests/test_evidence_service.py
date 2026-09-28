@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from backend.app.models.evidence import EvidenceRecord, SourceHistory
+from backend.app.models.evidence import EvidenceRecord, Polarity, SourceHistory, SourceType
 from backend.app.services.evidence_service import EvidenceService
 
 
@@ -14,15 +14,15 @@ def service():
 def evidence(
     evidence_id: str,
     source_id: str,
-    source_type: str,
-    polarity: str,
+    source_type: SourceType,
+    polarity: Polarity,
     *,
     issue_key: str = "transmission_shift_behavior",
     resolved_reports: int = 0,
     corroborated: int = 0,
     contradicted: int = 0,
     dependency_group: str | None = None,
-):
+) -> EvidenceRecord:
     return EvidenceRecord(
         evidence_id=evidence_id,
         issue_key=issue_key,

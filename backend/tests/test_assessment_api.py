@@ -2,9 +2,8 @@ from datetime import date
 
 from fastapi.testclient import TestClient
 
-from backend.app.main import app
+from backend.app.main import app, get_groq_explanation_service, get_memory_service
 from backend.app.models.memory import MemoryEvidence
-from backend.app.services.evidence_service import EvidenceService
 
 
 class AssessmentMemoryService:
@@ -99,4 +98,46 @@ def test_get_vehicle_assessment_distinguishes_memory_unavailable():
 
     assert response.status_code == 503
     assert response.json()["detail"]["error"]["code"] == "MEMORY_UNAVAILABLE"
+    app.dependency_overrides.clear()
+
+
+def test_groq_failure_keeps_deterministic_assessment_available():
+    class UnavailableExplanationService:
+        async def explain(self, assessment):
+            raise RuntimeError("Groq unavailable")
+
+    app.dependency_overrides.clear()
+    app.dependency_overrides[get_memory_service] = lambda: AssessmentMemoryService(
+        [
+            memory(
+                memory_id="m-groq-failure",
+                text="Hesitation during the 2-to-3 shift.",
+                metadata={
+                    "report_id": "RPT-GROQ-FAILURE",
+                    "source_id": "SRC-MECH-GROQ",
+                    "source_type": "mechanic",
+                    "vehicle_id": "VEH-001",
+                    "observed_at": "2026-09-20",
+                    "issue_candidate": "transmission_shift_behavior",
+                    "polarity": "supporting",
+                },
+            )
+        ]
+    )
+    app.dependency_overrides[get_groq_explanation_service] = (
+        lambda: UnavailableExplanationService()
+    )
+
+    with TestClient(app) as client:
+        response = client.get(
+            "/api/vehicles/VEH-001/assessment/explanation",
+            params={"issue": "transmission_shift_behavior"},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_status"] == "available"
+    assert body["findings"][0]["supporting_sources"] == 1
+    assert body["explanation_status"] == "unavailable"
+    assert body["explanation"] is None
     app.dependency_overrides.clear()
