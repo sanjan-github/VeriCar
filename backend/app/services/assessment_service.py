@@ -17,11 +17,11 @@ class AssessmentService:
     async def assess_vehicle(
         self,
         *,
-        vin: str,
+        vehicle_id: str,
         issue_key: str,
         memory_service: Any,
     ):
-        recalled = await memory_service.recall_vehicle_history(vin, issue_key)
+        recalled = await memory_service.recall_vehicle_history(vehicle_id, issue_key)
         records = [self._to_evidence_record(item) for item in recalled]
         assessment = self._evidence_service.classify(issue_key, records)
         return assessment, "available" if recalled else "empty"
