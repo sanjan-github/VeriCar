@@ -36,7 +36,7 @@ class HindsightRepository:
             bank_id=f"vehicle_{report.vin}",
             content=report.text,
             context="vehicle history report",
-            timestamp=report.observed_at.isoformat(),
+            timestamp=report.observed_at,
             document_id=f"report_{report.report_id}",
             metadata={
                 "vin": report.vin,
