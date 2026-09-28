@@ -3,3 +3,4 @@ uvicorn[standard]
 hindsight-client==0.10.1
 pytest
 pytest-asyncio
+httpx
