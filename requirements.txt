@@ -1,3 +1,6 @@
+streamlit>=1.40,<2
+pydantic>=2.8,<3
+# Existing verification dependencies retained during the migration.
 fastapi
 uvicorn[standard]
 hindsight-client==0.10.1
