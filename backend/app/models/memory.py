@@ -13,6 +13,8 @@ class VehicleReport:
     observed_at: datetime
     vehicle_id: str | None = None
     submitted_at: datetime | None = None
+    issue_candidate: str | None = None
+    polarity: str = "unresolved"
 
 
 @dataclass(frozen=True)

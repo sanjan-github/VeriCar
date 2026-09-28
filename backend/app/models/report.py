@@ -61,6 +61,7 @@ def to_vehicle_report(
     report_id: str,
     request: ReportSubmission,
     submitted_at: datetime,
+    claim: Claim | None = None,
 ) -> VehicleReport:
     """Convert an API submission into the application's memory model."""
     observed_at = datetime.combine(
@@ -78,6 +79,8 @@ def to_vehicle_report(
         observed_at=observed_at,
         vehicle_id=request.vehicle_id,
         submitted_at=submitted_at,
+        issue_candidate=claim.issue_candidate if claim else None,
+        polarity=claim.polarity if claim else "unresolved",
     )
 
 

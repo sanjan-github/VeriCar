@@ -50,6 +50,8 @@ class HindsightRepository:
                     if report.submitted_at is not None
                     else None
                 ),
+                "issue_candidate": report.issue_candidate,
+                "polarity": report.polarity,
             },
             tags=["vehicle", f"vin:{report.vin}", f"source:{report.source_id}"],
             retain_async=False,
@@ -67,6 +69,8 @@ class HindsightRepository:
                 "source_id": report.source_id,
                 "source_type": report.source_type,
                 "report_id": report.report_id,
+                "issue_candidate": report.issue_candidate,
+                "polarity": report.polarity,
             },
             tags=["source", f"source:{report.source_id}", f"vin:{report.vin}"],
             retain_async=False,
