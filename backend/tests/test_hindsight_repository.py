@@ -59,6 +59,7 @@ async def test_retain_report_uses_stable_identifiers():
     assert kwargs["bank_id"] == "vehicle_TEST-VIN-001"
     assert kwargs["document_id"] == "report_report-1"
     assert kwargs["metadata"]["source_type"] == "inspector"
+    assert kwargs["timestamp"] == report.observed_at
     assert kwargs["retain_async"] is False
 
 
