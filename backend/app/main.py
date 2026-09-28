@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from logging import getLogger
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.app.config import settings
 from backend.app.models.report import (
@@ -18,6 +21,7 @@ from backend.app.services.groq_explanation_service import GroqExplanationService
 
 
 logger = getLogger(__name__)
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
 
 @asynccontextmanager
@@ -60,6 +64,18 @@ def get_assessment_service() -> AssessmentService:
 
 def get_groq_explanation_service() -> GroqExplanationService:
     return GroqExplanationService()
+
+
+@app.get("/", include_in_schema=False)
+def frontend() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+app.mount(
+    "/assets",
+    StaticFiles(directory=FRONTEND_DIR),
+    name="frontend-assets",
+)
 
 
 @app.get("/health")
@@ -145,7 +161,7 @@ async def _get_assessment(
 ):
     try:
         return await assessment_service.assess_vehicle(
-            vin=vehicle_id,
+            vehicle_id=vehicle_id,
             issue_key=issue,
             memory_service=memory_service,
         )
@@ -204,7 +220,7 @@ async def get_vehicle_assessment_explanation(
 
     try:
         explanation = await explanation_service.explain(assessment)
-    except Exception as exc:
+    except Exception:
         logger.exception("Failed to generate assessment explanation for vehicle %s", vehicle_id)
         return {
             **_assessment_payload(vehicle_id, assessment, memory_status),
