@@ -1,0 +1,136 @@
+from __future__ import annotations
+
+from datetime import date, datetime, time, timezone
+from typing import Literal
+from uuid import uuid4
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from backend.app.models.memory import VehicleReport
+
+
+SourceType = Literal["owner", "buyer", "mechanic", "inspector"]
+ClaimPolarity = Literal["supporting", "contradicting", "unresolved"]
+
+REPORT_TEXT_MAX_LENGTH = 10_000
+
+
+class ReportSubmission(BaseModel):
+    """Validated API payload for a vehicle history report."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    vehicle_id: str = Field(min_length=1, max_length=100)
+    vin: str | None = Field(default=None, min_length=1, max_length=100)
+    source_id: str = Field(min_length=1, max_length=100)
+    source_type: SourceType
+    observed_at: date
+    text: str = Field(min_length=1, max_length=REPORT_TEXT_MAX_LENGTH)
+
+    @field_validator("vehicle_id", "source_id", "text", "vin")
+    @classmethod
+    def reject_blank_values(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+
+        value = value.strip()
+        if not value:
+            raise ValueError("value must not be blank")
+        return value
+
+
+class Claim(BaseModel):
+    """A structured interpretation of what a report states."""
+
+    claim_id: str
+    report_id: str
+    text: str
+    issue_candidate: str | None
+    polarity: ClaimPolarity
+
+
+def generate_report_id() -> str:
+    return f"RPT-{uuid4().hex[:12].upper()}"
+
+
+def generate_claim_id() -> str:
+    return f"CLM-{uuid4().hex[:12].upper()}"
+
+
+def to_vehicle_report(
+    report_id: str,
+    request: ReportSubmission,
+    submitted_at: datetime,
+) -> VehicleReport:
+    """Convert an API submission into the application's memory model."""
+    observed_at = datetime.combine(
+        request.observed_at,
+        time.min,
+        tzinfo=timezone.utc,
+    )
+
+    return VehicleReport(
+        report_id=report_id,
+        vin=request.vin or request.vehicle_id,
+        source_id=request.source_id,
+        source_type=request.source_type,
+        text=request.text,
+        observed_at=observed_at,
+        vehicle_id=request.vehicle_id,
+        submitted_at=submitted_at,
+    )
+
+
+def build_claim(report_id: str, text: str) -> Claim:
+    """Create a deterministic V1 claim without making a mechanical diagnosis."""
+    normalized = " ".join(text.split())
+    lower = normalized.lower()
+
+    if any(
+        phrase in lower
+        for phrase in (
+            "no issue",
+            "no problem",
+            "works perfectly",
+            "working perfectly",
+            "excellent condition",
+        )
+    ):
+        polarity: ClaimPolarity = "contradicting"
+    elif any(
+        phrase in lower
+        for phrase in (
+            "issue",
+            "problem",
+            "hesitation",
+            "hard shift",
+            "rough shift",
+            "failure",
+            "delayed shift",
+        )
+    ):
+        polarity = "supporting"
+    else:
+        polarity = "unresolved"
+
+    if any(
+        term in lower
+        for term in ("transmission", "gearbox", "shift", "shifting", "gear")
+    ):
+        issue_candidate = "transmission_shift_behavior"
+    else:
+        issue_candidate = None
+
+    claim_text = (
+        normalized
+        if issue_candidate is None
+        else f"{normalized}"
+    )
+
+    return Claim(
+        claim_id=generate_claim_id(),
+        report_id=report_id,
+        text=claim_text,
+        issue_candidate=issue_candidate,
+        polarity=polarity,
+    )
