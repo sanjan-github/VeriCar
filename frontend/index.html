@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="VeriCar vehicle history evidence review">
+  <title>VeriCar — Vehicle Evidence</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="VeriCar home"><span class="brand-mark">V</span><span>VeriCar</span></a>
+    <span class="product-label">Vehicle history evidence</span>
+  </header>
+  <main class="shell">
+    <section class="search-panel">
+      <div>
+        <p class="eyebrow">VEHICLE REVIEW</p>
+        <h1>What does the accumulated evidence say?</h1>
+        <p class="lede">Review historical reports, corroboration, contradiction, and evidence strength for a vehicle.</p>
+      </div>
+      <form id="search-form" class="search-form">
+        <label for="vehicle-id">Vehicle ID</label>
+        <div class="search-row">
+          <input id="vehicle-id" name="vehicle-id" type="text" placeholder="e.g. VEH-001" autocomplete="off" required>
+          <button type="submit">Review vehicle</button>
+        </div>
+      </form>
+    </section>
+    <div id="status-banner" class="status-banner" hidden role="status"></div>
+    <section id="empty-state" class="empty-state">
+      <p class="eyebrow">NO VEHICLE SELECTED</p>
+      <h2>Start with a vehicle ID.</h2>
+      <p>VeriCar will retrieve the historical evidence available in persistent memory. It will not invent missing history.</p>
+    </section>
+    <section id="vehicle-view" hidden>
+      <div class="vehicle-heading">
+        <div><p class="eyebrow">VEHICLE</p><h2 id="vehicle-title"></h2></div>
+        <span id="memory-status" class="status-pill"></span>
+      </div>
+      <div class="finding-layout">
+        <article class="finding-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">CURRENT FINDING</p><h3>Transmission shift behavior</h3></div>
+            <span id="finding-state" class="finding-state"></span>
+          </div>
+          <div class="finding-summary">
+            <span class="summary-label">Evidence confidence</span>
+            <strong id="confidence-value">—</strong>
+            <p id="confidence-copy">No assessment loaded.</p>
+          </div>
+          <button id="confidence-toggle" class="text-button" type="button" aria-expanded="false">How is this calculated?</button>
+          <div id="confidence-details" class="details-panel" hidden>
+            <div class="metric-grid">
+              <div><span>Independent support</span><strong id="support-count">0</strong></div>
+              <div><span>Independent contradiction</span><strong id="contradiction-count">0</strong></div>
+              <div><span>Support weight</span><strong id="support-weight">0.00</strong></div>
+              <div><span>Contradiction weight</span><strong id="contradiction-weight">0.00</strong></div>
+            </div>
+            <p class="disclaimer">Evidence-based estimate, not a probability or mechanical diagnosis.</p>
+          </div>
+        </article>
+        <article class="explanation-panel">
+          <div class="section-heading">
+            <div><p class="eyebrow">WHY THIS ASSESSMENT?</p><h3>Evidence-backed explanation</h3></div>
+            <span id="explanation-status" class="muted"></span>
+          </div>
+          <div id="explanation-content" class="explanation-content"><p class="muted">Explanation will appear when evidence is available.</p></div>
+        </article>
+      </div>
+      <section class="evidence-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">EVIDENCE</p><h3>History timeline</h3></div>
+          <span id="evidence-count" class="muted"></span>
+        </div>
+        <div id="timeline" class="timeline"></div>
+      </section>
+      <section class="report-section">
+        <div class="section-heading"><div><p class="eyebrow">ADD HISTORY</p><h3>Record another report</h3></div></div>
+        <form id="report-form" class="report-form">
+          <input id="report-vehicle-id" type="hidden">
+          <div class="form-grid">
+            <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128"></label>
+            <label>Source ID<input id="report-source-id" type="text" maxlength="128" required></label>
+            <label>Source type<select id="report-source-type" required><option value="owner">Owner</option><option value="buyer">Buyer</option><option value="mechanic">Mechanic</option><option value="inspector">Inspector</option></select></label>
+            <label>Observed date<input id="report-observed-at" type="date" required></label>
+          </div>
+          <label>Report<textarea id="report-text" maxlength="10000" rows="5" placeholder="Describe what was observed. Preserve the original wording where practical." required></textarea></label>
+          <div class="form-actions"><button type="submit">Save report</button><span id="report-result" class="muted"></span></div>
+        </form>
+      </section>
+      <p class="safety-note">VeriCar assessments reflect the reports available to the system. Reports may be incomplete, inaccurate, outdated, or contradictory. Obtain an independent vehicle inspection before making a purchase decision.</p>
+    </section>
+  </main>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

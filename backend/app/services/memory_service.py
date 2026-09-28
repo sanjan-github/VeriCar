@@ -23,10 +23,10 @@ class MemoryService:
     def __init__(self, repository: HindsightRepository) -> None:
         self._repository = repository
 
-    async def ensure_vehicle_bank(self, vin: str) -> None:
+    async def ensure_vehicle_bank(self, vehicle_id: str) -> None:
         await self._repository.ensure_bank(
-            bank_id=f"vehicle_{vin}",
-            name=f"Vehicle history {vin}",
+            bank_id=f"vehicle_{vehicle_id}",
+            name=f"Vehicle history {vehicle_id}",
             mission=VEHICLE_MISSION,
         )
 
@@ -43,21 +43,22 @@ class MemoryService:
         return vehicle_result, source_result
 
     async def retain_vehicle_report(self, report: VehicleReport):
-        await self.ensure_vehicle_bank(report.vin)
+        vehicle_id = report.vehicle_id or report.vin
+        await self.ensure_vehicle_bank(vehicle_id)
         return await self._repository.retain_report(report)
 
     async def retain_source_report(self, report: VehicleReport):
         await self.ensure_source_bank(report.source_id)
         return await self._repository.retain_source_report(report)
 
-    async def recall_vehicle_history(self, vin: str, query: str) -> list[MemoryEvidence]:
-        return await self._repository.recall_vehicle(vin, query)
+    async def recall_vehicle_history(self, vehicle_id: str, query: str) -> list[MemoryEvidence]:
+        return await self._repository.recall_vehicle(vehicle_id, query)
 
     async def recall_source_history(self, source_id: str, query: str) -> list[MemoryEvidence]:
         return await self._repository.recall_source(source_id, query)
 
-    async def explain_assessment_change(self, vin: str, assessment_context: str) -> str:
-        return await self._repository.reflect(vin, assessment_context)
+    async def explain_assessment_change(self, vehicle_id: str, assessment_context: str) -> str:
+        return await self._repository.reflect(vehicle_id, assessment_context)
 
     async def check_version(self):
         return await self._repository.check_version()

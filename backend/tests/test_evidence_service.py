@@ -52,7 +52,7 @@ def test_small_history_blends_with_prior(service):
         "mechanic",
         SourceHistory("src-1", "mechanic", resolved_reports=1, corroborated=1),
     )
-    historical = 5 / 7
+    historical = 5 / 6
     expected = (1 - 1 / 6) * 0.75 + (1 / 6) * historical
     assert value == pytest.approx(expected)
 

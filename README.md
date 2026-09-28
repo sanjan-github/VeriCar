@@ -17,13 +17,18 @@ Python backend
 
 The backend is the system orchestrator. External service credentials are never exposed to the frontend.
 
+The deterministic evidence engine is the source of truth for findings, confidence, source counts, support, and contradiction. Groq is used only to explain that evidence in natural language.
+
 ## Repository Structure
 
 ```text
 backend/
 └── app/
     ├── main.py
-    └── config.py
+    ├── config.py
+    ├── models/
+    ├── repositories/
+    └── services/
 
 frontend/
 docs/
@@ -41,6 +46,12 @@ Activate the environment using your operating system's shell, then install depen
 
 ```bash
 pip install -r requirements.txt
+```
+
+Copy the environment template and configure Hindsight. Configure Groq only when explanation generation is needed:
+
+```text
+.env
 ```
 
 Start the API:
@@ -76,8 +87,69 @@ Example request:
 
 The endpoint validates the report, creates a traceable claim, and stores the report in both vehicle and source Hindsight memory.
 
-It does not calculate evidence confidence or produce a final assessment.
+### Get deterministic vehicle assessment
+
+`GET /api/vehicles/{vehicle_id}/assessment?issue=transmission_shift_behavior`
+
+The assessment endpoint recalls historical memory, reconstructs evidence records, and applies the deterministic evidence model. It returns evidence status, confidence, support/contradiction weights, source counts, and underlying evidence.
+
+### Get evidence-backed explanation
+
+`GET /api/vehicles/{vehicle_id}/assessment/explanation?issue=transmission_shift_behavior`
+
+This endpoint first computes the deterministic assessment, then asks Groq to explain that assessment.
+
+The LLM receives the structured assessment and evidence only. It is not allowed to create source counts, dates, reliability values, confidence values, diagnoses, or evidence IDs. Returned evidence IDs are validated against the assessment before the explanation is exposed.
+
+If Groq is unavailable or returns invalid output, the deterministic assessment remains available and the response reports:
+
+```json
+{
+  "explanation_status": "unavailable",
+  "explanation": null
+}
+```
+
+If Hindsight is unavailable, the assessment endpoints return `503 MEMORY_UNAVAILABLE`.
+
+## Frontend
+
+The application is served from the FastAPI process at:
+
+`http://127.0.0.1:8000/`
+
+The current interface provides:
+
+- vehicle ID lookup
+- deterministic evidence assessment
+- evidence confidence details
+- supporting, contradicting, and unresolved timeline entries
+- evidence-backed Groq explanation when available
+- report submission for owner, buyer, mechanic, and inspector sources
+- explicit memory-unavailable handling
+- purchase-safety language without presenting an assessment as a diagnosis
+
+The frontend is vanilla HTML, CSS, and JavaScript. It has no API credentials and communicates with the backend through same-origin HTTP requests.
 
 ## Status
 
-The backend foundation and structured report-ingestion layer are implemented. Evidence processing, LLM reasoning, assessment APIs, and frontend functionality will be implemented incrementally.
+The application now supports:
+
+- structured report ingestion
+- persistent vehicle and source memory
+- historical recall
+- deterministic evidence reconstruction
+- evidence confidence and contradiction handling
+- deterministic vehicle assessment API
+- evidence-backed Groq explanation API
+- initial vehicle evidence frontend
+
+- structured report ingestion
+- persistent vehicle and source memory
+- historical recall
+- deterministic evidence reconstruction
+- evidence confidence and contradiction handling
+- deterministic vehicle assessment API
+- evidence-backed Groq explanation API
+
+Frontend functionality, broader issue extraction, live Hindsight validation, and production deployment remain to be implemented.
