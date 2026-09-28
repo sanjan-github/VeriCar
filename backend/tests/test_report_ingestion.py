@@ -9,6 +9,7 @@ from backend.app.models.report import (
     REPORT_TEXT_MAX_LENGTH,
     ReportSubmission,
     build_claim,
+    generate_report_id,
     to_vehicle_report,
 )
 
@@ -83,6 +84,25 @@ def test_to_vehicle_report_normalizes_date_to_utc_midnight():
     assert report.submitted_at == submitted_at
 
 
+def test_to_vehicle_report_keeps_vin_optional_and_separate_from_vehicle_id():
+    request = ReportSubmission(
+        vehicle_id="VEH-001",
+        source_id="SRC-001",
+        source_type="inspector",
+        observed_at="2026-09-20",
+        text="Transmission hesitation.",
+    )
+
+    report = to_vehicle_report(
+        "RPT-001",
+        request,
+        datetime(2026, 9, 28, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert report.vehicle_id == "VEH-001"
+    assert report.vin is None
+
+
 def test_build_claim_normalizes_transmission_issue():
     claim = build_claim(
         "RPT-001",
@@ -107,6 +127,16 @@ def test_build_claim_leaves_unrelated_text_unresolved():
 
     assert claim.issue_candidate is None
     assert claim.polarity == "unresolved"
+
+
+def test_report_id_is_stable_for_idempotency_key_and_request():
+    first = generate_report_id("request-123", '{"vehicle_id":"VEH-001"}')
+    retry = generate_report_id("request-123", '{"vehicle_id":"VEH-001"}')
+    changed_request = generate_report_id("request-123", '{"vehicle_id":"VEH-002"}')
+
+    assert first == retry
+    assert first != changed_request
+    assert first.startswith("RPT-")
 
 
 def test_create_report_endpoint():
@@ -137,6 +167,38 @@ def test_create_report_endpoint():
         "source_memory": "stored",
     }
     assert len(memory.reports) == 1
+
+
+def test_create_report_retry_reuses_report_identity():
+    memory = FakeMemoryService()
+    app = make_app(memory)
+    payload = {
+        "vehicle_id": "VEH-001",
+        "source_id": "SRC-001",
+        "source_type": "inspector",
+        "observed_at": "2026-09-20",
+        "text": "Transmission hesitation observed.",
+    }
+
+    with TestClient(app) as client:
+        first = client.post(
+            "/api/reports",
+            json=payload,
+            headers={"Idempotency-Key": "request-123"},
+        )
+        retry = client.post(
+            "/api/reports",
+            json=payload,
+            headers={"Idempotency-Key": "request-123"},
+        )
+
+    assert first.status_code == 201
+    assert retry.status_code == 201
+    assert first.json()["report"]["report_id"] == retry.json()["report"]["report_id"]
+    assert [report.report_id for report in memory.reports] == [
+        first.json()["report"]["report_id"],
+        first.json()["report"]["report_id"],
+    ]
 
 
 def test_create_report_rejects_invalid_input_before_memory_write():

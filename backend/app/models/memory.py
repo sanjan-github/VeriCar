@@ -6,7 +6,7 @@ from typing import Any
 @dataclass(frozen=True)
 class VehicleReport:
     report_id: str
-    vin: str
+    vin: str | None
     source_id: str
     source_type: str
     text: str

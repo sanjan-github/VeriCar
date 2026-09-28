@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timezone
 from typing import Literal
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -49,8 +49,15 @@ class Claim(BaseModel):
     polarity: ClaimPolarity
 
 
-def generate_report_id() -> str:
-    return f"RPT-{uuid4().hex[:12].upper()}"
+def generate_report_id(
+    idempotency_key: str | None = None,
+    request_fingerprint: str | None = None,
+) -> str:
+    if idempotency_key is None:
+        return f"RPT-{uuid4().hex.upper()}"
+
+    identity = f"{idempotency_key.strip()}\0{request_fingerprint or ''}"
+    return f"RPT-{uuid5(NAMESPACE_URL, identity).hex.upper()}"
 
 
 def generate_claim_id() -> str:
@@ -72,7 +79,7 @@ def to_vehicle_report(
 
     return VehicleReport(
         report_id=report_id,
-        vin=request.vin or request.vehicle_id,
+        vin=request.vin,
         source_id=request.source_id,
         source_type=request.source_type,
         text=request.text,

@@ -56,6 +56,41 @@ async def test_retain_report_uses_stable_vehicle_identifier():
 
 
 @pytest.mark.asyncio
+async def test_retain_source_report_preserves_vehicle_and_report_metadata():
+    fake = FakeHindsight()
+    repository = HindsightRepository(fake)
+    observed_at = datetime(2026, 9, 20, 10, 0, tzinfo=timezone.utc)
+    submitted_at = datetime(2026, 9, 22, 12, 0, tzinfo=timezone.utc)
+    report = VehicleReport(
+        report_id="RPT-001", vehicle_id="VEH-001", vin="VIN-001",
+        source_id="SRC-001", source_type="inspector",
+        text="Transmission hesitation observed.", observed_at=observed_at,
+        submitted_at=submitted_at, issue_candidate="transmission_shift_behavior",
+        polarity="supporting",
+    )
+
+    await repository.retain_source_report(report)
+
+    _, kwargs = fake.calls[-1]
+    assert kwargs["bank_id"] == "source_SRC-001"
+    assert kwargs["document_id"] == "report_RPT-001"
+    assert kwargs["timestamp"] == observed_at
+    assert kwargs["metadata"] == {
+        "vehicle_id": "VEH-001",
+        "vin": "VIN-001",
+        "source_id": "SRC-001",
+        "source_type": "inspector",
+        "report_id": "RPT-001",
+        "observed_at": observed_at.isoformat(),
+        "submitted_at": submitted_at.isoformat(),
+        "issue_candidate": "transmission_shift_behavior",
+        "polarity": "supporting",
+    }
+    assert "vehicle:VEH-001" in kwargs["tags"]
+    assert "vin:VIN-001" in kwargs["tags"]
+
+
+@pytest.mark.asyncio
 async def test_retain_source_outcome_preserves_resolution_metadata():
     fake = FakeHindsight()
     repository = HindsightRepository(fake)

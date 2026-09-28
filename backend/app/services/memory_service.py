@@ -45,7 +45,9 @@ class MemoryService:
         return vehicle_result, source_result
 
     async def retain_vehicle_report(self, report: VehicleReport):
-        vehicle_id = report.vehicle_id or report.vin
+        vehicle_id = report.vehicle_id
+        if not vehicle_id:
+            raise ValueError("VehicleReport.vehicle_id is required for vehicle memory.")
         await self.ensure_vehicle_bank(vehicle_id)
         return await self._repository.retain_report(report)
 
@@ -55,11 +57,14 @@ class MemoryService:
 
     async def resolve_source_outcomes(self, report: VehicleReport) -> None:
         """Record clear independent corroboration or contradiction events."""
+        vehicle_id = report.vehicle_id
+        if not vehicle_id:
+            raise ValueError("VehicleReport.vehicle_id is required for source resolution.")
         if not report.issue_candidate or report.polarity == "unresolved":
             return
 
         memories = await self.recall_vehicle_history(
-            report.vehicle_id or report.vin,
+            vehicle_id,
             report.issue_candidate,
         )
         reports: dict[str, dict] = {}
@@ -72,7 +77,7 @@ class MemoryService:
 
         reports[report.report_id] = {
             "report_id": report.report_id,
-            "vehicle_id": report.vehicle_id or report.vin,
+            "vehicle_id": vehicle_id,
             "source_id": report.source_id,
             "source_type": report.source_type,
             "issue_candidate": report.issue_candidate,
@@ -108,7 +113,7 @@ class MemoryService:
             await self._repository.retain_source_outcome(
                 source_id=source_id,
                 source_type=source_type,
-                vehicle_id=str(metadata.get("vehicle_id", report.vehicle_id or report.vin)),
+                vehicle_id=str(metadata.get("vehicle_id", vehicle_id)),
                 report_id=report_id,
                 triggering_report_id=report.report_id,
                 issue_candidate=report.issue_candidate,
@@ -127,7 +132,7 @@ class MemoryService:
             await self._repository.retain_source_outcome(
                 source_id=report.source_id,
                 source_type=report.source_type,
-                vehicle_id=report.vehicle_id or report.vin,
+                vehicle_id=vehicle_id,
                 report_id=report.report_id,
                 triggering_report_id=report.report_id,
                 issue_candidate=report.issue_candidate,

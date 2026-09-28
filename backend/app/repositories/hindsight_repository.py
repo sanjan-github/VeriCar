@@ -33,7 +33,12 @@ class HindsightRepository:
         )
 
     async def retain_report(self, report: VehicleReport) -> Any:
-        vehicle_id = report.vehicle_id or report.vin
+        vehicle_id = report.vehicle_id
+        if not vehicle_id:
+            raise ValueError("VehicleReport.vehicle_id is required for vehicle memory.")
+        tags = ["vehicle", f"vehicle:{vehicle_id}", f"source:{report.source_id}"]
+        if report.vin:
+            tags.append(f"vin:{report.vin}")
         return await self._client.aretain(
             bank_id=f"vehicle_{vehicle_id}",
             content=report.text,
@@ -55,11 +60,17 @@ class HindsightRepository:
                 "issue_candidate": report.issue_candidate,
                 "polarity": report.polarity,
             },
-            tags=["vehicle", f"vehicle:{vehicle_id}", f"vin:{report.vin}", f"source:{report.source_id}"],
+            tags=tags,
             retain_async=False,
         )
 
     async def retain_source_report(self, report: VehicleReport) -> Any:
+        vehicle_id = report.vehicle_id
+        if not vehicle_id:
+            raise ValueError("VehicleReport.vehicle_id is required for source memory.")
+        tags = ["source", f"source:{report.source_id}", f"vehicle:{vehicle_id}"]
+        if report.vin:
+            tags.append(f"vin:{report.vin}")
         return await self._client.aretain(
             bank_id=f"source_{report.source_id}",
             content=report.text,
@@ -67,15 +78,21 @@ class HindsightRepository:
             timestamp=report.observed_at,
             document_id=f"report_{report.report_id}",
             metadata={
-                "vehicle_id": report.vehicle_id,
+                "vehicle_id": vehicle_id,
                 "vin": report.vin,
                 "source_id": report.source_id,
                 "source_type": report.source_type,
                 "report_id": report.report_id,
+                "observed_at": report.observed_at.isoformat(),
+                "submitted_at": (
+                    report.submitted_at.isoformat()
+                    if report.submitted_at is not None
+                    else None
+                ),
                 "issue_candidate": report.issue_candidate,
                 "polarity": report.polarity,
             },
-            tags=["source", f"source:{report.source_id}", f"vin:{report.vin}"],
+            tags=tags,
             retain_async=False,
         )
 

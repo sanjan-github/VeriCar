@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from logging import getLogger
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -91,10 +91,19 @@ def health() -> dict[str, str]:
 @app.post("/api/reports", status_code=status.HTTP_201_CREATED)
 async def create_report(
     request: ReportSubmission,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     memory_service: MemoryService = Depends(get_memory_service),
 ) -> dict:
     """Validate and persist one vehicle history report."""
-    report_id = generate_report_id()
+    if idempotency_key is not None and not idempotency_key.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Idempotency-Key must not be blank.",
+        )
+    report_id = generate_report_id(
+        idempotency_key=idempotency_key,
+        request_fingerprint=(request.model_dump_json() if idempotency_key else None),
+    )
     submitted_at = datetime.now(timezone.utc)
     claim = build_claim(report_id, request.text)
     vehicle_report = to_vehicle_report(report_id, request, submitted_at, claim)

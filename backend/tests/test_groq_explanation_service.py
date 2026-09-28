@@ -33,7 +33,7 @@ def _assessment() -> Assessment:
 
 
 @pytest.mark.asyncio
-async def test_groq_explanation_validates_returned_evidence_ids():
+async def test_groq_explanation_validates_returned_evidence_ids(monkeypatch):
     captured = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -66,13 +66,13 @@ async def test_groq_explanation_validates_returned_evidence_ids():
     )
     transport = httpx.MockTransport(handler)
 
-    async with httpx.AsyncClient(transport=transport) as client:
-        original = httpx.AsyncClient
-        try:
-            httpx.AsyncClient = lambda **_: client
-            result = await service.explain(_assessment())
-        finally:
-            httpx.AsyncClient = original
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: original_client(transport=transport, **kwargs),
+    )
+    result = await service.explain(_assessment())
 
     assert result.evidence_ids == ["memory-1"]
     assert captured["body"]["temperature"] == 0
@@ -80,7 +80,7 @@ async def test_groq_explanation_validates_returned_evidence_ids():
 
 
 @pytest.mark.asyncio
-async def test_groq_explanation_rejects_unknown_evidence_id():
+async def test_groq_explanation_rejects_unknown_evidence_id(monkeypatch):
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -109,11 +109,11 @@ async def test_groq_explanation_rejects_unknown_evidence_id():
     )
     transport = httpx.MockTransport(handler)
 
-    async with httpx.AsyncClient(transport=transport) as client:
-        original = httpx.AsyncClient
-        try:
-            httpx.AsyncClient = lambda **_: client
-            with pytest.raises(ValueError, match="evidence ID"):
-                await service.explain(_assessment())
-        finally:
-            httpx.AsyncClient = original
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: original_client(transport=transport, **kwargs),
+    )
+    with pytest.raises(ValueError, match="evidence ID"):
+        await service.explain(_assessment())
