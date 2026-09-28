@@ -168,7 +168,20 @@ async function fetchJson(url, options = {}) {
   return payload;
 }
 
-async function checkBackend() {\n  const status = $("#api-status");\n  if (!status) return;\n  try {\n    const payload = await fetchJson("/health", { headers: { Accept: "application/json" } });\n    status.textContent = "API: " + (payload.status === "ok" ? "online" : "unavailable");\n    status.classList.add("online");\n  } catch {\n    status.textContent = "API: offline";\n    status.classList.add("offline");\n  }\n}\n\nasync function loadVehicle(vehicleId) {
+async function checkBackend() {
+  const status = $("#api-status");
+  if (!status) return;
+  try {
+    const payload = await fetchJson("/health", { headers: { Accept: "application/json" } });
+    status.textContent = "API: " + (payload.status === "ok" ? "online" : "unavailable");
+    status.classList.add("online");
+  } catch {
+    status.textContent = "API: offline";
+    status.classList.add("offline");
+  }
+}
+
+async function loadVehicle(vehicleId) {
   setStatus("Retrieving historical evidence…");
   elements.vehicleView.hidden = true;
   elements.searchButton.disabled = true;
@@ -240,4 +253,5 @@ elements.reportForm.addEventListener("submit", async (event) => {
 if (elements.reportObservedAt && !elements.reportObservedAt.value) {
   elements.reportObservedAt.value = new Date().toISOString().slice(0, 10);
 }
-\ncheckBackend();\n
+
+checkBackend();
