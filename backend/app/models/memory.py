@@ -11,6 +11,8 @@ class VehicleReport:
     source_type: str
     text: str
     observed_at: datetime
+    vehicle_id: str | None = None
+    submitted_at: datetime | None = None
 
 
 @dataclass(frozen=True)
