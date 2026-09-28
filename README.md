@@ -55,6 +55,29 @@ Health endpoint:
 GET http://127.0.0.1:8000/health
 ```
 
+## API
+
+### Create a vehicle history report
+
+`POST /api/reports`
+
+Example request:
+
+```json
+{
+  "vehicle_id": "VEH-001",
+  "vin": "VIN-VERICAR-001",
+  "source_id": "SRC-003",
+  "source_type": "mechanic",
+  "observed_at": "2026-04-19",
+  "text": "Transmission hesitation confirmed during test drive."
+}
+```
+
+The endpoint validates the report, creates a traceable claim, and stores the report in both vehicle and source Hindsight memory.
+
+It does not calculate evidence confidence or produce a final assessment.
+
 ## Status
 
-Initial backend foundation is in place. External memory, evidence processing, LLM reasoning, assessment APIs, and frontend functionality will be implemented incrementally.
+The backend foundation and structured report-ingestion layer are implemented. Evidence processing, LLM reasoning, assessment APIs, and frontend functionality will be implemented incrementally.
