@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from dataclasses import replace
 from math import exp
 
 from backend.app.models.evidence import (
@@ -36,7 +34,7 @@ CONFIDENCE_THRESHOLDS = {
 class EvidenceService:
     """Deterministic evidence classification and confidence calculation."""
 
-    def source_reliability(self, source_type: str) -> float:
+    def source_prior(self, source_type: str) -> float:
         if source_type not in SOURCE_PRIORS:
             raise ValueError(f"Unsupported source type: {source_type}")
         return SOURCE_PRIORS[source_type]
@@ -57,7 +55,7 @@ class EvidenceService:
         source_type: str,
         history: SourceHistory | None = None,
     ) -> float:
-        prior = self.source_reliability(source_type)
+        prior = self.source_prior(source_type)
         if history is None or history.resolved_reports == 0:
             return prior
 
