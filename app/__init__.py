@@ -1,0 +1,1 @@
+"""VeriCar Streamlit application package."""
