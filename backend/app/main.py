@@ -14,6 +14,7 @@ from backend.app.models.report import (
 from backend.app.services.hindsight_factory import create_hindsight_repository
 from backend.app.services.memory_service import MemoryService
 from backend.app.services.assessment_service import AssessmentService
+from backend.app.services.groq_explanation_service import GroqExplanationService
 
 
 logger = getLogger(__name__)
@@ -55,6 +56,10 @@ def get_memory_service(request: Request) -> MemoryService:
 
 def get_assessment_service() -> AssessmentService:
     return AssessmentService()
+
+
+def get_groq_explanation_service() -> GroqExplanationService:
+    return GroqExplanationService()
 
 
 @app.get("/health")
@@ -110,32 +115,7 @@ async def create_report(
     }
 
 
-@app.get("/api/vehicles/{vehicle_id}/assessment")
-async def get_vehicle_assessment(
-    vehicle_id: str,
-    issue: str = "transmission_shift_behavior",
-    memory_service: MemoryService = Depends(get_memory_service),
-    assessment_service: AssessmentService = Depends(get_assessment_service),
-) -> dict:
-    """Return the current deterministic assessment for one vehicle finding."""
-    try:
-        assessment, memory_status = await assessment_service.assess_vehicle(
-            vin=vehicle_id,
-            issue_key=issue,
-            memory_service=memory_service,
-        )
-    except Exception as exc:
-        logger.exception("Failed to retrieve assessment for vehicle %s", vehicle_id)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "error": {
-                    "code": "MEMORY_UNAVAILABLE",
-                    "message": "Historical memory is temporarily unavailable.",
-                }
-            },
-        ) from exc
-
+def _assessment_payload(vehicle_id: str, assessment, memory_status: str) -> dict:
     return {
         "vehicle_id": vehicle_id,
         "memory_status": memory_status,
@@ -153,4 +133,87 @@ async def get_vehicle_assessment(
                 "unresolved_evidence": [item.__dict__ for item in assessment.unresolved_evidence],
             }
         ],
+    }
+
+
+async def _get_assessment(
+    *,
+    vehicle_id: str,
+    issue: str,
+    memory_service: MemoryService,
+    assessment_service: AssessmentService,
+):
+    try:
+        return await assessment_service.assess_vehicle(
+            vin=vehicle_id,
+            issue_key=issue,
+            memory_service=memory_service,
+        )
+    except Exception as exc:
+        logger.exception("Failed to retrieve assessment for vehicle %s", vehicle_id)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "error": {
+                    "code": "MEMORY_UNAVAILABLE",
+                    "message": "Historical memory is temporarily unavailable.",
+                }
+            },
+        ) from exc
+
+
+@app.get("/api/vehicles/{vehicle_id}/assessment")
+async def get_vehicle_assessment(
+    vehicle_id: str,
+    issue: str = "transmission_shift_behavior",
+    memory_service: MemoryService = Depends(get_memory_service),
+    assessment_service: AssessmentService = Depends(get_assessment_service),
+) -> dict:
+    """Return the current deterministic assessment for one vehicle finding."""
+    assessment, memory_status = await _get_assessment(
+        vehicle_id=vehicle_id,
+        issue=issue,
+        memory_service=memory_service,
+        assessment_service=assessment_service,
+    )
+    return _assessment_payload(vehicle_id, assessment, memory_status)
+
+
+@app.get("/api/vehicles/{vehicle_id}/assessment/explanation")
+async def get_vehicle_assessment_explanation(
+    vehicle_id: str,
+    issue: str = "transmission_shift_behavior",
+    memory_service: MemoryService = Depends(get_memory_service),
+    assessment_service: AssessmentService = Depends(get_assessment_service),
+    explanation_service: GroqExplanationService = Depends(get_groq_explanation_service),
+) -> dict:
+    """Return a deterministic assessment plus an optional LLM explanation."""
+    assessment, memory_status = await _get_assessment(
+        vehicle_id=vehicle_id,
+        issue=issue,
+        memory_service=memory_service,
+        assessment_service=assessment_service,
+    )
+
+    if memory_status == "empty":
+        return {
+            **_assessment_payload(vehicle_id, assessment, memory_status),
+            "explanation_status": "unavailable",
+            "explanation": None,
+        }
+
+    try:
+        explanation = await explanation_service.explain(assessment)
+    except Exception as exc:
+        logger.exception("Failed to generate assessment explanation for vehicle %s", vehicle_id)
+        return {
+            **_assessment_payload(vehicle_id, assessment, memory_status),
+            "explanation_status": "unavailable",
+            "explanation": None,
+        }
+
+    return {
+        **_assessment_payload(vehicle_id, assessment, memory_status),
+        "explanation_status": "available",
+        "explanation": explanation.model_dump(),
     }
