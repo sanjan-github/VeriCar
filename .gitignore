@@ -1,23 +1,16 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
 .venv/
-venv/
+.pytest_cache/
+
+# Environment
 .env
 
-# Testing / tooling
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.ruff_cache/
+# Local application data
+data/*.db
+data/*.sqlite
+data/*.sqlite3
 
-# OS / editor
-.DS_Store
-Thumbs.db
+# IDE
 .vscode/
-.idea/
-
-# Local runtime data
-*.log
