@@ -39,10 +39,17 @@ class HindsightRepository:
             timestamp=report.observed_at,
             document_id=f"report_{report.report_id}",
             metadata={
+                "vehicle_id": report.vehicle_id or report.vin,
                 "vin": report.vin,
                 "source_id": report.source_id,
                 "source_type": report.source_type,
                 "report_id": report.report_id,
+                "observed_at": report.observed_at.isoformat(),
+                "submitted_at": (
+                    report.submitted_at.isoformat()
+                    if report.submitted_at is not None
+                    else None
+                ),
             },
             tags=["vehicle", f"vin:{report.vin}", f"source:{report.source_id}"],
             retain_async=False,
