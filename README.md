@@ -34,16 +34,20 @@ A typical workflow is:
 - Confidence calculation based on evidence and findings
 - Hindsight memory wrapper
 - Vehicle condition → Hindsight synchronization
-- Vehicle memory recall panel
+- Vehicle memory recall
+- Deterministic current-vs-history reconciliation
 - Three synthetic demo scenarios
 - PDF assessment report
-- Automated test suite
+- NHTSA vPIC provider layer
+- Groq structured explanation layer
+- End-to-end integration tests
+- Automated test suite (132 passing tests at the current revision)
 
 ### Important limitation
 
 The profiles in `data/expected_profiles.json` use `source: synthetic_seed`. They are **demo/reference data**, not verified manufacturer specifications, reliability statistics, or authoritative vehicle-history data.
 
-The external-source and LLM layers are intentionally separate from the deterministic evidence engine and should not be treated as live unless they have been explicitly configured and integrated.
+The external-source and LLM layers are intentionally separate from the deterministic evidence engine. NHTSA vPIC and Groq are implemented as optional integrations; live network access and credentials are not required by the test suite.
 
 ## Design principles
 
@@ -152,6 +156,8 @@ VeriCar/
 │   ├── memory_report.py         # Evidence snapshot for memory
 │   ├── memory_sync.py           # Condition → Hindsight sync
 │   ├── memory_recall.py         # Historical-memory retrieval
+│   ├── history_reconciliation.py # Current-vs-historical evidence comparison
+│   ├── assessment_explanation.py # Groq explanation orchestration
 │   ├── demo_scenarios.py        # Synthetic demo vehicles
 │   └── pdf_report.py            # PDF assessment report
 ├── memory/
@@ -278,18 +284,18 @@ Demo scenarios exist so the complete assessment pipeline can be exercised withou
 
 VeriCar contains a Hindsight integration for persistent vehicle-history memory.
 
-By default, the client expects:
+VeriCar supports Hindsight Cloud. The repository's `.env.example` uses:
 
 ~~~text
-http://localhost:8888
+https://api.hindsight.vectorize.io
 ~~~
 
-Configure it with environment variables when needed.
+Configure it with environment variables. A self-hosted Hindsight deployment can also be used by setting `HINDSIGHT_BASE_URL` to its endpoint.
 
 ### PowerShell
 
 ~~~powershell
-$env:HINDSIGHT_BASE_URL="http://localhost:8888"
+$env:HINDSIGHT_BASE_URL="https://api.hindsight.vectorize.io"
 $env:HINDSIGHT_API_KEY="your-api-key"
 $env:HINDSIGHT_TIMEOUT="30"
 ~~~
@@ -402,11 +408,11 @@ The architecture leaves room for verified external sources and an explanation la
 
 ## Planned development
 
-1. **External vehicle-data integration** — provider contracts and provenance are implemented, and the first live government adapter is the NHTSA vPIC VIN decoder with timeout/retry handling. The adapter distinguishes `NOT_FOUND` from `UNAVAILABLE`; live network access is not required by the test suite.
-2. **LLM explanation layer** — the Groq adapter validates structured JSON, retries transient failures, supports a configurable endpoint/model, and explicitly treats user-entered evidence as untrusted data. Live API credentials are not required by the test suite.
-3. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
-4. **Additional data sources** — service information, recall information and other appropriate vehicle-history sources.
-5. **Production hardening** — configuration/security review, integration tests, deployment documentation, observability and error handling.
+1. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
+2. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
+3. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
+4. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
+5. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
 
 ## For developers and other LLMs
 
