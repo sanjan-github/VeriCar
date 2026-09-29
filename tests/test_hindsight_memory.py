@@ -77,6 +77,14 @@ async def test_recall_vehicle_normalizes_memory_items():
     assert items[0].text == "Transmission hesitation reported."
     assert items[0].metadata["source_id"] == "SRC-1"
 
+    recall_name, recall_kwargs = fake.calls[0]
+    assert recall_name == "recall"
+    assert recall_kwargs["bank_id"] == "vehicle_CAR-1"
+    assert recall_kwargs["query"] == "transmission history"
+    assert recall_kwargs["include_source_facts"] is True
+    assert recall_kwargs["prefer_observations"] is True
+    assert recall_kwargs["tags"] == ["vehicle:CAR-1"]
+
 
 @pytest.mark.asyncio
 async def test_empty_report_is_rejected_before_hindsight_call():
