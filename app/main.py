@@ -352,7 +352,7 @@ if "saved_car" in st.session_state:
         )
         db.save_condition(saved_condition)
         st.session_state.saved_condition = saved_condition
-        st.success("Condition history saved. No assessment has been inferred yet.")
+        st.success("Condition history saved.")
 
     saved_condition = db.get_condition(car.car_id)
     if saved_condition:
