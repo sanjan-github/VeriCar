@@ -4,13 +4,17 @@ from dataclasses import dataclass
 from datetime import date
 
 from core.assessment import Assessment, assess_vehicle
+from core.assessment_explanation import (
+    AssessmentExplanation,
+    generate_assessment_explanation,
+)
 from core.comparison import ComparisonFinding, compare_expected_vs_actual
 from core.condition import ConditionRecord
 from core.database import Database
-from core.expected_profile import ExpectedProfile
+from core.groq_llm import GroqLLM
+from core.models import Car
 from core.profile_resolver import ProfileResolution, resolve_expected_profile
 from core.profile_seed import seed_expected_profiles
-from core.models import Car
 from core.rules import RuleFlag, evaluate_rules
 
 
@@ -20,6 +24,7 @@ class AssessmentPipelineResult:
     rule_flags: tuple[RuleFlag, ...]
     comparison_findings: tuple[ComparisonFinding, ...]
     assessment: Assessment | None
+    explanation: AssessmentExplanation | None = None
 
 
 def run_assessment(
@@ -29,10 +34,15 @@ def run_assessment(
     *,
     today: date | None = None,
     seed_missing_profiles: bool = True,
+    generate_explanation: bool = False,
+    llm: GroqLLM | None = None,
 ) -> AssessmentPipelineResult:
     """Run the deterministic assessment pipeline for one vehicle.
 
     A missing expected profile prevents a verdict. No profile facts are invented.
+
+    The optional LLM explanation runs only after the deterministic assessment
+    has been produced and never changes that assessment.
     """
     if seed_missing_profiles:
         seed_expected_profiles(db)
@@ -41,10 +51,35 @@ def run_assessment(
     rule_flags = tuple(evaluate_rules(car, condition, today=today))
 
     if resolution.profile is None:
-        return AssessmentPipelineResult(resolution, rule_flags, (), None)
+        return AssessmentPipelineResult(
+            resolution,
+            rule_flags,
+            (),
+            None,
+            None,
+        )
 
     comparison = tuple(
         compare_expected_vs_actual(car, condition, resolution.profile, today=today)
     )
     assessment = assess_vehicle(car, condition, list(rule_flags), list(comparison))
-    return AssessmentPipelineResult(resolution, rule_flags, comparison, assessment)
+
+    explanation = None
+    if generate_explanation:
+        explanation = generate_assessment_explanation(
+            car,
+            condition,
+            resolution.profile,
+            assessment,
+            rule_flags,
+            comparison,
+            llm=llm,
+        )
+
+    return AssessmentPipelineResult(
+        resolution,
+        rule_flags,
+        comparison,
+        assessment,
+        explanation,
+    )
