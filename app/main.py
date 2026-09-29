@@ -46,40 +46,24 @@ st.markdown(
     """
     <style>
     :root {
-        --ink: #17283d;
-        --muted: #687589;
-        --line: #dbe2e8;
-        --paper: #f7f8f6;
-        --white: #ffffff;
+        --ink: var(--text-color, #17283d);
+        --muted: color-mix(in srgb, var(--text-color, #17283d) 58%, var(--background-color, #f7f8f6));
+        --line: color-mix(in srgb, var(--text-color, #17283d) 16%, var(--background-color, #f7f8f6));
+        --paper: var(--background-color, #f7f8f6);
+        --white: var(--secondary-background-color, #ffffff);
         --accent: #e16d45;
-        --accent-soft: #fff0e9;
+        --accent-soft: color-mix(in srgb, var(--background-color, #f7f8f6) 88%, var(--accent) 12%);
         --green: #17795c;
-        --green-soft: #e9f6ef;
+        --green-soft: color-mix(in srgb, var(--background-color, #f7f8f6) 88%, var(--green) 12%);
         --amber: #9a6515;
-        --amber-soft: #fff5dc;
+        --amber-soft: color-mix(in srgb, var(--background-color, #f7f8f6) 88%, var(--amber) 12%);
         --red: #a43b38;
-        --red-soft: #fff0ef;
-        --blue-soft: #edf4fa;
-        --shadow: rgba(23,40,61,.05);
-        --finding-line: rgba(23,40,61,.11);
-        --expander-bg: rgba(255,255,255,.55);
-        --pill-bg: #eef1f3;
-    }
-    [data-theme="dark"] {
-        --ink: #edf2f7;
-        --muted: #aeb9c6;
-        --line: #344252;
-        --paper: #111820;
-        --white: #1b2530;
-        --accent-soft: #3a2721;
-        --green-soft: #163329;
-        --amber-soft: #392e18;
-        --red-soft: #3a2020;
-        --blue-soft: #1d2b38;
-        --shadow: rgba(0,0,0,.28);
-        --finding-line: rgba(237,242,247,.12);
-        --expander-bg: rgba(27,37,48,.8);
-        --pill-bg: #2b3540;
+        --red-soft: color-mix(in srgb, var(--background-color, #f7f8f6) 88%, var(--red) 12%);
+        --blue-soft: color-mix(in srgb, var(--background-color, #f7f8f6) 88%, #4f86ad 12%);
+        --shadow: color-mix(in srgb, var(--text-color, #17283d) 10%, transparent);
+        --finding-line: color-mix(in srgb, var(--text-color, #17283d) 12%, transparent);
+        --expander-bg: color-mix(in srgb, var(--secondary-background-color, #ffffff) 88%, var(--background-color, #f7f8f6));
+        --pill-bg: color-mix(in srgb, var(--secondary-background-color, #ffffff) 82%, var(--text-color, #17283d));
     }
     .stApp { background: var(--paper); color: var(--ink); }
     .block-container { max-width: 1120px; padding: 2.1rem 2rem 4rem; }
