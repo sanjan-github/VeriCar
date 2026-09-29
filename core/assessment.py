@@ -44,7 +44,18 @@ def assess_vehicle(
     warnings.extend(f.message for f in comparison_findings if f.severity == "warn")
     infos.extend(f.message for f in comparison_findings if f.severity == "info")
 
-    unknown_count = sum(1 for f in rule_flags if f.rule == "unknown_data" for _ in range(1))
+    unknown_count = 0
+    for finding in rule_flags:
+        if finding.rule == "unknown_data":
+            for item in finding.evidence:
+                if item.startswith("unknown_checklist_items="):
+                    try:
+                        unknown_count += int(item.split("=", 1)[1])
+                    except ValueError:
+                        unknown_count += 1
+                    break
+            else:
+                unknown_count += 1
     unknown_count += sum(1 for f in comparison_findings if f.severity == "unknown")
 
     if critical:
