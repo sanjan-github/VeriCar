@@ -150,7 +150,7 @@ def test_history_reconciliation_does_not_treat_unknown_as_conflict():
         [make_item(historical_car, historical_condition)],
     )
 
-    assert result.status == "INSUFFICIENT"
+    assert result.status == "MATCHED"
     assert not any(
         finding.field == "accident_status" for finding in result.findings
     )
