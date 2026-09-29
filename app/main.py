@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 import asyncio
+from pathlib import Path
+import sys
+
+# Streamlit may execute this file with app/ as the import root.
+# Add the repository root so the shared core package is importable.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import streamlit as st
 
