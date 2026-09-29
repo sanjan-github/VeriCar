@@ -48,7 +48,7 @@ def assess_vehicle(
     for finding in rule_flags:
         if finding.rule == "unknown_data":
             for item in finding.evidence:
-                if item.startswith("unknown_checklist_items="):
+                if item.startswith("unknown_checklist_items=") or item.startswith("count="):
                     try:
                         unknown_count += int(item.split("=", 1)[1])
                     except ValueError:
