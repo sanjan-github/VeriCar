@@ -65,7 +65,12 @@ class GroqLLM:
             try:
                 body = response.json()
                 content = body["choices"][0]["message"]["content"]
-                return LLMExplanation.model_validate(_parse_json_content(content))
+                parsed = _parse_json_content(content)
+                parsed["ai_estimates"] = _remove_deterministic_estimates(
+                    parsed.get("ai_estimates", []),
+                    evidence.get("deterministic_assessment", {}),
+                )
+                return LLMExplanation.model_validate(parsed)
             except (KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:
                 raise RuntimeError(f"Groq returned an invalid structured explanation: {exc}") from exc
         except httpx.HTTPStatusError as exc:
@@ -75,6 +80,42 @@ class GroqLLM:
         finally:
             if self.client is None:
                 client.close()
+
+
+def _remove_deterministic_estimates(
+    estimates: Any,
+    deterministic_assessment: Any,
+) -> list[str]:
+    """Remove LLM items that merely restate deterministic verdict/confidence."""
+    if not isinstance(estimates, list):
+        return estimates
+    if not isinstance(deterministic_assessment, dict):
+        return estimates
+
+    verdict = str(deterministic_assessment.get("verdict", "")).strip().lower()
+    confidence = deterministic_assessment.get("confidence")
+    confidence_texts: set[str] = set()
+    if confidence is not None:
+        confidence_texts.update({
+            str(confidence).strip().lower(),
+            f"{confidence} confidence".lower(),
+            f"confidence: {confidence}".lower(),
+            f"confidence {confidence}".lower(),
+        })
+
+    filtered: list[str] = []
+    for item in estimates:
+        if not isinstance(item, str):
+            continue
+        normalized = item.strip().lower()
+        if verdict and normalized in {verdict, f"verdict: {verdict}", f"verdict {verdict}"}:
+            continue
+        if any(text and normalized == text for text in confidence_texts):
+            continue
+        if confidence is not None and normalized.startswith("confidence") and str(confidence).strip().lower() in normalized:
+            continue
+        filtered.append(item)
+    return filtered
 
 def _serialize_evidence(evidence: dict[str, Any]) -> str:
     import json
