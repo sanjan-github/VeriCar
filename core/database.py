@@ -1,5 +1,18 @@
 from __future__ import annotations
 
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS vehicle_memory_reports (
+                    report_id TEXT PRIMARY KEY,
+                    car_id TEXT NOT NULL,
+                    observed_at TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    error TEXT,
+                    synced_at TEXT,
+                    FOREIGN KEY(car_id) REFERENCES cars(car_id)
+                )
+                """
+            )
 import json
 import sqlite3
 from pathlib import Path
@@ -123,6 +136,25 @@ class Database:
                 """,
                 (condition.car_id, payload),
             )
+
+    def record_memory_report(
+        self, *, report_id: str, car_id: str, observed_at: str,
+        status: str, error: str | None = None, synced_at: str | None = None,
+    ) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT INTO vehicle_memory_reports (report_id, car_id, observed_at, status, error, synced_at) "
+                "VALUES (?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(report_id) DO UPDATE SET status=excluded.status, error=excluded.error, synced_at=excluded.synced_at",
+                (report_id, car_id, observed_at, status, error, synced_at),
+            )
+
+    def get_memory_report(self, report_id: str):
+        with self._connect() as connection:
+            return connection.execute(
+                "SELECT * FROM vehicle_memory_reports WHERE report_id = ?",
+                (report_id,),
+            ).fetchone()
 
     def get_condition(self, car_id: str) -> ConditionRecord | None:
         with self._connect() as connection:
