@@ -172,15 +172,27 @@ def build_assessment_pdf(
 
 
 def _table(rows: list[list[str]]) -> Table:
-    table = Table(rows, colWidths=[35 * mm, 58 * mm, 35 * mm, 58 * mm], hAlign="LEFT")
+    column_count = max(len(row) for row in rows)
+    if column_count == 2:
+        widths = [58 * mm, 128 * mm]
+        label_columns = (0,)
+    elif column_count == 4:
+        widths = [35 * mm, 58 * mm, 35 * mm, 58 * mm]
+        label_columns = (0, 2)
+    else:
+        widths = [186 * mm / column_count] * column_count
+        label_columns = ()
+    table = Table(rows, colWidths=widths, hAlign="LEFT")
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.35, colors.lightgrey),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("LEADING", (0, 0), (-1, -1), 11),
-        ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
-        ("BACKGROUND", (2, 0), (2, -1), colors.whitesmoke),
+        *[
+            ("BACKGROUND", (column, 0), (column, -1), colors.whitesmoke)
+            for column in label_columns
+        ],
         ("LEFTPADDING", (0, 0), (-1, -1), 5),
         ("RIGHTPADDING", (0, 0), (-1, -1), 5),
         ("TOPPADDING", (0, 0), (-1, -1), 5),
