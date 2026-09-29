@@ -443,3 +443,7 @@ Meaningful changes to data models, rules, assessments, integrations or user-visi
 ## License
 
 No project license has been declared yet.
+
+### Environment variables
+
+Use `.env.example` as the local template. `.env` is ignored by Git and must never be committed. Groq is required only for live LLM calls. Hindsight credentials are required only for live Hindsight access.
