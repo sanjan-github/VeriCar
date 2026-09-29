@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
+from core.condition import ConditionRecord
 from core.models import Car
 
 
@@ -10,7 +12,7 @@ DEFAULT_DB_PATH = Path("data/vericar.db")
 
 
 class Database:
-    """Small SQLite persistence layer for structured vehicle data."""
+    """SQLite persistence for structured vehicle and condition data."""
 
     def __init__(self, path: str | Path = DEFAULT_DB_PATH) -> None:
         self.path = Path(path)
@@ -44,6 +46,16 @@ class Database:
                     asking_price_inr INTEGER,
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS vehicle_conditions (
+                    car_id TEXT PRIMARY KEY,
+                    payload TEXT NOT NULL,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(car_id) REFERENCES cars(car_id)
                 )
                 """
             )
@@ -97,3 +109,27 @@ class Database:
                     "SELECT * FROM cars ORDER BY updated_at DESC LIMIT ?", (limit,)
                 ).fetchall()
             )
+
+    def save_condition(self, condition: ConditionRecord) -> None:
+        payload = json.dumps(condition.to_record(), ensure_ascii=False)
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO vehicle_conditions (car_id, payload)
+                VALUES (?, ?)
+                ON CONFLICT(car_id) DO UPDATE SET
+                    payload=excluded.payload,
+                    updated_at=CURRENT_TIMESTAMP
+                """,
+                (condition.car_id, payload),
+            )
+
+    def get_condition(self, car_id: str) -> ConditionRecord | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM vehicle_conditions WHERE car_id = ?",
+                (car_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return ConditionRecord.from_record(json.loads(row["payload"]))
