@@ -14,9 +14,9 @@ DEFAULT_GROQ_MODEL = "qwen/qwen3-32b"
 class LLMExplanation(BaseModel):
     model_config = ConfigDict(extra="forbid")
     summary: str = Field(min_length=1)
-    evidence_explanations: list[str] = Field(default_factory=list)
-    contradictions: list[str] = Field(default_factory=list)
-    ai_estimates: list[str] = Field(default_factory=list)
+    evidence_explanations: list[str]
+    contradictions: list[str]
+    ai_estimates: list[str]
 
 class GroqClient(Protocol):
     def post(self, url: str, *, headers: dict[str, str], json: dict[str, Any], timeout: float) -> Any: ...
