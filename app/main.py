@@ -60,6 +60,26 @@ st.markdown(
         --red: #a43b38;
         --red-soft: #fff0ef;
         --blue-soft: #edf4fa;
+        --shadow: rgba(23,40,61,.05);
+        --finding-line: rgba(23,40,61,.11);
+        --expander-bg: rgba(255,255,255,.55);
+        --pill-bg: #eef1f3;
+    }
+    [data-theme="dark"] {
+        --ink: #edf2f7;
+        --muted: #aeb9c6;
+        --line: #344252;
+        --paper: #111820;
+        --white: #1b2530;
+        --accent-soft: #3a2721;
+        --green-soft: #163329;
+        --amber-soft: #392e18;
+        --red-soft: #3a2020;
+        --blue-soft: #1d2b38;
+        --shadow: rgba(0,0,0,.28);
+        --finding-line: rgba(237,242,247,.12);
+        --expander-bg: rgba(27,37,48,.8);
+        --pill-bg: #2b3540;
     }
     .stApp { background: var(--paper); color: var(--ink); }
     .block-container { max-width: 1120px; padding: 2.1rem 2rem 4rem; }
@@ -74,7 +94,7 @@ st.markdown(
     .nav-note { color:var(--muted); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; }
     .eyebrow { color:var(--accent); font-size:.7rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; margin:1.65rem 0 .45rem; }
     .lede { color:var(--muted); max-width:650px; font-size:1.05rem; line-height:1.55; }
-    .vehicle-card, .history-card, .verdict-card, .soft-card { background:var(--white); border:1px solid var(--line); border-radius:18px; padding:1.25rem 1.4rem; box-shadow:0 12px 28px rgba(23,40,61,.05); }
+    .vehicle-card, .history-card, .verdict-card, .soft-card { background:var(--white); border:1px solid var(--line); border-radius:18px; padding:1.25rem 1.4rem; box-shadow:0 12px 28px var(--shadow); }
     .vehicle-card { border-top:4px solid var(--accent); }
     .vehicle-kicker { color:var(--muted); font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; font-weight:800; }
     .vehicle-name { color:var(--ink); font-size:2rem; font-weight:800; letter-spacing:-.05em; margin:.25rem 0 .65rem; }
@@ -89,7 +109,7 @@ st.markdown(
     .history-card.changed { border-left:5px solid var(--amber); background:var(--amber-soft); }
     .history-card.contradiction { border-left:5px solid var(--red); background:var(--red-soft); }
     .history-card.insufficient, .history-card.no-history, .history-card.unavailable { border-left:5px solid #8495a7; background:var(--blue-soft); }
-    .finding-line { border-top:1px solid rgba(23,40,61,.11); padding:.6rem 0; color:var(--ink); font-size:.92rem; }
+    .finding-line { border-top:1px solid var(--finding-line); padding:.6rem 0; color:var(--ink); font-size:.92rem; }
     .verdict-card { display:flex; justify-content:space-between; gap:1.5rem; align-items:flex-start; }
     .verdict-card.buy { border-top:5px solid var(--green); }
     .verdict-card.negotiate { border-top:5px solid var(--amber); }
@@ -98,12 +118,12 @@ st.markdown(
     .verdict-title { font-size:1.35rem; line-height:1.18; font-weight:800; margin:.35rem 0 .35rem; max-width:620px; }
     .confidence { color:var(--ink); font-size:1.45rem; font-weight:900; white-space:nowrap; }
     .confidence-note { color:var(--muted); font-size:.76rem; max-width:160px; line-height:1.35; }
-    .pill { display:inline-block; padding:.22rem .55rem; border-radius:99px; font-size:.72rem; font-weight:800; background:#eef1f3; color:var(--muted); }
+    .pill { display:inline-block; padding:.22rem .55rem; border-radius:99px; font-size:.72rem; font-weight:800; background:var(--pill-bg); color:var(--muted); }
     .metric-label { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; }
     .metric-value { color:var(--ink); font-size:1.12rem; font-weight:800; margin-top:.2rem; }
     .stButton > button, .stDownloadButton > button { border-radius:10px; min-height:2.8rem; font-weight:800; }
     .stButton > button[kind="primary"] { background:var(--accent); border-color:var(--accent); }
-    div[data-testid="stExpander"] { border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.55); }
+    div[data-testid="stExpander"] { border:1px solid var(--line); border-radius:12px; background:var(--expander-bg); }
     @media (max-width: 700px) {
         .block-container { padding:1.2rem 1rem 3rem; }
         .verdict-card { flex-direction:column; }
