@@ -12,6 +12,8 @@ from core.comparison import ComparisonFinding, compare_expected_vs_actual
 from core.condition import ConditionRecord
 from core.database import Database
 from core.groq_llm import GroqLLM
+from core.history_reconciliation import HistoryReconciliation, reconcile_vehicle_history
+from memory.hindsight import MemoryItem
 from core.models import Car
 from core.profile_resolver import ProfileResolution, resolve_expected_profile
 from core.profile_seed import seed_expected_profiles
@@ -25,6 +27,7 @@ class AssessmentPipelineResult:
     comparison_findings: tuple[ComparisonFinding, ...]
     assessment: Assessment | None
     explanation: AssessmentExplanation | None = None
+    history_reconciliation: HistoryReconciliation | None = None
 
 
 def run_assessment(
@@ -36,6 +39,7 @@ def run_assessment(
     seed_missing_profiles: bool = True,
     generate_explanation: bool = False,
     llm: GroqLLM | None = None,
+    history_items: list[MemoryItem] | tuple[MemoryItem, ...] | None = None,
 ) -> AssessmentPipelineResult:
     """Run the deterministic assessment pipeline for one vehicle.
 
@@ -48,6 +52,9 @@ def run_assessment(
         seed_expected_profiles(db)
 
     resolution = resolve_expected_profile(car, db)
+    history_reconciliation = None
+    if history_items is not None:
+        history_reconciliation = reconcile_vehicle_history(car, condition, history_items)
     rule_flags = tuple(evaluate_rules(car, condition, today=today))
 
     if resolution.profile is None:
@@ -57,6 +64,7 @@ def run_assessment(
             (),
             None,
             None,
+            history_reconciliation,
         )
 
     comparison = tuple(
@@ -82,4 +90,5 @@ def run_assessment(
         comparison,
         assessment,
         explanation,
+        history_reconciliation,
     )
