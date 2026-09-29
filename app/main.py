@@ -22,6 +22,7 @@ from core.memory_sync import sync_condition_to_memory
 from core.memory_report import build_vehicle_memory_report
 from core.memory_recall import recall_vehicle_memory
 from core.assessment_pipeline import run_assessment
+from core.pdf_report import build_assessment_pdf
 from memory.hindsight import HindsightMemory
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
 
@@ -489,6 +490,18 @@ if "saved_car" in st.session_state:
                 + " · profile key: "
                 + result.profile_resolution.profile_key
             )
+
+            try:
+                report_pdf = build_assessment_pdf(car, saved_condition, result)
+                st.download_button(
+                    "Download assessment PDF",
+                    data=report_pdf,
+                    file_name=f"vericar-assessment-{car.car_id}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+            except Exception as exc:
+                st.error("Assessment PDF could not be generated: " + str(exc))
 
         st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
         st.markdown('<div class="eyebrow">VEHICLE MEMORY</div>', unsafe_allow_html=True)
