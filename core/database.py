@@ -1,18 +1,5 @@
 from __future__ import annotations
 
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS vehicle_memory_reports (
-                    report_id TEXT PRIMARY KEY,
-                    car_id TEXT NOT NULL,
-                    observed_at TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    error TEXT,
-                    synced_at TEXT,
-                    FOREIGN KEY(car_id) REFERENCES cars(car_id)
-                )
-                """
-            )
 import json
 import sqlite3
 from pathlib import Path
@@ -68,6 +55,19 @@ class Database:
                     car_id TEXT PRIMARY KEY,
                     payload TEXT NOT NULL,
                     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(car_id) REFERENCES cars(car_id)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS vehicle_memory_reports (
+                    report_id TEXT PRIMARY KEY,
+                    car_id TEXT NOT NULL,
+                    observed_at TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    error TEXT,
+                    synced_at TEXT,
                     FOREIGN KEY(car_id) REFERENCES cars(car_id)
                 )
                 """
