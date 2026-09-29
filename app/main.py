@@ -17,6 +17,7 @@ from core.condition import (
     YES_NO_UNKNOWN,
 )
 from core.database import Database
+from core.demo_scenarios import build_demo_scenarios
 from core.memory_sync import sync_condition_to_memory
 from core.memory_report import build_vehicle_memory_report
 from core.memory_recall import recall_vehicle_memory
@@ -51,6 +52,36 @@ st.markdown(
     "Enter the known vehicle details. Unknown values are valid and remain explicitly unknown; "
     "they will lower confidence later rather than being guessed."
 )
+
+st.markdown('<div class="eyebrow">DEMO MODE</div>', unsafe_allow_html=True)
+st.caption(
+    "Synthetic demo data only. Loading a scenario replaces the current in-memory vehicle selection "
+    "and condition record so the real assessment pipeline can be exercised without manual entry."
+)
+demo_scenarios = build_demo_scenarios()
+demo_names = {scenario.name: scenario for scenario in demo_scenarios}
+selected_demo_name = st.selectbox(
+    "Demo scenario",
+    ["Select a scenario"] + list(demo_names),
+    key="demo_scenario_name",
+)
+if st.button("Load demo scenario", use_container_width=True):
+    if selected_demo_name == "Select a scenario":
+        st.warning("Select a demo scenario first.")
+    else:
+        scenario = demo_names[selected_demo_name]
+        db.save_car(scenario.car)
+        db.save_condition(scenario.condition)
+        st.session_state.car_id = scenario.car.car_id
+        st.session_state.saved_car = scenario.car
+        st.session_state.editing_car = scenario.car.to_record()
+        st.session_state.saved_condition = scenario.condition
+        st.session_state.pop("assessment_result", None)
+        st.session_state.pop("memory_result", None)
+        st.success(f"Loaded synthetic scenario: {scenario.name}.")
+        st.caption(scenario.description)
+
+st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
 
 if "car_id" not in st.session_state:
     st.session_state.car_id = new_car_id()
