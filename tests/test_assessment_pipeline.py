@@ -43,3 +43,47 @@ def test_pipeline_critical_evidence_reaches_assessment(tmp_path):
     assert result.assessment is not None
     assert result.assessment.verdict == "AVOID"
     assert result.assessment.critical_findings
+
+
+def test_pipeline_reconciles_supplied_history_without_changing_assessment(tmp_path):
+    from datetime import datetime
+    from core.memory_report import build_vehicle_memory_report
+    from memory.hindsight import MemoryItem
+
+    db = Database(tmp_path / "test.db")
+    car = Car(
+        "CAR-HISTORY", "Tata", "Nexon", 2022,
+        "XZ+", "Petrol", "Manual", odometer_km=30000
+    )
+    condition = ConditionRecord.empty(car.car_id)
+    report = build_vehicle_memory_report(
+        car,
+        condition,
+        observed_at=datetime(2026, 1, 1),
+    )
+    history_item = MemoryItem(
+        memory_id="memory-1",
+        text=report.text,
+        metadata={**report.metadata, "observed_at": report.observed_at.isoformat()},
+        tags=[f"vehicle:{car.car_id}"],
+    )
+
+    result = run_assessment(
+        car, condition, db, today=date(2026, 1, 1),
+        history_items=[history_item],
+    )
+
+    assert result.assessment is not None
+    assert result.history_reconciliation is not None
+    assert result.history_reconciliation.status == "MATCHED"
+    assert result.assessment.verdict in {"BUY", "NEGOTIATE", "AVOID"}
+
+
+def test_pipeline_keeps_history_optional(tmp_path):
+    db = Database(tmp_path / "test.db")
+    car = Car("CAR-NO-HISTORY", "Tata", "Nexon", 2022)
+    condition = ConditionRecord.empty(car.car_id)
+
+    result = run_assessment(car, condition, db, today=date(2026, 1, 1))
+
+    assert result.history_reconciliation is None
