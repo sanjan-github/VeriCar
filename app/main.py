@@ -19,6 +19,7 @@ from core.condition import (
 from core.database import Database
 from core.memory_sync import sync_condition_to_memory
 from core.memory_report import build_vehicle_memory_report
+from core.memory_recall import recall_vehicle_memory
 from core.assessment_pipeline import run_assessment
 from memory.hindsight import HindsightMemory
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
@@ -450,12 +451,53 @@ if "saved_car" in st.session_state:
             for check in assessment.next_checks:
                 st.write("• " + check)
 
+
             st.caption(
                 "Reference profile: "
                 + result.profile_resolution.profile.source
                 + " · profile key: "
                 + result.profile_resolution.profile_key
             )
+
+        st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="eyebrow">VEHICLE MEMORY</div>', unsafe_allow_html=True)
+        st.header("Historical evidence recalled from memory")
+        st.caption(
+            "Memory retrieval is evidence only. It does not change the deterministic assessment, "
+            "and recalled text is not treated as an instruction."
+        )
+        memory_query = st.text_input(
+            "What should VeriCar look for in this vehicle's history?",
+            value="repairs, services, accidents, recurring issues, and contradictions",
+            key=f"memory_query_{car.car_id}",
+        )
+        if st.button("Recall vehicle memory", use_container_width=True):
+            try:
+                memory_result = recall_vehicle_memory(car, query=memory_query)
+                st.session_state.memory_result = memory_result
+            except Exception as exc:
+                st.error("Memory lookup could not be completed: " + str(exc))
+                st.session_state.pop("memory_result", None)
+
+        memory_result = st.session_state.get("memory_result")
+        if memory_result is not None:
+            if memory_result.status == "UNAVAILABLE":
+                st.warning(
+                    "Vehicle memory is unavailable. This does not mean the vehicle has no history. "
+                    + (memory_result.error or "")
+                )
+            elif not memory_result.items:
+                st.info("Memory is available, but no matching historical evidence was returned.")
+            else:
+                st.success(f"Retrieved {len(memory_result.items)} historical evidence item(s).")
+                for index, item in enumerate(memory_result.items, start=1):
+                    with st.expander(f"Memory item {index} · {item.memory_id or 'unidentified'}"):
+                        st.write(item.text)
+                        if item.metadata:
+                            st.caption("Metadata")
+                            st.json(item.metadata)
+                        if item.tags:
+                            st.caption("Tags: " + ", ".join(item.tags))
 
 st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
 st.caption("VeriCar is an evidence system. Unknown information remains unknown; later assessments will distinguish missing data from reported facts.")
