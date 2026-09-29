@@ -448,7 +448,7 @@ Meaningful changes to data models, rules, assessments, integrations or user-visi
 
 ## License
 
-No project license has been declared yet.
+VeriCar is licensed under the MIT License. See `LICENSE` for the full text.
 
 ### Environment variables
 
