@@ -4,6 +4,8 @@ pydantic>=2.8,<3
 fastapi
 uvicorn[standard]
 hindsight-client==0.10.1
+reportlab>=4.0,<5
+pypdf>=5.0,<7
 pytest
 pytest-asyncio
 httpx
