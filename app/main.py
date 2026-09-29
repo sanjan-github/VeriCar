@@ -19,6 +19,7 @@ from core.condition import (
 from core.database import Database
 from core.memory_sync import sync_condition_to_memory
 from core.memory_report import build_vehicle_memory_report
+from core.assessment_pipeline import run_assessment
 from memory.hindsight import HindsightMemory
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
 
@@ -383,9 +384,78 @@ if "saved_car" in st.session_state:
             ),
         )
         st.caption(
-            "This stage stores observations only. Rules, confidence, expected-profile comparison, and verdict logic "
-            "will be implemented in later stages."
+            "Assessment uses deterministic rules and the stored reference profile. "
+            "Unknown evidence lowers confidence; missing profiles do not produce a verdict."
         )
+
+        st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="eyebrow">ASSESSMENT</div>', unsafe_allow_html=True)
+        st.header("Evidence-based vehicle assessment")
+        st.caption(
+            "The assessment engine is deterministic. Reference profiles are marked as synthetic seed data "
+            "until external sources are integrated."
+        )
+
+        if st.button("Assess vehicle", type="primary", use_container_width=True):
+            try:
+                result = run_assessment(
+                    car,
+                    saved_condition,
+                    db,
+                    today=date.today(),
+                )
+                st.session_state.assessment_result = result
+            except Exception as exc:
+                st.error("Assessment could not be completed: " + str(exc))
+                st.session_state.pop("assessment_result", None)
+
+        result = st.session_state.get("assessment_result")
+        if result is not None and result.profile_resolution.status == "MISSING":
+            st.warning(
+                "No expected profile is available for this exact vehicle configuration. "
+                "No verdict was generated."
+            )
+
+        if result is not None and result.assessment is not None:
+            assessment = result.assessment
+            verdict = assessment.verdict
+            if verdict == "AVOID":
+                st.error(f"Assessment: {verdict}")
+            elif verdict == "NEGOTIATE":
+                st.warning(f"Assessment: {verdict}")
+            else:
+                st.success(f"Assessment: {verdict}")
+
+            metrics = st.columns(3)
+            metrics[0].metric("Confidence", f"{assessment.confidence}%")
+            low, high = assessment.near_term_repair_range_inr
+            metrics[1].metric("Near-term repair range", f"₹{low:,}–₹{high:,}")
+            metrics[2].metric("Negotiation reduction", f"₹{assessment.negotiation_reduction_inr:,}")
+
+            st.subheader("Why")
+            if assessment.critical_findings:
+                st.markdown("**Critical findings**")
+                for finding in assessment.critical_findings:
+                    st.write("• " + finding)
+            if assessment.warning_findings:
+                st.markdown("**Warnings**")
+                for finding in assessment.warning_findings:
+                    st.write("• " + finding)
+            if assessment.info_findings:
+                st.markdown("**Information**")
+                for finding in assessment.info_findings:
+                    st.write("• " + finding)
+
+            st.subheader("Next checks")
+            for check in assessment.next_checks:
+                st.write("• " + check)
+
+            st.caption(
+                "Reference profile: "
+                + result.profile_resolution.profile.source
+                + " · profile key: "
+                + result.profile_resolution.profile_key
+            )
 
 st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
 st.caption("VeriCar is an evidence system. Unknown information remains unknown; later assessments will distinguish missing data from reported facts.")
