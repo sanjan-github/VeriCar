@@ -295,7 +295,7 @@ Configure it with environment variables. A self-hosted Hindsight deployment can 
 ### PowerShell
 
 ~~~powershell
-$env:HINDSIGHT_BASE_URL="http://localhost:8888"
+$env:HINDSIGHT_BASE_URL="https://api.hindsight.vectorize.io"
 $env:HINDSIGHT_API_KEY="your-api-key"
 $env:HINDSIGHT_TIMEOUT="30"
 ~~~
@@ -408,13 +408,11 @@ The architecture leaves room for verified external sources and an explanation la
 
 ## Planned development
 
-1. **External vehicle-data integration** — provider contracts and provenance are implemented, including the NHTSA vPIC VIN decoder with timeout/retry handling. The adapter distinguishes `NOT_FOUND` from `UNAVAILABLE`; live network access is not required by the test suite.
-2. **LLM explanation layer** — the Groq adapter validates structured JSON, retries transient failures, supports a configurable endpoint/model, and explicitly treats user-entered evidence as untrusted data. Live API credentials are not required by the test suite.
-3. **Historical reconciliation** — deterministic comparison of current evidence with structured historical vehicle reports is implemented. It reports `MATCHED`, `CHANGED`, `CONTRADICTION`, `INSUFFICIENT`, or `NO_HISTORY` and never changes the deterministic assessment.
-3. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
-4. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
-5. **Additional data sources** — service information, recall information and other appropriate vehicle-history sources.
-6. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
+1. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
+2. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
+3. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
+4. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
+5. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
 
 ## For developers and other LLMs
 
