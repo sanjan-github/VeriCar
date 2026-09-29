@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
 from io import BytesIO
 
 import pytest
@@ -106,7 +106,7 @@ def test_end_to_end_success_persists_assesses_explains_recalls_and_builds_pdf(
         scenario.car,
         scenario.condition,
         result,
-        generated_at=date(2026, 9, 29),
+        generated_at=datetime(2026, 9, 29, tzinfo=timezone.utc),
     )
     reader = PdfReader(BytesIO(pdf))
     pdf_text = "\n".join(page.extract_text() or "" for page in reader.pages)
