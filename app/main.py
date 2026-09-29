@@ -17,6 +17,7 @@ from core.condition import (
     YES_NO_UNKNOWN,
 )
 from core.database import Database
+from core.memory_sync import sync_condition_to_memory
 from core.memory_report import build_vehicle_memory_report
 from memory.hindsight import HindsightMemory
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
