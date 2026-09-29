@@ -402,7 +402,7 @@ The architecture leaves room for verified external sources and an explanation la
 
 ## Planned development
 
-1. **External vehicle-data integration** — properly sourced reference information, optional NHTSA integration where applicable, and source attribution.
+1. **External vehicle-data integration** — properly sourced reference information, optional NHTSA integration where applicable, and source attribution. The provider layer now defines explicit provenance and distinguishes `NOT_FOUND` from `UNAVAILABLE` before any live provider is connected.
 2. **LLM explanation layer** — structured outputs, evidence-grounded explanations, explicit AI-estimate labeling, and robust tool-call retries.
 3. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
 4. **Additional data sources** — service information, recall information and other appropriate vehicle-history sources.
