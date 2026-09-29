@@ -94,6 +94,9 @@ def _remove_deterministic_estimates(
 
     verdict = str(deterministic_assessment.get("verdict", "")).strip().lower()
     confidence = deterministic_assessment.get("confidence")
+    repair_range = deterministic_assessment.get("near_term_repair_range_inr")
+    negotiation_reduction = deterministic_assessment.get("negotiation_reduction_inr")
+
     confidence_texts: set[str] = set()
     if confidence is not None:
         confidence_texts.update({
@@ -102,6 +105,12 @@ def _remove_deterministic_estimates(
             f"confidence: {confidence}".lower(),
             f"confidence {confidence}".lower(),
         })
+
+    deterministic_texts = {
+        "near-term repair cost range",
+        "near term repair cost range",
+        "negotiation reduction",
+    }
 
     filtered: list[str] = []
     for item in estimates:
@@ -113,6 +122,12 @@ def _remove_deterministic_estimates(
         if any(text and normalized == text for text in confidence_texts):
             continue
         if confidence is not None and normalized.startswith("confidence") and str(confidence).strip().lower() in normalized:
+            continue
+        if any(label in normalized for label in deterministic_texts):
+            continue
+        if repair_range is not None and "repair" in normalized and str(repair_range).strip().lower() in normalized:
+            continue
+        if negotiation_reduction is not None and "negotiation" in normalized and str(negotiation_reduction).strip().lower() in normalized:
             continue
         filtered.append(item)
     return filtered
