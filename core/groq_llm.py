@@ -8,7 +8,7 @@ from typing import Any, Protocol
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_API_BASE_URL = "https://api.groq.com/openai/v1"
 DEFAULT_GROQ_MODEL = "qwen/qwen3-32b"
 
 class LLMExplanation(BaseModel):
@@ -28,6 +28,7 @@ class GroqLLM:
     timeout_seconds: float = 30.0
     retries: int = 2
     client: GroqClient | None = None
+    base_url: str = GROQ_API_BASE_URL
 
     @classmethod
     def from_environment(cls) -> "GroqLLM":
@@ -44,7 +45,7 @@ class GroqLLM:
             response = None
             for attempt in range(self.retries + 1):
                 try:
-                    response = client.post(GROQ_API_URL, headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, json=payload, timeout=self.timeout_seconds)
+                    response = client.post(f"{self.base_url}/chat/completions", headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, json=payload, timeout=self.timeout_seconds)
                     response.raise_for_status()
                     break
                 except (httpx.TimeoutException, httpx.NetworkError) as exc:
