@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import sqlite3
 
 from core.database import Database
 
@@ -11,3 +12,17 @@ def test_memory_report_status_persists(tmp_path):
     assert row["car_id"] == "CAR-1"
     assert row["status"] == "synced"
     assert row["synced_at"] == observed_at
+
+
+def test_database_connection_is_closed_after_context(tmp_path):
+    db = Database(tmp_path / "vericar.db")
+
+    with db._connect() as connection:
+        connection.execute("SELECT 1")
+
+    try:
+        connection.execute("SELECT 1")
+    except sqlite3.ProgrammingError:
+        pass
+    else:
+        raise AssertionError("Database connection remained open after context exit")
