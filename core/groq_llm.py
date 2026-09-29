@@ -7,6 +7,7 @@ from typing import Any, Protocol
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from dotenv import load_dotenv
 
 GROQ_API_BASE_URL = "https://api.groq.com/openai/v1"
 DEFAULT_GROQ_MODEL = "qwen/qwen3-32b"
@@ -32,7 +33,14 @@ class GroqLLM:
 
     @classmethod
     def from_environment(cls) -> "GroqLLM":
-        return cls(api_key=os.getenv("GROQ_API_KEY") or None, model=os.getenv("GROQ_MODEL") or DEFAULT_GROQ_MODEL, timeout_seconds=float(os.getenv("GROQ_TIMEOUT", "30")), retries=int(os.getenv("GROQ_RETRIES", "2")))
+        load_dotenv()
+        return cls(
+            api_key=os.getenv("GROQ_API_KEY") or None,
+            model=os.getenv("GROQ_MODEL") or DEFAULT_GROQ_MODEL,
+            timeout_seconds=float(os.getenv("GROQ_TIMEOUT", "30")),
+            retries=int(os.getenv("GROQ_RETRIES", "2")),
+            base_url=os.getenv("GROQ_BASE_URL", GROQ_API_BASE_URL).rstrip("/"),
+        )
 
     def explain(self, evidence: dict[str, Any]) -> LLMExplanation:
         if not self.api_key:
