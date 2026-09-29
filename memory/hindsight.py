@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
+from dotenv import load_dotenv
 from hindsight_client import Hindsight
+
+load_dotenv()
 
 
 class HindsightClient(Protocol):
