@@ -61,6 +61,15 @@ class Database:
             )
             connection.execute(
                 """
+                CREATE TABLE IF NOT EXISTS expected_profiles (
+                    profile_key TEXT PRIMARY KEY,
+                    payload TEXT NOT NULL,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            connection.execute(
+                """
                 CREATE TABLE IF NOT EXISTS vehicle_memory_reports (
                     report_id TEXT PRIMARY KEY,
                     car_id TEXT NOT NULL,
@@ -165,3 +174,29 @@ class Database:
         if row is None:
             return None
         return ConditionRecord.from_record(json.loads(row["payload"]))
+
+    def save_expected_profile(self, profile) -> None:
+        payload = json.dumps(profile.to_record(), ensure_ascii=False)
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO expected_profiles (profile_key, payload)
+                VALUES (?, ?)
+                ON CONFLICT(profile_key) DO UPDATE SET
+                    payload=excluded.payload,
+                    updated_at=CURRENT_TIMESTAMP
+                """,
+                (profile.profile_key, payload),
+            )
+
+    def get_expected_profile(self, profile_key: str):
+        from core.expected_profile import ExpectedProfile
+
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM expected_profiles WHERE profile_key = ?",
+                (profile_key,),
+            ).fetchone()
+        if row is None:
+            return None
+        return ExpectedProfile.from_record(json.loads(row["payload"]))
