@@ -41,7 +41,7 @@ A typical workflow is:
 - NHTSA vPIC provider layer
 - Groq structured explanation layer
 - End-to-end integration tests
-- Automated test suite (132 passing tests at the current revision)
+- Automated test suite (137 tests in the current suite; 137 passed in the last local full-suite verification before the latest CSS-only UI commits)
 
 ### Important limitation
 
