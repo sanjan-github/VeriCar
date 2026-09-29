@@ -403,7 +403,7 @@ The architecture leaves room for verified external sources and an explanation la
 ## Planned development
 
 1. **External vehicle-data integration** — provider contracts and provenance are implemented, and the first live government adapter is the NHTSA vPIC VIN decoder with timeout/retry handling. The adapter distinguishes `NOT_FOUND` from `UNAVAILABLE`; live network access is not required by the test suite.
-2. **LLM explanation layer** — structured outputs, evidence-grounded explanations, explicit AI-estimate labeling, and robust tool-call retries.
+2. **LLM explanation layer** — the Groq adapter validates structured JSON, retries transient failures, supports a configurable endpoint/model, and explicitly treats user-entered evidence as untrusted data. Live API credentials are not required by the test suite.
 3. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
 4. **Additional data sources** — service information, recall information and other appropriate vehicle-history sources.
 5. **Production hardening** — configuration/security review, integration tests, deployment documentation, observability and error handling.
