@@ -65,3 +65,21 @@ def test_groq_filters_deterministic_confidence_from_ai_estimates():
         "deterministic_assessment": {"verdict": "NEGOTIATE", "confidence": 0.78},
     })
     assert result.ai_estimates == ["Supported estimate from evidence"]
+
+def test_groq_filters_deterministic_repair_outputs_from_ai_estimates():
+    client = FakeClient(responses=[FakeResponse({
+        "choices": [{
+            "message": {
+                "content": '{"summary":"ok","evidence_explanations":[],"contradictions":[],"ai_estimates":["Near-term repair cost range: INR 0 to INR 0","Negotiation reduction: INR 0","Supported estimate from evidence"]}'
+            }
+        }]
+    })])
+    result = GroqLLM(api_key="test-key", client=client).explain({
+        "deterministic_assessment": {
+            "verdict": "AVOID",
+            "confidence": 0.85,
+            "near_term_repair_range_inr": [0, 0],
+            "negotiation_reduction_inr": 0,
+        },
+    })
+    assert result.ai_estimates == ["Supported estimate from evidence"]
