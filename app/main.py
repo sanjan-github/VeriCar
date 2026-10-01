@@ -26,7 +26,7 @@ from core.condition import (
 )
 from core.database import Database
 from core.demo_scenarios import build_demo_scenarios
-from core.memory_recall import recall_vehicle_memory
+from core.memory_recall import recall_vehicle_history, recall_vehicle_memory
 from core.memory_sync import sync_condition_to_memory
 from core.nhtsa_provider import NHTSAComplaintProvider, NHTSARecallProvider
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
@@ -523,8 +523,10 @@ if "saved_car" in st.session_state:
         if st.button("Assess this car", type="primary", use_container_width=True):
             try:
                 memory_result = recall_vehicle_memory(car, query="repairs, services, accidents, recurring issues, and contradictions")
+                history_result = recall_vehicle_history(car)
                 st.session_state.memory_result = memory_result
-                history_items = list(memory_result.items) if memory_result.status == "AVAILABLE" else None
+                st.session_state.history_memory_result = history_result
+                history_items = list(history_result.items) if history_result.status == "AVAILABLE" else None
                 result = run_assessment(car, saved_condition, db, today=date.today(), generate_explanation=True, history_items=history_items)
                 st.session_state.assessment_result = result
             except Exception as exc:
