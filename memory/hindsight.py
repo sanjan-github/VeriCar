@@ -120,19 +120,52 @@ class HindsightMemory:
         vehicle_id: str,
         query: str,
     ) -> list[MemoryItem]:
-        """Recall historical evidence for one vehicle."""
+        """Recall semantic historical evidence for the vehicle UI."""
 
+        return await self._recall(
+            vehicle_id=vehicle_id,
+            query=query,
+            types=["world", "experience", "observation"],
+            prefer_observations=True,
+            include_source_facts=True,
+        )
+
+    async def recall_vehicle_reports(
+        self,
+        *,
+        vehicle_id: str,
+        query: str = "vehicle evidence report",
+    ) -> list[MemoryItem]:
+        """Recall original retained reports for deterministic reconciliation."""
+
+        return await self._recall(
+            vehicle_id=vehicle_id,
+            query=query,
+            types=["world"],
+            prefer_observations=False,
+            include_source_facts=False,
+        )
+
+    async def _recall(
+        self,
+        *,
+        vehicle_id: str,
+        query: str,
+        types: list[str],
+        prefer_observations: bool,
+        include_source_facts: bool,
+    ) -> list[MemoryItem]:
         if not query.strip():
             raise ValueError("query must not be empty.")
 
         response = await self._client.arecall(
             bank_id=self._bank_id(vehicle_id),
             query=query.strip(),
-            types=["world", "experience", "observation"],
+            types=types,
             budget="mid",
             max_tokens=4096,
-            include_source_facts=True,
-            prefer_observations=True,
+            include_source_facts=include_source_facts,
+            prefer_observations=prefer_observations,
             tags=[f"vehicle:{vehicle_id.strip()}"],
         )
 
