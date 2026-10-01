@@ -24,6 +24,7 @@ class Database:
     def _connect(self):
         connection = sqlite3.connect(self.path)
         connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
         try:
             yield connection
         except Exception:
@@ -135,6 +136,8 @@ class Database:
             ).fetchone()
 
     def list_cars(self, limit: int = 20):
+        if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+            raise ValueError("limit must be a positive integer.")
         with self._connect() as connection:
             return list(
                 connection.execute(
