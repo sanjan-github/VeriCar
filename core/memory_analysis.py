@@ -100,7 +100,21 @@ def derive_model_observations(
     if not ordered:
         return ()
 
-    model_key = f"{ordered[0].vehicle.get('brand', '')}:{ordered[0].vehicle.get('model', '')}:{ordered[0].vehicle.get('manufacture_year', '')}"
+    vehicle_ids = {
+        str(snapshot.metadata.get("vehicle_id") or snapshot.vehicle.get("vehicle_id") or "")
+        for snapshot in ordered
+    }
+    vehicle_ids.discard("")
+    if len(vehicle_ids) < 2:
+        return ()
+
+    model_keys = {
+        f"{snapshot.vehicle.get('brand', '')}:{snapshot.vehicle.get('model', '')}:{snapshot.vehicle.get('manufacture_year', '')}"
+        for snapshot in ordered
+    }
+    if len(model_keys) != 1:
+        return ()
+    model_key = next(iter(model_keys))
     reports_by_category: dict[str, list[str]] = {}
 
     for snapshot in ordered:
