@@ -90,6 +90,17 @@ st.markdown(
     .status-body { color:var(--muted); line-height:1.5; }
     .status-action { display:inline-block; color:var(--red); font-weight:800; margin-top:.7rem; }
     .history-card.matched { border-left:5px solid var(--green); background:var(--green-soft); }
+    .history-summary { display:flex; justify-content:space-between; align-items:center; gap:1rem; border:1px solid var(--line); border-radius:16px; padding:1rem 1.2rem; margin:.8rem 0 1rem; background:var(--white); box-shadow:0 8px 20px var(--shadow); }
+    .history-summary.green { border-left:5px solid var(--green); }
+    .history-summary.amber { border-left:5px solid var(--amber); }
+    .history-summary.red { border-left:5px solid var(--red); }
+    .history-summary.blue { border-left:5px solid #8495a7; }
+    .history-summary-label { color:var(--muted); font-size:.68rem; letter-spacing:.14em; font-weight:800; }
+    .history-summary-title { color:var(--ink); font-size:1.15rem; font-weight:800; margin-top:.15rem; }
+    .history-summary-count { color:var(--muted); font-size:.85rem; font-weight:700; white-space:nowrap; }
+    .timeline-item { border-left:2px solid var(--line); padding:.42rem 0 .42rem .8rem; margin:.12rem 0; color:var(--ink); line-height:1.45; }
+    div[data-testid="stExpander"] .timeline-item + .timeline-item { margin-top:.05rem; }
+
     .history-card.changed { border-left:5px solid var(--amber); background:var(--amber-soft); }
     .history-card.contradiction { border-left:5px solid var(--red); background:var(--red-soft); }
     .history-card.insufficient, .history-card.no-history, .history-card.unavailable { border-left:5px solid #8495a7; background:var(--blue-soft); }
@@ -164,6 +175,224 @@ def _render_history_check(result, memory_result) -> None:
 
 
 
+
+
+
+def _format_history_date(value) -> str:
+    if value is None:
+        return "Date not recorded"
+    return value.strftime("%d %b %Y")
+
+
+def _known_history(value: object) -> bool:
+    return value is not None and value != UNKNOWN and value != ""
+
+
+def _render_history_timeline(result, memory_result) -> None:
+    """Render recalled vehicle history as a calm, chronological user-facing timeline."""
+    reconciliation = getattr(result, "history_reconciliation", None)
+    snapshots = list(getattr(reconciliation, "snapshots", ()) if reconciliation else ())
+    snapshots.sort(
+        key=lambda snapshot: snapshot.observed_at or date.min,
+        reverse=True,
+    )
+
+    st.markdown('<div class="eyebrow">VEHICLE HISTORY</div>', unsafe_allow_html=True)
+
+    if memory_result is not None and memory_result.status == "UNAVAILABLE":
+        st.markdown(
+            '<div class="history-card unavailable">'
+            '<div class="status-title">Vehicle history is temporarily unavailable.</div>'
+            '<div class="status-body">This does not mean the vehicle has no history. VeriCar could not retrieve its saved records right now.</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    if not snapshots:
+        st.markdown(
+            '<div class="history-card no-history">'
+            '<div class="status-title">No earlier VeriCar report found.</div>'
+            '<div class="status-body">This is the first saved report VeriCar can compare for this vehicle.</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    status = getattr(reconciliation, "status", "NO_HISTORY")
+    status_labels = {
+        "MATCHED": ("History matches", "green"),
+        "CHANGED": ("History has changed", "amber"),
+        "CONTRADICTION": ("History needs verification", "red"),
+        "INSUFFICIENT": ("History is incomplete", "blue"),
+    }
+    status_label, status_tone = status_labels.get(status, ("History available", "blue"))
+
+    st.markdown(
+        f'<div class="history-summary {status_tone}">'
+        f'<div><div class="history-summary-label">SAVED VEHICLE HISTORY</div>'
+        f'<div class="history-summary-title">{_safe(status_label)}</div></div>'
+        f'<div class="history-summary-count">{len(snapshots)} report{"s" if len(snapshots) != 1 else ""}</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    latest = snapshots[0]
+    latest_km = latest.vehicle.get("odometer_km")
+    if latest_km is not None:
+        st.caption(
+            f"Most recent saved report: {_format_history_date(latest.observed_at)} · "
+            f"{latest_km:,} km"
+        )
+    else:
+        st.caption(f"Most recent saved report: {_format_history_date(latest.observed_at)}")
+
+    for index, snapshot in enumerate(snapshots):
+        condition = snapshot.condition
+        odometer = snapshot.vehicle.get("odometer_km")
+        date_label = _format_history_date(snapshot.observed_at)
+        km_label = f"{odometer:,} km" if odometer is not None else "Odometer not recorded"
+        report_label = f"{date_label}  ·  {km_label}"
+
+        with st.expander(report_label, expanded=index == 0):
+            header = st.columns([1.618, 1])
+            with header[0]:
+                vehicle_name = " ".join(
+                    str(value).strip()
+                    for value in (
+                        snapshot.vehicle.get("brand"),
+                        snapshot.vehicle.get("model"),
+                        snapshot.vehicle.get("variant"),
+                    )
+                    if _known_history(value)
+                )
+                st.markdown(f"**{_safe(vehicle_name or 'Vehicle details not recorded')}**")
+                details = " · ".join(
+                    str(value).strip()
+                    for value in (
+                        snapshot.vehicle.get("manufacture_year"),
+                        snapshot.vehicle.get("fuel_type"),
+                        snapshot.vehicle.get("transmission"),
+                    )
+                    if _known_history(value)
+                )
+                if details:
+                    st.caption(details)
+            with header[1]:
+                asking_price = snapshot.vehicle.get("asking_price_inr")
+                if asking_price is not None:
+                    st.markdown(f"**₹{asking_price:,}**")
+                    st.caption("Asking price recorded")
+
+            sections: list[tuple[str, list[str]]] = []
+
+            services = []
+            for item in sorted(condition.services, key=lambda item: item.observed_at, reverse=True):
+                parts = [_format_history_date(item.observed_at)]
+                if item.odometer_km is not None:
+                    parts.append(f"{item.odometer_km:,} km")
+                if item.description:
+                    parts.append(item.description)
+                if item.gap_notes:
+                    parts.append(item.gap_notes)
+                services.append(" · ".join(parts))
+            if services:
+                sections.append(("Service history", services))
+
+            repairs = []
+            for item in sorted(condition.repairs, key=lambda item: item.observed_at, reverse=True):
+                parts = [_format_history_date(item.observed_at)]
+                if item.odometer_km is not None:
+                    parts.append(f"{item.odometer_km:,} km")
+                if item.category:
+                    parts.append(item.category)
+                if item.description:
+                    parts.append(item.description)
+                if item.cost_inr is not None:
+                    parts.append(f"₹{item.cost_inr:,}")
+                repairs.append(" · ".join(parts))
+            if repairs:
+                sections.append(("Repairs", repairs))
+
+            condition_items = []
+            for field, label in (
+                ("accident_status", "Accident history"),
+                ("airbag_deployed", "Airbag deployment"),
+                ("repainted_panels", "Repainted panels"),
+            ):
+                value = getattr(condition, field)
+                if _known_history(value):
+                    condition_items.append(f"{label}: {value}")
+            if condition_items:
+                sections.append(("Accident & condition", condition_items))
+
+            document_items = []
+            for field, label in (
+                ("rc_match", "RC matches vehicle details"),
+                ("insurance_valid", "Insurance valid"),
+                ("puc_valid", "PUC valid"),
+                ("loan_hypothecation_closed", "Loan/hypothecation closed"),
+                ("vin_matches_rc", "VIN/chassis matches RC"),
+            ):
+                value = condition.documents.get(field)
+                if _known_history(value):
+                    document_items.append(f"{label}: {value}")
+            if document_items:
+                sections.append(("Documents", document_items))
+
+            inspection_items = []
+            for field, label in (
+                ("flood_signs", "Flood signs"),
+                ("rust", "Rust"),
+                ("oil_or_coolant_leaks", "Oil/coolant leaks"),
+                ("panel_gaps_or_paint_mismatch", "Panel gaps/paint mismatch"),
+                ("ac_works", "AC works"),
+                ("lights_windows_work", "Lights and windows work"),
+            ):
+                value = condition.physical_inspection.get(field)
+                if _known_history(value):
+                    inspection_items.append(f"{label}: {value}")
+            if inspection_items:
+                sections.append(("Physical inspection", inspection_items))
+
+            test_drive_items = []
+            for field, label in (
+                ("engine_noise", "Engine noise"),
+                ("hesitation", "Hesitation"),
+                ("brakes_pull_or_spongy", "Brakes"),
+                ("steering_play", "Steering"),
+            ):
+                value = condition.test_drive.get(field)
+                if _known_history(value):
+                    test_drive_items.append(f"{label}: {value}")
+            if test_drive_items:
+                sections.append(("Test drive", test_drive_items))
+
+            for title, items in sections:
+                st.markdown(f"**{title}**")
+                for item in items:
+                    st.markdown(f'<div class="timeline-item">{_safe(item)}</div>', unsafe_allow_html=True)
+
+            if condition.seller_claims:
+                st.markdown("**Seller claims**")
+                st.write(condition.seller_claims)
+            if condition.obd_notes:
+                st.markdown("**OBD notes**")
+                st.write(condition.obd_notes)
+            if condition.tyre_dot_codes:
+                st.markdown("**Tyre DOT codes**")
+                st.write(condition.tyre_dot_codes)
+
+    if memory_result is not None and memory_result.items:
+        with st.expander("Additional recalled notes", expanded=False):
+            st.caption(
+                "These are semantic memories recalled from Hindsight. "
+                "They provide context; the structured reports above are what VeriCar uses for reconciliation."
+            )
+            for item in memory_result.items[:8]:
+                st.markdown(f'<div class="timeline-item">{_safe(item.text)}</div>', unsafe_allow_html=True)
+            if len(memory_result.items) > 8:
+                st.caption(f"{len(memory_result.items) - 8} additional notes are available in memory.")
 
 
 
@@ -550,17 +779,7 @@ if "saved_car" in st.session_state:
             except Exception as exc:
                 st.error("Inspection report could not be generated: " + str(exc))
 
-        with st.expander("View recalled history notes", expanded=False):
-            if memory_result is None:
-                st.caption("Run an assessment to check the vehicle's previous VeriCar record.")
-            elif memory_result.status == "UNAVAILABLE":
-                st.caption("Vehicle history is unavailable. This does not mean the vehicle has no history.")
-            elif not memory_result.items:
-                st.caption("No matching historical notes were returned.")
-            else:
-                st.caption("These notes are historical evidence, not automatic truth. They do not change the deterministic verdict.")
-                for item in memory_result.items:
-                    st.write(item.text)
+        _render_history_timeline(result, memory_result)
 
 st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
 st.caption("VeriCar helps you inspect evidence. It does not replace an independent inspection, original document checks, or professional mechanical advice.")
