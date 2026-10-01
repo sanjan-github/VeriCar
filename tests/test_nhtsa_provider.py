@@ -141,3 +141,70 @@ def test_nhtsa_does_not_query_without_vin():
 
     assert result.status == "NOT_FOUND"
     assert client.calls == []
+
+
+from core.nhtsa_provider import NHTSARecallProvider
+
+
+def test_nhtsa_recall_provider_returns_model_scoped_evidence():
+    client = FakeClient(
+        responses=[
+            FakeResponse(
+                {
+                    "Count": 1,
+                    "results": [
+                        {
+                            "NHTSACampaignNumber": "24V000000",
+                            "Component": "SERVICE BRAKES",
+                            "Summary": "Example recall",
+                            "Remedy": "Example remedy",
+                        }
+                    ],
+                }
+            )
+        ]
+    )
+
+    result = NHTSARecallProvider(client=client).get_recalls(_car())
+
+    assert result.status == "FOUND"
+    assert result.source.source_id == "nhtsa_recalls"
+    assert result.source_reliability == "high"
+    assert result.evidence_confidence == "high"
+    assert result.evidence_scope == "model"
+    assert result.data["model"] == "Accord"
+    assert len(result.data["recalls"]) == 1
+    assert client.calls[0][1] == {
+        "make": "Honda",
+        "model": "Accord",
+        "modelYear": "2003",
+    }
+
+
+def test_nhtsa_recall_provider_distinguishes_no_data_from_unavailable():
+    client = FakeClient(responses=[FakeResponse({"Count": 0, "results": []})])
+
+    result = NHTSARecallProvider(client=client).get_recalls(_car())
+
+    assert result.status == "NOT_FOUND"
+    assert result.evidence_scope == "model"
+
+    unavailable_client = FakeClient(errors=[httpx.ConnectError("offline")])
+    result = NHTSARecallProvider(
+        client=unavailable_client,
+        retries=0,
+    ).get_recalls(_car())
+
+    assert result.status == "UNAVAILABLE"
+    assert result.data is None
+
+
+def test_nhtsa_recall_provider_requires_vehicle_identity():
+    client = FakeClient()
+    car = Car(car_id="CAR-4", brand="", model="", manufacture_year=2003)
+
+    result = NHTSARecallProvider(client=client).get_recalls(car)
+
+    assert result.status == "ERROR"
+    assert result.evidence_scope == "model"
+    assert client.calls == []
