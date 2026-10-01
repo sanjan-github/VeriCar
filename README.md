@@ -44,6 +44,7 @@ A typical workflow is:
 - Three synthetic demo scenarios
 - PDF assessment report
 - NHTSA vPIC provider layer
+- NHTSA recall provider with explicit model/year evidence scope
 - Groq structured explanation layer
 - End-to-end integration tests
 - Automated test suite
