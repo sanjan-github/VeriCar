@@ -439,11 +439,27 @@ VeriCar is under active development. The current prototype does **not** claim th
 
 The architecture leaves room for verified external sources and an explanation layer without making the LLM the source of truth.
 
-## Planned development
+## External data-source roadmap
 
-1. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
-2. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
-3. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
+### Implemented verified sources
+
+- **NHTSA vPIC** — vehicle-scoped VIN decoding and identity fields.
+- **NHTSA Recalls API** — model/year recall evidence.
+- **NHTSA Complaints API** — model/year complaint evidence about reports submitted to NHTSA.
+
+The NHTSA integrations explicitly preserve evidence scope and distinguish successful no-data responses from unavailable or failed lookups. Recall and complaint records are not treated as proof about a particular vehicle.
+
+### Remaining external-source work
+
+- **Verified service-history provider** — service-history data requires a provider with an appropriate API/license and credentials. VeriCar does not fabricate a service-history integration or treat a generic vehicle-history source as a verified service record.
+- **Additional vehicle-history providers** — add providers only when their provenance, API contract, licensing and evidence scope can be verified.
+- **Further NHTSA integrations** — add additional public NHTSA datasets only where they provide useful, well-scoped evidence without bypassing the deterministic assessment engine.
+
+## Remaining development
+
+1. **Production hardening** — structured observability, operational monitoring, deployment verification and dependency maintenance.
+2. **Consumer UX refinement** — continue improving historical reconciliation, evidence explanations and next-step guidance based on real usage.
+3. **Additional automated coverage** — expand integration and external-provider failure-mode tests as new providers are added.
 
 ## For developers and other LLMs
 
