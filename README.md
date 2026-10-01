@@ -54,6 +54,17 @@ The profiles in `data/expected_profiles.json` use `source: synthetic_seed`. They
 
 The external-source and LLM layers are intentionally separate from the deterministic evidence engine. NHTSA vPIC and Groq are implemented as optional integrations; live network access and credentials are not required by the test suite.
 
+## External vehicle data
+
+VeriCar includes an NHTSA provider layer for two different evidence scopes:
+
+- **NHTSA vPIC** — VIN decoding and vehicle identity fields. This is vehicle-scoped provider evidence when a valid VIN lookup succeeds.
+- **NHTSA Recalls API** — recall information returned for make/model/model-year queries. This is model/year-scoped evidence and does **not** prove that a specific vehicle received or missed a recall remedy.
+
+Provider responses explicitly distinguish successful data, successful no-data responses, unavailable providers, and processing errors. Provider provenance keeps **source reliability**, **evidence confidence**, and **evidence scope** separate.
+
+NHTSA responses are optional external evidence. They do not bypass VeriCar's deterministic rules or automatically change the assessment unless a corresponding deterministic rule exists. Live provider tests are mocked; credentials are not required for the NHTSA public endpoints used here.
+
 ## Expanded Hindsight memory
 
 VeriCar's Hindsight layer now preserves more than a single previous report. Multiple structured reports for the same vehicle remain independently addressable and are ordered by observation time during reconciliation.
