@@ -475,6 +475,7 @@ if "saved_car" in st.session_state:
         saved_condition = ConditionRecord(car_id=car.car_id, repairs=repairs, services=services, accident_status=accident_status_value, repainted_panels=repainted_panels_value, airbag_deployed=airbag_deployed_value, documents=documents, physical_inspection=physical, test_drive=test_drive, obd_notes=obd_notes.strip() or None, tyre_dot_codes=tyre_dot_codes.strip() or None, seller_claims=seller_claims.strip() or None)
         db.save_condition(saved_condition)
         st.session_state.saved_condition = saved_condition
+        st.session_state.pop("nhtsa_recall_result", None)
         report_id, memory_error = sync_condition_to_memory(car, saved_condition, db)
         if memory_error is None:
             st.success("Condition saved. VeriCar retained the record for future comparison.")
