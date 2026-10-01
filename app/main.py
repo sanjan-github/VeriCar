@@ -162,6 +162,40 @@ def _render_history_check(result, memory_result) -> None:
         st.caption("The assessment remains deterministic; history availability is shown separately from the verdict.")
 
 
+
+
+def _render_memory_insights(result) -> None:
+    analysis = getattr(result, "memory_analysis", None)
+    reconciliation = getattr(result, "history_reconciliation", None)
+    if analysis is None:
+        return
+
+    influential = analysis.influential_memories
+    longitudinal = getattr(reconciliation, "longitudinal_findings", ()) if reconciliation else ()
+    model_observations = analysis.model_observations
+
+    if not (influential or longitudinal or model_observations):
+        return
+
+    with st.expander("Historical memory insights", expanded=False):
+        if influential:
+            st.markdown("**Influential historical evidence**")
+            for item in influential:
+                observed = item.observed_at.isoformat() if item.observed_at else "date unavailable"
+                st.write(f"- **{item.field}** — {item.reason} ({observed}; source: {item.source_type})")
+
+        if longitudinal:
+            st.markdown("**Longitudinal changes**")
+            for finding in longitudinal:
+                st.write(f"- {finding.message}")
+
+        if model_observations:
+            st.markdown("**Model-level observations**")
+            st.caption("These are repeated observations from this vehicle's history, not manufacturer specifications or reliability statistics.")
+            for observation in model_observations:
+                st.write(f"- {observation.pattern} Reports: {observation.count}.")
+
+
 def _render_verdict(assessment) -> None:
     copy = verdict_copy(assessment.verdict)
     st.markdown('<div class="eyebrow">VERICAR ASSESSMENT</div>', unsafe_allow_html=True)
@@ -442,6 +476,7 @@ if "saved_car" in st.session_state:
         if result is not None:
             # History is deliberately rendered before the deterministic verdict.
             _render_history_check(result, memory_result)
+            _render_memory_insights(result)
 
         if result is not None and result.profile_resolution.status == "MISSING":
             st.warning("No expected profile is available for this exact vehicle configuration. No verdict was generated.")
