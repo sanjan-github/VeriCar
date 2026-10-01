@@ -22,7 +22,7 @@ class InfluentialMemory:
 
 @dataclass(frozen=True)
 class ModelObservation:
-    """An observational pattern; never an authoritative model specification."""
+    """A cross-vehicle observational pattern; never an authoritative specification."""
 
     model_key: str
     pattern: str
@@ -90,10 +90,11 @@ def derive_model_observations(
     *,
     limit: int = 10,
 ) -> tuple[ModelObservation, ...]:
-    """Derive repeated observational patterns without changing reference data.
+    """Derive cross-vehicle observational patterns without changing reference data.
 
-    Only repeated repair categories are surfaced. These observations are
-    explicitly non-authoritative and must not mutate expected profiles.
+    Patterns require at least two distinct vehicles with the same model/year.
+    This function intentionally does not infer manufacturer reliability claims
+    and never mutates expected profiles.
     """
     ordered = list(snapshots)
     if not ordered:
