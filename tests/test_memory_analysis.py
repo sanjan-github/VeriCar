@@ -121,3 +121,41 @@ def test_model_observation_requires_multiple_distinct_vehicles():
     analysis = analyze_longitudinal_memory(car2, condition2, reconciliation)
 
     assert analysis.model_observations == ()
+
+
+def test_model_observation_is_derived_across_distinct_vehicle_ids():
+    car1 = make_car(50_000, "CAR-A")
+    car2 = make_car(55_000, "CAR-B")
+    condition1 = ConditionRecord.empty(car1.car_id)
+    condition2 = ConditionRecord.empty(car2.car_id)
+    repair1 = Repair(
+        observed_at=datetime(2026, 7, 1, tzinfo=timezone.utc).date(),
+        odometer_km=49_000,
+        category="Brakes",
+        description="Brake service",
+        cost_inr=5000,
+        garage_type="Authorized",
+    )
+    repair2 = Repair(
+        observed_at=datetime(2026, 8, 1, tzinfo=timezone.utc).date(),
+        odometer_km=54_000,
+        category="Brakes",
+        description="Brake service",
+        cost_inr=5500,
+        garage_type="Authorized",
+    )
+    condition1.repairs.append(repair1)
+    condition2.repairs.append(repair2)
+
+    items = [
+        make_item(car1, condition1, "R1", datetime(2026, 7, 1, tzinfo=timezone.utc)),
+        make_item(car2, condition2, "R2", datetime(2026, 8, 1, tzinfo=timezone.utc)),
+    ]
+    reconciliation = reconcile_vehicle_history(car2, condition2, items)
+    analysis = analyze_longitudinal_memory(car2, condition2, reconciliation)
+
+    assert len(analysis.model_observations) == 1
+    observation = analysis.model_observations[0]
+    assert observation.model_key == "Toyota:City:2020"
+    assert observation.count == 2
+    assert observation.source_report_ids == ("R1", "R2")
