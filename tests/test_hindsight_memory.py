@@ -111,3 +111,23 @@ async def test_empty_query_is_rejected_before_hindsight_call():
         await memory.recall_vehicle(vehicle_id="CAR-1", query=" ")
 
     assert fake.calls == []
+
+
+
+@pytest.mark.asyncio
+async def test_recall_vehicle_reports_requests_original_world_memories():
+    fake = FakeHindsight()
+    memory = HindsightMemory(fake)
+
+    items = await memory.recall_vehicle_reports(
+        vehicle_id="CAR-1",
+    )
+
+    assert len(items) == 1
+    recall_name, recall_kwargs = fake.calls[0]
+    assert recall_name == "recall"
+    assert recall_kwargs["types"] == ["world"]
+    assert recall_kwargs["include_source_facts"] is False
+    assert recall_kwargs["prefer_observations"] is False
+    assert recall_kwargs["query"] == "vehicle evidence report"
+    assert recall_kwargs["tags"] == ["vehicle:CAR-1"]
