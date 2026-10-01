@@ -48,7 +48,7 @@ def test_memory_recall_reports_service_unavailable(monkeypatch):
 
     assert result.status == "UNAVAILABLE"
     assert result.items == ()
-    assert "connection refused" in result.error
+    assert result.error == "RuntimeError: Hindsight service unavailable."\n    assert "CAR-1" not in result.error
 
 
 def test_memory_recall_rejects_empty_query():
