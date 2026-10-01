@@ -5,6 +5,8 @@ from typing import Literal
 
 
 SourceKind = Literal["synthetic", "official", "government", "commercial", "user", "unknown"]
+Reliability = Literal["high", "medium", "low", "unknown"]
+EvidenceScope = Literal["vehicle", "model", "unknown"]
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,9 @@ class ProviderResult:
     source: DataSource
     data: object | None = None
     message: str | None = None
+    source_reliability: Reliability = "unknown"
+    evidence_confidence: Reliability = "unknown"
+    evidence_scope: EvidenceScope = "unknown"
 
     @property
     def available(self) -> bool:
