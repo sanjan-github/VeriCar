@@ -46,7 +46,9 @@ A typical workflow is:
 - NHTSA vPIC provider layer
 - Groq structured explanation layer
 - End-to-end integration tests
-- Automated test suite (137 tests in the current suite; 137 passed in the last local full-suite verification before the latest CSS-only UI commits)
+- Automated test suite
+- GitHub Actions CI for compilation and automated tests
+- Deployment and operations guide
 
 ### Important limitation
 
@@ -439,9 +441,8 @@ The architecture leaves room for verified external sources and an explanation la
 ## Planned development
 
 1. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
-2. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
-3. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
-4. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
+2. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
+3. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
 
 ## For developers and other LLMs
 
