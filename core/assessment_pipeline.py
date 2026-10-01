@@ -15,6 +15,7 @@ from core.groq_llm import GroqLLM
 from core.history_reconciliation import HistoryReconciliation, reconcile_vehicle_history
 from memory.hindsight import MemoryItem
 from core.models import Car
+from core.memory_analysis import LongitudinalMemoryAnalysis, analyze_longitudinal_memory
 from core.profile_resolver import ProfileResolution, resolve_expected_profile
 from core.profile_seed import seed_expected_profiles
 from core.rules import RuleFlag, evaluate_rules
@@ -28,6 +29,7 @@ class AssessmentPipelineResult:
     assessment: Assessment | None
     explanation: AssessmentExplanation | None = None
     history_reconciliation: HistoryReconciliation | None = None
+    memory_analysis: LongitudinalMemoryAnalysis | None = None
 
 
 def run_assessment(
@@ -53,8 +55,10 @@ def run_assessment(
 
     resolution = resolve_expected_profile(car, db)
     history_reconciliation = None
+    memory_analysis = None
     if history_items is not None:
         history_reconciliation = reconcile_vehicle_history(car, condition, history_items)
+        memory_analysis = analyze_longitudinal_memory(car, condition, history_reconciliation)
     rule_flags = tuple(evaluate_rules(car, condition, today=today))
 
     if resolution.profile is None:
@@ -65,6 +69,7 @@ def run_assessment(
             None,
             None,
             history_reconciliation,
+            memory_analysis,
         )
 
     comparison = tuple(
@@ -91,4 +96,5 @@ def run_assessment(
         assessment,
         explanation,
         history_reconciliation,
+        memory_analysis,
     )
