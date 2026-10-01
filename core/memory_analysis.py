@@ -6,7 +6,7 @@ from typing import Any, Iterable
 
 from core.condition import ConditionRecord
 from core.models import Car, UNKNOWN
-from core.history_reconciliation import HistoryReconciliation, HistoricalSnapshot, HistoryFinding
+from core.history_reconciliation import HistoryReconciliation, HistoricalSnapshot
 
 
 @dataclass(frozen=True)
