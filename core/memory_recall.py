@@ -47,3 +47,33 @@ def recall_vehicle_memory(
         status="AVAILABLE",
         items=tuple(items),
     )
+
+
+
+def recall_vehicle_history(
+    car: Car,
+    *,
+    query: str = "vehicle evidence report",
+) -> MemoryRecallResult:
+    """Recall original retained reports for deterministic history reconciliation."""
+
+    if not query.strip():
+        raise ValueError("query must not be empty.")
+
+    try:
+        items = asyncio.run(
+            HindsightMemory().recall_vehicle_reports(
+                vehicle_id=car.car_id,
+                query=query,
+            )
+        )
+    except Exception as exc:
+        return MemoryRecallResult(
+            status="UNAVAILABLE",
+            error=str(exc)[:500],
+        )
+
+    return MemoryRecallResult(
+        status="AVAILABLE",
+        items=tuple(items),
+    )
