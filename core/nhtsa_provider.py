@@ -137,6 +137,9 @@ class NHTSAVinProvider:
                 status="FOUND",
                 source=self.source,
                 data=data,
+                source_reliability="high",
+                evidence_confidence="high",
+                evidence_scope="vehicle",
             )
         except (httpx.HTTPError, ValueError, TypeError) as exc:
             return ProviderResult(
