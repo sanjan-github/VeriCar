@@ -97,7 +97,7 @@ def test_influential_memory_is_derived_from_contradiction():
     )
 
 
-def test_model_observation_is_labeled_as_observational():
+def test_model_observation_requires_multiple_distinct_vehicles():
     car1 = make_car(50_000)
     car2 = make_car(55_000)
     condition1 = ConditionRecord.empty(car1.car_id)
@@ -120,5 +120,4 @@ def test_model_observation_is_labeled_as_observational():
     reconciliation = reconcile_vehicle_history(car2, condition2, items)
     analysis = analyze_longitudinal_memory(car2, condition2, reconciliation)
 
-    assert analysis.model_observations
-    assert "observed" in analysis.model_observations[0].pattern.lower()
+    assert analysis.model_observations == ()
