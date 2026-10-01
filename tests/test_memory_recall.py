@@ -56,3 +56,31 @@ def test_memory_recall_rejects_empty_query():
 
     with pytest.raises(ValueError, match="query"):
         recall_vehicle_memory(make_car(), query=" ")
+
+
+
+def test_memory_recall_history_returns_original_reports(monkeypatch):
+    async def fake_recall(self, *, vehicle_id, query):
+        assert vehicle_id == "CAR-1"
+        assert query == "vehicle evidence report"
+        return [
+            MemoryItem(
+                memory_id="memory-report",
+                text="VeriCar vehicle evidence report. {\"vehicle\": {}}",
+                metadata={"report_id": "RPT-1"},
+                tags=["vehicle:CAR-1"],
+            )
+        ]
+
+    monkeypatch.setattr(
+        "core.memory_recall.HindsightMemory.recall_vehicle_reports",
+        fake_recall,
+    )
+
+    from core.memory_recall import recall_vehicle_history
+
+    result = recall_vehicle_history(make_car())
+
+    assert result.status == "AVAILABLE"
+    assert len(result.items) == 1
+    assert result.items[0].metadata["report_id"] == "RPT-1"
