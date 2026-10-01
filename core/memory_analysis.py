@@ -126,7 +126,7 @@ def derive_model_observations(
 
     observations: list[ModelObservation] = []
     for category, report_ids in sorted(reports_by_category.items()):
-        unique_reports = tuple(dict.fromkeys(report_ids))
+        unique_reports = tuple(sorted(set(report_ids)))
         if len(unique_reports) < 2:
             continue
         observations.append(
