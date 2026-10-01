@@ -8,6 +8,7 @@ def test_memory_sync_records_failure_without_losing_local_data(tmp_path, monkeyp
     db = Database(tmp_path / "vericar.db")
     car = Car(car_id="CAR-1", brand="Toyota", model="City", manufacture_year=2020)
     condition = ConditionRecord.empty(car.car_id)
+    db.save_car(car)
 
     class BrokenMemory:
         async def retain_vehicle_report(self, **kwargs):
@@ -17,11 +18,11 @@ def test_memory_sync_records_failure_without_losing_local_data(tmp_path, monkeyp
     report_id, error = sync_condition_to_memory(car, condition, db)
 
     assert report_id.startswith("RPT-")
-    assert error == "Hindsight unavailable"
+    assert error == "RuntimeError: Hindsight service unavailable."
     row = db.get_memory_report(report_id)
     assert row["status"] == "failed"
-    assert row["error"] == "RuntimeError: Hindsight service unavailable."\n    assert "CAR-1" not in row["error"]
-
+    assert row["error"] == "RuntimeError: Hindsight service unavailable."
+    assert "CAR-1" not in row["error"]
 
 
 def test_memory_sync_is_idempotent_for_identical_evidence(tmp_path, monkeypatch):
