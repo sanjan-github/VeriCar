@@ -28,6 +28,7 @@ from core.database import Database
 from core.demo_scenarios import build_demo_scenarios
 from core.memory_recall import recall_vehicle_memory
 from core.memory_sync import sync_condition_to_memory
+from core.nhtsa_provider import NHTSARecallProvider
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
 from core.pdf_report import build_assessment_pdf
 from app.ui_helpers import history_status_copy, humanize_history_finding, verdict_copy
@@ -162,6 +163,38 @@ def _render_history_check(result, memory_result) -> None:
         st.caption("The assessment remains deterministic; history availability is shown separately from the verdict.")
 
 
+
+
+
+
+def _render_recall_check(car) -> None:
+    if st.button("Check NHTSA recalls", use_container_width=True):
+        result = NHTSARecallProvider().get_recalls(car)
+        st.session_state.nhtsa_recall_result = result
+
+    result = st.session_state.get("nhtsa_recall_result")
+    if result is None:
+        return
+
+    with st.expander("NHTSA recall information", expanded=False):
+        st.caption("NHTSA recall results are model/year evidence. They do not prove that this specific vehicle received or missed a remedy.")
+        if result.status == "UNAVAILABLE":
+            st.warning("NHTSA recall information is currently unavailable.")
+        elif result.status == "NOT_FOUND":
+            st.info("NHTSA returned no matching recall information for this make/model/year query.")
+        elif result.status == "ERROR":
+            st.warning("NHTSA recall lookup could not be completed.")
+        elif result.status == "FOUND":
+            recalls = (result.data or {}).get("recalls", [])
+            st.write(f"Source: {result.source.name}")
+            st.write(f"Scope: {result.evidence_scope}")
+            for index, recall in enumerate(recalls, start=1):
+                summary = recall.get("Summary") or recall.get("summary") or "No summary supplied."
+                component = recall.get("Component") or recall.get("component") or "Component not supplied."
+                campaign = recall.get("NHTSACampaignNumber") or recall.get("campaignNumber") or "Identifier not supplied."
+                st.markdown(f"**Recall {index} — {campaign}**")
+                st.write(f"Component: {component}")
+                st.write(f"Summary: {summary}")
 
 
 def _render_memory_insights(result) -> None:
@@ -477,6 +510,7 @@ if "saved_car" in st.session_state:
             # History is deliberately rendered before the deterministic verdict.
             _render_history_check(result, memory_result)
             _render_memory_insights(result)
+            _render_recall_check(car)
 
         if result is not None and result.profile_resolution.status == "MISSING":
             st.warning("No expected profile is available for this exact vehicle configuration. No verdict was generated.")
