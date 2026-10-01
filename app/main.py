@@ -28,7 +28,7 @@ from core.database import Database
 from core.demo_scenarios import build_demo_scenarios
 from core.memory_recall import recall_vehicle_memory
 from core.memory_sync import sync_condition_to_memory
-from core.nhtsa_provider import NHTSARecallProvider
+from core.nhtsa_provider import NHTSAComplaintProvider, NHTSARecallProvider
 from core.models import Car, UNKNOWN, clean_optional_text, new_car_id
 from core.pdf_report import build_assessment_pdf
 from app.ui_helpers import history_status_copy, humanize_history_finding, verdict_copy
@@ -167,35 +167,60 @@ def _render_history_check(result, memory_result) -> None:
 
 
 
-def _render_recall_check(car) -> None:
-    if st.button("Check NHTSA recalls", use_container_width=True):
-        result = NHTSARecallProvider().get_recalls(car)
-        st.session_state.nhtsa_recall_result = result
+def _render_nhtsa_checks(car) -> None:
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Check NHTSA recalls", use_container_width=True):
+            st.session_state.nhtsa_recall_result = NHTSARecallProvider().get_recalls(car)
+    with col2:
+        if st.button("Check NHTSA complaints", use_container_width=True):
+            st.session_state.nhtsa_complaint_result = NHTSAComplaintProvider().get_complaints(car)
 
-    result = st.session_state.get("nhtsa_recall_result")
-    if result is None:
-        return
+    recall_result = st.session_state.get("nhtsa_recall_result")
+    if recall_result is not None:
+        with st.expander("NHTSA recall information", expanded=False):
+            st.caption("NHTSA recall results are model/year evidence. They do not prove that this specific vehicle received or missed a remedy.")
+            if recall_result.status == "UNAVAILABLE":
+                st.warning("NHTSA recall information is currently unavailable.")
+            elif recall_result.status == "NOT_FOUND":
+                st.info("NHTSA returned no matching recall information for this make/model/year query.")
+            elif recall_result.status == "ERROR":
+                st.warning("NHTSA recall lookup could not be completed.")
+            elif recall_result.status == "FOUND":
+                recalls = (recall_result.data or {}).get("recalls", [])
+                st.write(f"Source: {recall_result.source.name}")
+                st.write(f"Scope: {recall_result.evidence_scope}")
+                for index, recall in enumerate(recalls, start=1):
+                    summary = recall.get("Summary") or recall.get("summary") or "No summary supplied."
+                    component = recall.get("Component") or recall.get("component") or "Component not supplied."
+                    campaign = recall.get("NHTSACampaignNumber") or recall.get("campaignNumber") or "Identifier not supplied."
+                    st.markdown(f"**Recall {index} — {campaign}**")
+                    st.write(f"Component: {component}")
+                    st.write(f"Summary: {summary}")
 
-    with st.expander("NHTSA recall information", expanded=False):
-        st.caption("NHTSA recall results are model/year evidence. They do not prove that this specific vehicle received or missed a remedy.")
-        if result.status == "UNAVAILABLE":
-            st.warning("NHTSA recall information is currently unavailable.")
-        elif result.status == "NOT_FOUND":
-            st.info("NHTSA returned no matching recall information for this make/model/year query.")
-        elif result.status == "ERROR":
-            st.warning("NHTSA recall lookup could not be completed.")
-        elif result.status == "FOUND":
-            recalls = (result.data or {}).get("recalls", [])
-            st.write(f"Source: {result.source.name}")
-            st.write(f"Scope: {result.evidence_scope}")
-            for index, recall in enumerate(recalls, start=1):
-                summary = recall.get("Summary") or recall.get("summary") or "No summary supplied."
-                component = recall.get("Component") or recall.get("component") or "Component not supplied."
-                campaign = recall.get("NHTSACampaignNumber") or recall.get("campaignNumber") or "Identifier not supplied."
-                st.markdown(f"**Recall {index} — {campaign}**")
-                st.write(f"Component: {component}")
-                st.write(f"Summary: {summary}")
-
+    complaint_result = st.session_state.get("nhtsa_complaint_result")
+    if complaint_result is not None:
+        with st.expander("NHTSA complaint information", expanded=False):
+            st.caption("NHTSA complaint results are model/year evidence about reports submitted to NHTSA. They do not prove that this specific vehicle has the reported defect.")
+            if complaint_result.status == "UNAVAILABLE":
+                st.warning("NHTSA complaint information is currently unavailable.")
+            elif complaint_result.status == "NOT_FOUND":
+                st.info("NHTSA returned no matching complaint information for this make/model/year query.")
+            elif complaint_result.status == "ERROR":
+                st.warning("NHTSA complaint lookup could not be completed.")
+            elif complaint_result.status == "FOUND":
+                complaints = (complaint_result.data or {}).get("complaints", [])
+                st.write(f"Source: {complaint_result.source.name}")
+                st.write(f"Scope: {complaint_result.evidence_scope}")
+                st.write(f"Records returned: {len(complaints)}")
+                for index, complaint in enumerate(complaints[:10], start=1):
+                    summary = complaint.get("summary") or complaint.get("Summary") or "No summary supplied."
+                    component = complaint.get("components") or complaint.get("Component") or "Component not supplied."
+                    st.markdown(f"**Complaint {index}**")
+                    st.write(f"Component: {component}")
+                    st.write(f"Summary: {summary}")
+                if len(complaints) > 10:
+                    st.caption(f"Showing the first 10 of {len(complaints)} records.")
 
 def _render_memory_insights(result) -> None:
     analysis = getattr(result, "memory_analysis", None)
@@ -476,6 +501,7 @@ if "saved_car" in st.session_state:
         db.save_condition(saved_condition)
         st.session_state.saved_condition = saved_condition
         st.session_state.pop("nhtsa_recall_result", None)
+        st.session_state.pop("nhtsa_complaint_result", None)
         report_id, memory_error = sync_condition_to_memory(car, saved_condition, db)
         if memory_error is None:
             st.success("Condition saved. VeriCar retained the record for future comparison.")
@@ -511,7 +537,7 @@ if "saved_car" in st.session_state:
             # History is deliberately rendered before the deterministic verdict.
             _render_history_check(result, memory_result)
             _render_memory_insights(result)
-            _render_recall_check(car)
+            _render_nhtsa_checks(car)
 
         if result is not None and result.profile_resolution.status == "MISSING":
             st.warning("No expected profile is available for this exact vehicle configuration. No verdict was generated.")
