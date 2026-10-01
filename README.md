@@ -408,7 +408,7 @@ The architecture leaves room for verified external sources and an explanation la
 
 ## Planned development
 
-1. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
+1. ~~**Expanded Hindsight memory**~~ (Completed)  — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
 2. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
 3. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
 4. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.

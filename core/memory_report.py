@@ -53,7 +53,9 @@ def build_vehicle_memory_report(
         "report_id": report_id,
         "source_id": "vericar-ui",
         "source_type": "user_entered_evidence",
-        "source_trust": "unverified",
+        "source_reliability": "unverified",
+        "evidence_confidence": "unverified",
+        "provenance": "vericar-ui",
         "report_kind": "condition_snapshot",
     }
     return VehicleMemoryReport(

@@ -156,6 +156,15 @@ def _render_history_check(result, memory_result) -> None:
             with st.expander(f"See {len(findings) - 4} more comparisons"):
                 for finding in findings[4:]:
                     st.write(humanize_history_finding(finding))
+    influential = getattr(reconciliation, "influential_memories", ())
+    if influential:
+        st.markdown("**Influential historical memories**")
+        for mem in influential[:4]:
+            st.markdown(f'<div class="finding-line"><strong>{_safe(mem.relevance.capitalize())}</strong>: {_safe(mem.reason)} <span style="color: var(--muted); font-size: 0.85em;">({_safe(mem.observed_at[:10])})</span><br><span style="font-size: 0.8em; color: var(--muted)">Reliability: {_safe(mem.source_reliability)} &middot; Confidence: {_safe(mem.evidence_confidence)}</span></div>', unsafe_allow_html=True)
+        if len(influential) > 4:
+            with st.expander(f"See {len(influential) - 4} more influential memories"):
+                for mem in influential[4:]:
+                    st.markdown(f'<div class="finding-line"><strong>{_safe(mem.relevance.capitalize())}</strong>: {_safe(mem.reason)} <span style="color: var(--muted); font-size: 0.85em;">({_safe(mem.observed_at[:10])})</span><br><span style="font-size: 0.8em; color: var(--muted)">Reliability: {_safe(mem.source_reliability)} &middot; Confidence: {_safe(mem.evidence_confidence)}</span></div>', unsafe_allow_html=True)
     elif status == "NO_HISTORY":
         st.caption("A first record gives VeriCar nothing earlier to compare yet.")
     elif status == "UNAVAILABLE" and getattr(memory_result, "error", None):
