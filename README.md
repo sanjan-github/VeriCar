@@ -38,7 +38,7 @@ A typical workflow is:
 - Longitudinal vehicle history across multiple reports
 - Expanded current-vs-history and multi-report contradiction tracking
 - Influential historical-memory selection
-- Observational model-level pattern detection without mutating reference profiles
+- Safe model-level observation interface that requires cross-vehicle evidence and never mutates reference profiles
 - Separate source reliability and evidence confidence metadata
 - Deterministic current-vs-history reconciliation
 - Three synthetic demo scenarios
