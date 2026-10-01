@@ -1,7 +1,7 @@
 import httpx
 
 from core.models import Car
-from core.nhtsa_provider import NHTSARecallProvider, NHTSAVinProvider
+from core.nhtsa_provider import NHTSAComplaintProvider, NHTSARecallProvider, NHTSAVinProvider
 
 
 VIN = "1HGCM82633A004352"
@@ -205,3 +205,55 @@ def test_nhtsa_recall_provider_requires_vehicle_identity():
     assert result.status == "ERROR"
     assert result.evidence_scope == "model"
     assert client.calls == []
+
+
+def test_nhtsa_complaint_provider_returns_model_scoped_evidence():
+    client = FakeClient(
+        responses=[
+            FakeResponse(
+                {
+                    "Count": 1,
+                    "results": [
+                        {
+                            "odiNumber": 123456,
+                            "components": "BRAKES",
+                            "summary": "Example complaint",
+                        }
+                    ],
+                }
+            )
+        ]
+    )
+
+    result = NHTSAComplaintProvider(client=client).get_complaints(_car())
+
+    assert result.status == "FOUND"
+    assert result.source.source_id == "nhtsa_complaints"
+    assert result.source_reliability == "high"
+    assert result.evidence_confidence == "medium"
+    assert result.evidence_scope == "model"
+    assert result.data["model"] == "Accord"
+    assert len(result.data["complaints"]) == 1
+    assert client.calls[0][1] == {
+        "make": "Honda",
+        "model": "Accord",
+        "modelYear": "2003",
+    }
+
+
+def test_nhtsa_complaint_provider_distinguishes_no_data_from_unavailable():
+    client = FakeClient(responses=[FakeResponse({"Count": 0, "results": []})])
+
+    result = NHTSAComplaintProvider(client=client).get_complaints(_car())
+
+    assert result.status == "NOT_FOUND"
+    assert result.evidence_scope == "model"
+
+    unavailable_client = FakeClient(errors=[httpx.ConnectError("offline")])
+    result = NHTSAComplaintProvider(
+        client=unavailable_client,
+        retries=0,
+    ).get_complaints(_car())
+
+    assert result.status == "UNAVAILABLE"
+    assert result.data is None
