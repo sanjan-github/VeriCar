@@ -368,6 +368,39 @@ def _compare_repairs_and_services(
     return findings
 
 
+def _compare_longitudinal_snapshots(
+    snapshots: list[HistoricalSnapshot],
+) -> list[HistoryFinding]:
+    """Compare adjacent historical observations to expose multi-report changes."""
+    findings: list[HistoryFinding] = []
+    ordered = sorted(snapshots, key=lambda snapshot: snapshot.observed_at or datetime.min)
+    for previous, current in zip(ordered, ordered[1:]):
+        previous_odometer = previous.vehicle.get("odometer_km")
+        current_odometer = current.vehicle.get("odometer_km")
+        if previous_odometer is not None and current_odometer is not None and current_odometer < previous_odometer:
+            findings.append(HistoryFinding(
+                kind="CONTRADICTION", field="odometer_km",
+                current_value=current_odometer, historical_value=previous_odometer,
+                report_id=current.report_id,
+                message=f'Historical odometer sequence regressed from {previous_odometer:,} km to {current_odometer:,} km.',
+            ))
+        for field, label in (
+            ("accident_status", "Accident history"),
+            ("airbag_deployed", "Airbag deployment"),
+            ("repainted_panels", "Repaint information"),
+        ):
+            previous_value = getattr(previous.condition, field)
+            current_value = getattr(current.condition, field)
+            if not (_known(previous_value) and _known(current_value)) or previous_value == current_value:
+                continue
+            kind = "CONTRADICTION" if field in {"accident_status", "airbag_deployed"} else "CHANGED"
+            findings.append(HistoryFinding(
+                kind=kind, field=field, current_value=current_value,
+                historical_value=previous_value, report_id=current.report_id,
+                message=f'{label} changed between historical reports: {previous_value!r} -> {current_value!r}.',
+            ))
+    return findings
+
 def reconcile_vehicle_history(
     car: Car,
     current_condition: ConditionRecord,
@@ -397,6 +430,7 @@ def reconcile_vehicle_history(
 
     latest = snapshots[0]
     findings: list[HistoryFinding] = []
+    longitudinal_findings = _compare_longitudinal_snapshots(snapshots)
     findings.extend(_compare_vehicle_identity(car, latest.vehicle, latest))
     findings.extend(_compare_odometer(car, latest.vehicle, latest))
     findings.extend(
@@ -445,4 +479,5 @@ def reconcile_vehicle_history(
         snapshots=tuple(snapshots),
         findings=tuple(findings),
         ignored_items=len(items) - len(snapshots),
+        longitudinal_findings=tuple(longitudinal_findings),
     )
