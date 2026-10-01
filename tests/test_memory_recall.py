@@ -84,3 +84,21 @@ def test_memory_recall_history_returns_original_reports(monkeypatch):
     assert result.status == "AVAILABLE"
     assert len(result.items) == 1
     assert result.items[0].metadata["report_id"] == "RPT-1"
+
+
+def test_memory_recall_deduplicates_cosmetic_hindsight_repeats(monkeypatch):
+    async def fake_recall(self, *, vehicle_id, query):
+        return [
+            MemoryItem(memory_id="1", text="The vehicle is a 2022 Tata Nexon XZ+ with a petrol engine and manual transmission.", metadata={}, tags=[]),
+            MemoryItem(memory_id="2", text="Vehicle is a 2022 Tata Nexon XZ+ with a petrol engine and manual transmission.", metadata={}, tags=[]),
+            MemoryItem(memory_id="3", text="Vehicle has an odometer reading of 90,000 km and an asking price of 850,000 INR. | When: 2026-10-01", metadata={}, tags=[]),
+            MemoryItem(memory_id="4", text="Vehicle has an odometer reading of 90,000 km and an asking price of 850,000 INR. | When: 2026-09-29", metadata={}, tags=[]),
+        ]
+
+    monkeypatch.setattr("core.memory_recall.HindsightMemory.recall_vehicle", fake_recall)
+
+    result = recall_vehicle_memory(make_car(), query="vehicle history")
+
+    assert result.status == "AVAILABLE"
+    assert len(result.items) == 2
+    assert {item.memory_id for item in result.items} == {"1", "3"}
