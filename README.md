@@ -35,6 +35,11 @@ A typical workflow is:
 - Hindsight memory wrapper
 - Vehicle condition → Hindsight synchronization
 - Vehicle memory recall
+- Longitudinal vehicle history across multiple reports
+- Expanded current-vs-history and multi-report contradiction tracking
+- Influential historical-memory selection
+- Observational model-level pattern detection without mutating reference profiles
+- Separate source reliability and evidence confidence metadata
 - Deterministic current-vs-history reconciliation
 - Three synthetic demo scenarios
 - PDF assessment report
@@ -48,6 +53,20 @@ A typical workflow is:
 The profiles in `data/expected_profiles.json` use `source: synthetic_seed`. They are **demo/reference data**, not verified manufacturer specifications, reliability statistics, or authoritative vehicle-history data.
 
 The external-source and LLM layers are intentionally separate from the deterministic evidence engine. NHTSA vPIC and Groq are implemented as optional integrations; live network access and credentials are not required by the test suite.
+
+## Expanded Hindsight memory
+
+VeriCar's Hindsight layer now preserves more than a single previous report. Multiple structured reports for the same vehicle remain independently addressable and are ordered by observation time during reconciliation.
+
+The historical layer supports:
+
+- **Longitudinal history** — earlier observations are preserved rather than overwritten.
+- **Multi-report contradiction tracking** — adjacent historical observations can expose sequences such as odometer regression or conflicting historical facts.
+- **Influential memories** — historical observations associated with meaningful changes or contradictions can be surfaced as relevant evidence for the current review.
+- **Observational model patterns** — repeated repair categories can be surfaced as observations from the vehicle's history. These do not modify the synthetic reference profiles and are not manufacturer reliability claims.
+- **Source reliability vs. evidence confidence** — provenance records keep the trust characteristics of a source separate from how strongly a particular conclusion is supported. An Unknown observation remains Unknown even when its source is otherwise reliable.
+
+Hindsight remains an evidence store, not an assessment authority. The deterministic rules and assessment engine continue to produce the final assessment, while historical memory provides context and evidence for the user to verify.
 
 ## Design principles
 
@@ -408,11 +427,10 @@ The architecture leaves room for verified external sources and an explanation la
 
 ## Planned development
 
-1. **Expanded Hindsight memory** — longitudinal history, contradiction tracking, influential memories, model-level learning where appropriate, and separation of source reliability from evidence confidence.
-2. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
-3. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
-4. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
-5. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
+1. **Additional verified data sources** — service information, recall information and other appropriate vehicle-history sources.
+2. **Production hardening** — deployment documentation, observability, operational monitoring and dependency maintenance.
+3. **Consumer UX refinement** — make historical reconciliation, evidence explanations and next-step guidance easier for non-technical buyers to understand.
+4. **Additional automated coverage** — expand integration and failure-mode tests as external providers and deployment targets evolve.
 
 ## For developers and other LLMs
 
