@@ -1,7 +1,7 @@
 import httpx
 
 from core.models import Car
-from core.nhtsa_provider import NHTSAVinProvider
+from core.nhtsa_provider import NHTSARecallProvider, NHTSAVinProvider
 
 
 VIN = "1HGCM82633A004352"
@@ -141,9 +141,6 @@ def test_nhtsa_does_not_query_without_vin():
 
     assert result.status == "NOT_FOUND"
     assert client.calls == []
-
-
-from core.nhtsa_provider import NHTSARecallProvider
 
 
 def test_nhtsa_recall_provider_returns_model_scoped_evidence():
