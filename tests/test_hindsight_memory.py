@@ -127,7 +127,7 @@ async def test_recall_vehicle_reports_requests_original_world_memories():
     recall_name, recall_kwargs = fake.calls[0]
     assert recall_name == "recall"
     assert recall_kwargs["types"] == ["world"]
-    assert recall_kwargs["include_source_facts"] is False
+    assert recall_kwargs["include_source_facts"] is True
     assert recall_kwargs["prefer_observations"] is False
     assert recall_kwargs["query"] == "vehicle evidence report"
     assert recall_kwargs["tags"] == ["vehicle:CAR-1"]
