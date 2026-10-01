@@ -1,0 +1,35 @@
+name: VeriCar CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HINDSIGHT_BASE_URL: http://localhost:8888
+      HINDSIGHT_API_KEY: ci-placeholder
+      HINDSIGHT_TIMEOUT: "5"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Compile Python sources
+        run: python -m compileall -q app core memory tests
+
+      - name: Run tests
+        run: python -m pytest -q
