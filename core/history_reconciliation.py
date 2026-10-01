@@ -18,6 +18,7 @@ class HistoricalSnapshot:
     observed_at: datetime | None
     vehicle: dict[str, Any]
     condition: ConditionRecord
+    metadata: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,7 @@ class HistoryReconciliation:
     snapshots: tuple[HistoricalSnapshot, ...] = ()
     findings: tuple[HistoryFinding, ...] = ()
     ignored_items: int = 0
+    longitudinal_findings: tuple[HistoryFinding, ...] = ()
 
 
 def _parse_snapshot(item: MemoryItem) -> HistoricalSnapshot | None:
@@ -77,6 +79,7 @@ def _parse_snapshot(item: MemoryItem) -> HistoricalSnapshot | None:
         observed_at=observed_at,
         vehicle=vehicle,
         condition=condition,
+        metadata=dict(item.metadata),
     )
 
 
