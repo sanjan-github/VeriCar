@@ -141,9 +141,9 @@ class HindsightMemory:
         return await self._recall(
             vehicle_id=vehicle_id,
             query=query,
-            types=["world"],
+            types=["world", "experience", "observation"],
             prefer_observations=False,
-            include_source_facts=False,
+            include_source_facts=True,
         )
 
     async def _recall(
