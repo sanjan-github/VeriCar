@@ -38,10 +38,6 @@ class LongitudinalMemoryAnalysis:
     model_observations: tuple[ModelObservation, ...] = ()
 
 
-def _known(value: Any) -> bool:
-    return value is not None and value != UNKNOWN and value != ""
-
-
 def _source_type(snapshot: HistoricalSnapshot) -> str:
     value = snapshot.metadata.get("source_type", "unknown")
     return str(value)
@@ -101,7 +97,12 @@ def derive_model_observations(
         return ()
 
     vehicle_ids = {
-        str(snapshot.metadata.get("vehicle_id") or snapshot.vehicle.get("vehicle_id") or "")
+        str(
+            snapshot.metadata.get("vehicle_id")
+            or snapshot.vehicle.get("vehicle_id")
+            or snapshot.vehicle.get("car_id")
+            or ""
+        )
         for snapshot in ordered
     }
     vehicle_ids.discard("")
@@ -115,14 +116,13 @@ def derive_model_observations(
     if len(model_keys) != 1:
         return ()
     model_key = next(iter(model_keys))
-    reports_by_category: dict[str, list[str]] = {}
 
+    reports_by_category: dict[str, list[str]] = {}
     for snapshot in ordered:
         for repair in snapshot.condition.repairs:
             category = str(repair.category).strip()
-            if not category:
-                continue
-            reports_by_category.setdefault(category, []).append(snapshot.report_id)
+            if category:
+                reports_by_category.setdefault(category, []).append(snapshot.report_id)
 
     observations: list[ModelObservation] = []
     for category, report_ids in sorted(reports_by_category.items()):
