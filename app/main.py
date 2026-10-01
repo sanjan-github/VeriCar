@@ -90,6 +90,13 @@ st.markdown(
     .status-body { color:var(--muted); line-height:1.5; }
     .status-action { display:inline-block; color:var(--red); font-weight:800; margin-top:.7rem; }
     .history-card.matched { border-left:5px solid var(--green); background:var(--green-soft); }
+
+    .history-note-intro { display:flex; gap:1rem; align-items:baseline; border-top:2px solid var(--ink); padding:.9rem 0 .75rem; margin:.75rem 0 1rem; }
+    .history-note-intro strong { color:var(--ink); font-size:1rem; white-space:nowrap; }
+    .history-note-intro span { color:var(--muted); font-size:.86rem; line-height:1.45; }
+    .history-note-group { margin-bottom:1.25rem; }
+    .history-note-group-title { color:var(--ink); font-size:.76rem; font-weight:850; letter-spacing:.1em; text-transform:uppercase; padding-bottom:.45rem; border-bottom:1px solid var(--line); margin-bottom:.15rem; }
+    .history-note { color:var(--ink); font-size:.9rem; line-height:1.5; padding:.62rem 0; border-bottom:1px solid var(--line); }
     .history-summary { display:flex; justify-content:space-between; align-items:center; gap:1rem; border:1px solid var(--line); border-radius:16px; padding:1rem 1.2rem; margin:.8rem 0 1rem; background:var(--white); box-shadow:0 8px 20px var(--shadow); }
     .history-summary.green { border-left:5px solid var(--green); }
     .history-summary.amber { border-left:5px solid var(--amber); }
@@ -210,6 +217,54 @@ def _render_history_timeline(result, memory_result) -> None:
         return
 
     if not snapshots:
+        recalled = list(getattr(memory_result, "items", ()) if memory_result else ())
+        if recalled:
+            st.markdown(
+                '<div class="history-note-intro">'
+                '<strong>Previously recalled</strong>'
+                '<span>VeriCar found historical memory, but could not reconstruct a structured report from it yet.</span>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
+            groups = [
+                ("Vehicle & usage", []),
+                ("Service & repairs", []),
+                ("Inspection & documents", []),
+                ("Other notes", []),
+            ]
+            keywords = (
+                ("Vehicle & usage", ("vehicle is", "vehicle has", "odometer", "asking price", "manufactured")),
+                ("Service & repairs", ("service", "repair", "brake", "engine", "transmission")),
+                ("Inspection & documents", ("inspection", "document", "insurance", "rc ", "airbag", "accident", "flood", "rust", "leak")),
+            )
+            for item in recalled:
+                text = item.text.strip()
+                lowered = text.lower()
+                placed = False
+                for group_name, terms in keywords:
+                    if any(term in lowered for term in terms):
+                        next(group for group in groups if group[0] == group_name)[1].append(text)
+                        placed = True
+                        break
+                if not placed:
+                    groups[-1][1].append(text)
+
+            visible_groups = [(name, notes) for name, notes in groups if notes]
+            cols = st.columns([1.618, 1])
+            for index, (name, notes) in enumerate(visible_groups):
+                column = cols[index % 2]
+                with column:
+                    st.markdown(f'<div class="history-note-group"><div class="history-note-group-title">{_safe(name)}</div>', unsafe_allow_html=True)
+                    for note in notes[:6]:
+                        st.markdown(f'<div class="history-note">{_safe(note)}</div>', unsafe_allow_html=True)
+                    if len(notes) > 6:
+                        st.caption(f"{len(notes) - 6} more notes")
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+            st.caption("These recalled notes are context only. VeriCar needs a structured saved report to perform field-by-field historical reconciliation.")
+            return
+
         st.markdown(
             '<div class="history-card no-history">'
             '<div class="status-title">No earlier VeriCar report found.</div>'
