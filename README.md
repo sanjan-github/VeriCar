@@ -43,8 +43,6 @@ A typical workflow is:
 - Deterministic current-vs-history reconciliation
 - Three synthetic demo scenarios
 - PDF assessment report
-- NHTSA vPIC provider layer
-- NHTSA recall provider with explicit model/year evidence scope
 - Groq structured explanation layer
 - End-to-end integration tests
 - Automated test suite
@@ -57,16 +55,22 @@ The profiles in `data/expected_profiles.json` use `source: synthetic_seed`. They
 
 The external-source and LLM layers are intentionally separate from the deterministic evidence engine. NHTSA vPIC and Groq are implemented as optional integrations; live network access and credentials are not required by the test suite.
 
-## External vehicle data
+## India-focused external data
 
-VeriCar includes an NHTSA provider layer for two different evidence scopes:
+VeriCar is designed for Indian used-car buyers. The current product does **not** expose U.S.-specific NHTSA checks.
 
-- **NHTSA vPIC** — VIN decoding and vehicle identity fields. This is vehicle-scoped provider evidence when a valid VIN lookup succeeds.
-- **NHTSA Recalls API** — recall information returned for make/model/model-year queries. This is model/year-scoped evidence and does **not** prove that a specific vehicle received or missed a recall remedy.
+For Indian vehicles, the useful external records include:
 
-Provider responses explicitly distinguish successful data, successful no-data responses, unavailable providers, and processing errors. Provider provenance keeps **source reliability**, **evidence confidence**, and **evidence scope** separate.
+- registration / RC records;
+- insurance and claim records;
+- PUC records;
+- service invoices and workshop records;
+- accident and repair documentation;
+- government e-challan information where applicable.
 
-NHTSA responses are optional external evidence. They do not bypass VeriCar's deterministic rules or automatically change the assessment unless a corresponding deterministic rule exists. Live provider tests are mocked; credentials are not required for the NHTSA public endpoints used here.
+VeriCar currently asks the user to verify these records through the relevant official service, insurer, workshop or document source and enter the resulting evidence into the assessment. It does **not** claim direct API access to VAHAN, mParivahan, insurance databases, workshop systems or e-challan systems.
+
+This is deliberate: an Indian vehicle-history integration should only be added when an authorized provider exposes a documented API, the access/licensing terms are appropriate, and the returned evidence scope can be verified. VeriCar does not invent an API integration or require users to provide an arbitrary API key.
 
 ## Expanded Hindsight memory
 
@@ -441,19 +445,18 @@ The architecture leaves room for verified external sources and an explanation la
 
 ## External data-source roadmap
 
-### Implemented verified sources
+### Implemented external-data behavior
 
-- **NHTSA vPIC** — vehicle-scoped VIN decoding and identity fields.
-- **NHTSA Recalls API** — model/year recall evidence.
-- **NHTSA Complaints API** — model/year complaint evidence about reports submitted to NHTSA.
-
-The NHTSA integrations explicitly preserve evidence scope and distinguish successful no-data responses from unavailable or failed lookups. Recall and complaint records are not treated as proof about a particular vehicle.
+- India-focused document and verification guidance in the consumer UI.
+- Explicit separation between user-provided evidence and externally verified records.
+- No U.S.-specific vehicle-history provider is presented as if it were an Indian data source.
 
 ### Remaining external-source work
 
-- **Verified service-history provider** — service-history data requires a provider with an appropriate API/license and credentials. VeriCar does not fabricate a service-history integration or treat a generic vehicle-history source as a verified service record.
-- **Additional vehicle-history providers** — add providers only when their provenance, API contract, licensing and evidence scope can be verified.
-- **Further NHTSA integrations** — add additional public NHTSA datasets only where they provide useful, well-scoped evidence without bypassing the deterministic assessment engine.
+- **Authorized Indian registration provider** — integrate VAHAN/mParivahan or another authorized provider only when documented API access is available.
+- **Verified Indian service-history provider** — add service records only when an appropriate API/license and provenance can be verified.
+- **Insurance / claims provider** — add only with authorized access and clear evidence scope.
+- **Additional Indian vehicle-history sources** — add providers only when their provenance, API contract, licensing and evidence scope can be verified.
 
 ## Remaining development
 
