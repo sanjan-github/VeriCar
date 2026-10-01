@@ -16,10 +16,10 @@ from backend.app.models.report import (
 
 class FakeMemoryService:
     def __init__(self):
-        self.reports = []
+        self.reports = {}
 
     async def retain_report(self, report):
-        self.reports.append(report)
+        self.reports[report.report_id] = report
         return {"vehicle": "stored", "source": "stored"}
 
     async def resolve_source_outcomes(self, report):
@@ -195,10 +195,7 @@ def test_create_report_retry_reuses_report_identity():
     assert first.status_code == 201
     assert retry.status_code == 201
     assert first.json()["report"]["report_id"] == retry.json()["report"]["report_id"]
-    assert [report.report_id for report in memory.reports] == [
-        first.json()["report"]["report_id"],
-        first.json()["report"]["report_id"],
-    ]
+    assert list(memory.reports) == [first.json()["report"]["report_id"]]
 
 
 def test_create_report_rejects_invalid_input_before_memory_write():
@@ -217,7 +214,7 @@ def test_create_report_rejects_invalid_input_before_memory_write():
         response = client.post("/api/reports", json=payload)
 
     assert response.status_code == 422
-    assert memory.reports == []
+    assert memory.reports == {}
 
 
 def test_create_report_returns_503_when_memory_fails():
