@@ -1,6 +1,7 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 import tempfile
+from typing import Any, cast
 
 import pytest
 from fastapi import FastAPI
@@ -70,8 +71,8 @@ def test_report_submission_rejects_invalid_source_type():
         ReportSubmission(
             vehicle_id="VEH-001",
             source_id="SRC-001",
-            source_type="random_user",
-            observed_at="2026-09-20",
+            source_type=cast(Any, "random_user"),
+            observed_at=date(2026, 9, 20),
             text="Transmission hesitation.",
         )
 
@@ -82,7 +83,7 @@ def test_report_submission_rejects_blank_text():
             vehicle_id="VEH-001",
             source_id="SRC-001",
             source_type="owner",
-            observed_at="2026-09-20",
+            observed_at=date(2026, 9, 20),
             text="   ",
         )
 
@@ -93,7 +94,7 @@ def test_report_submission_rejects_oversized_text():
             vehicle_id="VEH-001",
             source_id="SRC-001",
             source_type="owner",
-            observed_at="2026-09-20",
+            observed_at=date(2026, 9, 20),
             text="x" * (REPORT_TEXT_MAX_LENGTH + 1),
         )
 
@@ -104,7 +105,7 @@ def test_to_vehicle_report_normalizes_date_to_utc_midnight():
         vin="VIN-001",
         source_id="SRC-001",
         source_type="mechanic",
-        observed_at="2026-09-20",
+        observed_at=date(2026, 9, 20),
         text="Transmission hesitation.",
     )
     submitted_at = datetime(2026, 9, 28, 12, 0, tzinfo=timezone.utc)
@@ -121,7 +122,7 @@ def test_to_vehicle_report_keeps_vin_optional_and_separate_from_vehicle_id():
         vehicle_id="VEH-001",
         source_id="SRC-001",
         source_type="inspector",
-        observed_at="2026-09-20",
+        observed_at=date(2026, 9, 20),
         text="Transmission hesitation.",
     )
 
