@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 from logging import getLogger
@@ -26,7 +26,7 @@ from backend.app.services.groq_explanation_service import GroqExplanationService
 from core.database import Database, DEFAULT_DB_PATH
 
 
-logger = getLogger(__name__)
+logger = getLogger(__name__)\nIDEMPOTENCY_LEASE_SECONDS = 30.0\nIDEMPOTENCY_POLL_SECONDS = 5.0
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
 
@@ -101,6 +101,21 @@ def health() -> dict[str, str]:
         "service": settings.app_name,
         "environment": settings.app_env,
     }
+
+
+def _idempotency_is_stale(row) -> bool:
+    if row["status"] != "PROCESSING":
+        return False
+    started_at = row["processing_started_at"]
+    if not started_at:
+        return True
+    try:
+        started = datetime.fromisoformat(str(started_at).replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    if started.tzinfo is None:
+        started = started.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) - started >= timedelta(seconds=IDEMPOTENCY_LEASE_SECONDS)
 
 
 def _failed_response(report_id: str) -> JSONResponse:
@@ -190,9 +205,9 @@ async def create_report(
                     content=json.loads(existing["response_payload"]),
                 )
 
-            if existing["status"] == "PROCESSING":
+            if existing["status"] == "PROCESSING" and not _idempotency_is_stale(existing):
                 start_time = asyncio.get_event_loop().time()
-                while asyncio.get_event_loop().time() - start_time < 5.0:
+                while asyncio.get_event_loop().time() - start_time < IDEMPOTENCY_POLL_SECONDS:
                     await asyncio.sleep(0.05)
                     poll_row = db.get_idempotency_record(idempotency_key=idempotency_key)
                     if poll_row and poll_row["status"] != "PROCESSING":
@@ -209,12 +224,20 @@ async def create_report(
                         status_code=status.HTTP_201_CREATED,
                         content=json.loads(existing["response_payload"]),
                     )
+        elif _idempotency_is_stale(existing):
+            db.reclaim_stale_idempotency_record(
+                idempotency_key=idempotency_key,
+                request_fingerprint=request_fingerprint,
+                processing_started_at=datetime.now(timezone.utc).isoformat(),
+            )
+            existing = db.get_idempotency_record(idempotency_key=idempotency_key)
         else:
             inserted = db.create_idempotency_record(
                 idempotency_key=idempotency_key,
                 request_fingerprint=request_fingerprint,
                 report_id=report_id,
                 status="PROCESSING",
+                processing_started_at=datetime.now(timezone.utc).isoformat(),
             )
             if not inserted:
                 existing = db.get_idempotency_record(idempotency_key=idempotency_key)
@@ -230,7 +253,7 @@ async def create_report(
                             content=json.loads(existing["response_payload"]),
                         )
                     start_time = asyncio.get_event_loop().time()
-                    while asyncio.get_event_loop().time() - start_time < 5.0:
+                    while asyncio.get_event_loop().time() - start_time < IDEMPOTENCY_POLL_SECONDS:
                         await asyncio.sleep(0.05)
                         poll_row = db.get_idempotency_record(idempotency_key=idempotency_key)
                         if poll_row and poll_row["status"] != "PROCESSING":
@@ -253,10 +276,15 @@ async def create_report(
             request_fingerprint=request_fingerprint,
             report_id=report_id,
             status="PROCESSING",
+            processing_started_at=datetime.now(timezone.utc).isoformat(),
         )
 
     if existing is not None and existing["status"] in ("PARTIAL", "FAILED"):
-        db.update_idempotency_record(report_id=report_id, status="PROCESSING")
+        db.update_idempotency_record(
+            report_id=report_id,
+            status="PROCESSING",
+            processing_started_at=datetime.now(timezone.utc).isoformat(),
+        )
 
     vehicle_done = bool(existing and existing["vehicle_memory_status"] == "STORED")
     source_done = bool(existing and existing["source_memory_status"] == "STORED")
@@ -285,8 +313,8 @@ async def create_report(
                     vehicle_memory_status="STORED",
                     source_memory_status="STORED",
                 )
-        except Exception:
-            logger.exception("Failed to persist vehicle report %s to memory", report_id)
+        except Exception as exc:
+            logger.error("Report persistence failed stage=vehicle error_type=%s", type(exc).__name__)
             db.update_idempotency_record(
                 report_id=report_id,
                 status="FAILED",
@@ -305,8 +333,8 @@ async def create_report(
                 report_id=report_id,
                 source_memory_status="STORED",
             )
-        except Exception:
-            logger.exception("Failed to persist source report %s to memory", report_id)
+        except Exception as exc:
+            logger.error("Report persistence failed stage=source error_type=%s", type(exc).__name__)
             db.update_idempotency_record(
                 report_id=report_id,
                 status="PARTIAL",
@@ -332,8 +360,8 @@ async def create_report(
                 report_id=report_id,
                 resolution_status="STORED",
             )
-        except Exception:
-            logger.exception("Failed to resolve source outcomes for report %s", report_id)
+        except Exception as exc:
+            logger.error("Report persistence failed stage=resolution error_type=%s", type(exc).__name__)
             db.update_idempotency_record(
                 report_id=report_id,
                 status="PARTIAL",
@@ -419,7 +447,7 @@ async def _get_assessment(
             memory_service=memory_service,
         )
     except Exception as exc:
-        logger.exception("Failed to retrieve assessment for vehicle %s", vehicle_id)
+        logger.error("Assessment retrieval failed stage=memory error_type=%s", type(exc).__name__)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
@@ -473,8 +501,8 @@ async def get_vehicle_assessment_explanation(
 
     try:
         explanation = await explanation_service.explain(assessment)
-    except Exception:
-        logger.exception("Failed to generate assessment explanation for vehicle %s", vehicle_id)
+    except Exception as exc:
+        logger.error("Assessment explanation failed stage=groq error_type=%s", type(exc).__name__)
         return {
             **_assessment_payload(vehicle_id, assessment, memory_status),
             "explanation_status": "unavailable",
