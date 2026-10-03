@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from uuid import uuid4
 
 from core.condition import ConditionRecord
 from core.models import Car
@@ -21,9 +21,12 @@ class VehicleMemoryReport:
 def build_vehicle_memory_report(
     car: Car, condition: ConditionRecord, *, observed_at: datetime | None = None
 ) -> VehicleMemoryReport:
-    """Create an evidence-only snapshot for long-term vehicle memory."""
+    """Create an evidence-only snapshot for long-term vehicle memory.
+
+    The report ID is content-derived so retrying an identical evidence snapshot
+    is idempotent instead of creating duplicate historical records.
+    """
     timestamp = observed_at or datetime.now(timezone.utc)
-    report_id = f"RPT-{uuid4().hex[:12].upper()}"
     payload = {
         "vehicle": {
             "vehicle_id": car.car_id,
@@ -41,6 +44,8 @@ def build_vehicle_memory_report(
         },
         "condition": condition.to_record(),
     }
+    canonical_payload = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    report_id = f"RPT-{hashlib.sha256(canonical_payload.encode('utf-8')).hexdigest()[:12].upper()}"
     text = (
         "VeriCar vehicle evidence report. "
         "This is an observed/input snapshot, not a diagnosis or verdict. "
