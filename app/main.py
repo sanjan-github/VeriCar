@@ -145,9 +145,14 @@ def _inr(value: int | None) -> str:
     return UNKNOWN if value is None else f"₹{value:,}"
 
 
-def _render_history_check(result, memory_result) -> None:
+def _render_history_check(result, memory_result, history_result=None) -> None:
     reconciliation = getattr(result, "history_reconciliation", None)
     status = reconciliation.status if reconciliation is not None else "UNAVAILABLE"
+    if (
+        getattr(memory_result, "status", None) == "UNAVAILABLE"
+        or getattr(history_result, "status", None) == "UNAVAILABLE"
+    ):
+        status = "UNAVAILABLE"
     copy = history_status_copy(status)
     findings = reconciliation.findings if reconciliation is not None else ()
     action_html = (
@@ -195,7 +200,7 @@ def _known_history(value: object) -> bool:
     return value is not None and value != UNKNOWN and value != ""
 
 
-def _render_history_timeline(result, memory_result) -> None:
+def _render_history_timeline(result, memory_result, history_result=None) -> None:
     """Render recalled vehicle history as a calm, chronological user-facing timeline."""
     reconciliation = getattr(result, "history_reconciliation", None)
     snapshots = list(getattr(reconciliation, "snapshots", ()) if reconciliation else ())
@@ -206,7 +211,10 @@ def _render_history_timeline(result, memory_result) -> None:
 
     st.markdown('<div class="eyebrow">VEHICLE HISTORY</div>', unsafe_allow_html=True)
 
-    if memory_result is not None and memory_result.status == "UNAVAILABLE":
+    if (
+        getattr(memory_result, "status", None) == "UNAVAILABLE"
+        or getattr(history_result, "status", None) == "UNAVAILABLE"
+    ):
         st.markdown(
             '<div class="history-card unavailable">'
             '<div class="status-title">Vehicle history is temporarily unavailable.</div>'
@@ -787,9 +795,10 @@ if "saved_car" in st.session_state:
 
         result = st.session_state.get("assessment_result")
         memory_result = st.session_state.get("memory_result")
+        history_result = st.session_state.get("history_memory_result")
         if result is not None:
             # History is deliberately rendered before the deterministic verdict.
-            _render_history_check(result, memory_result)
+            _render_history_check(result, memory_result, history_result)
             _render_memory_insights(result)
             _render_india_checks()
 
@@ -834,7 +843,7 @@ if "saved_car" in st.session_state:
             except Exception as exc:
                 st.error("Inspection report could not be generated: " + str(exc))
 
-        _render_history_timeline(result, memory_result)
+        _render_history_timeline(result, memory_result, history_result)
 
 st.markdown('<div class="section-rule"></div>', unsafe_allow_html=True)
 st.caption("VeriCar helps you inspect evidence. It does not replace an independent inspection, original document checks, or professional mechanical advice.")

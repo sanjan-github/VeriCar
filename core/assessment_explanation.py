@@ -91,7 +91,7 @@ def generate_assessment_explanation(
     try:
         client = llm or GroqLLM.from_environment()
         explanation = client.explain(evidence)
-    except RuntimeError:
+    except Exception:
         return None
 
     return AssessmentExplanation(llm=explanation)
