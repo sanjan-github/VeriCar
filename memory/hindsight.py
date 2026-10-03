@@ -173,7 +173,9 @@ class HindsightMemory:
         if items is None and isinstance(response, dict):
             items = response.get("results")
         if items is None:
-            items = response if isinstance(response, list) else []
+            items = response if isinstance(response, list) else None
+        if not isinstance(items, (list, tuple)):
+            raise ValueError("Hindsight returned an invalid recall response.")
 
         normalized: list[MemoryItem] = []
         for item in items:

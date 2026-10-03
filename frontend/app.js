@@ -94,8 +94,13 @@ function renderAssessment(payload) {
   state.assessment = payload;
   state.explanation = payload.explanation || null;
   elements.vehicleTitle.textContent = payload.vehicle_id || state.vehicleId;
+  const memoryStatusCopy = {
+    available: "Historical memory available",
+    empty: "No matching history",
+    unavailable: "Historical memory temporarily unavailable"
+  };
   elements.memoryStatus.textContent =
-    payload.memory_status === "available" ? "Historical memory available" : "No matching history";
+    memoryStatusCopy[payload.memory_status] || "Historical memory status unavailable";
 
   elements.vehicleView.hidden = false;
   elements.emptyState.hidden = true;
