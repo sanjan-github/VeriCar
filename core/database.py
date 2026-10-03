@@ -99,6 +99,7 @@ class Database:
                     request_fingerprint TEXT NOT NULL,
                     report_id TEXT PRIMARY KEY,
                     status TEXT NOT NULL,
+                    processing_started_at TEXT,
                     vehicle_memory_status TEXT NOT NULL DEFAULT 'PENDING',
                     source_memory_status TEXT NOT NULL DEFAULT 'PENDING',
                     resolution_status TEXT NOT NULL DEFAULT 'PENDING',
@@ -109,6 +110,16 @@ class Database:
                 )
                 """
             )
+            existing_columns = {
+                row["name"]
+                for row in connection.execute(
+                    "PRAGMA table_info(report_idempotency)"
+                ).fetchall()
+            }
+            if "processing_started_at" not in existing_columns:
+                connection.execute(
+                    "ALTER TABLE report_idempotency ADD COLUMN processing_started_at TEXT"
+                )
 
     def save_car(self, car: Car) -> None:
         record = car.to_record()
@@ -261,21 +272,44 @@ class Database:
         request_fingerprint: str,
         report_id: str,
         status: str = "PROCESSING",
+        processing_started_at: str | None = None,
     ) -> bool:
         try:
             with self._connect() as connection:
                 connection.execute(
                     """
                     INSERT INTO report_idempotency (
-                        idempotency_key, request_fingerprint, report_id, status,
+                        idempotency_key, request_fingerprint, report_id, status, processing_started_at,
                         vehicle_memory_status, source_memory_status, resolution_status
-                    ) VALUES (?, ?, ?, ?, 'PENDING', 'PENDING', 'PENDING')
+                    ) VALUES (?, ?, ?, ?, ?, 'PENDING', 'PENDING', 'PENDING')
                     """,
-                    (idempotency_key, request_fingerprint, report_id, status),
+                    (idempotency_key, request_fingerprint, report_id, status, processing_started_at),
                 )
                 return True
         except sqlite3.IntegrityError:
             return False
+
+    def reclaim_stale_idempotency_record(
+        self,
+        *,
+        idempotency_key: str,
+        request_fingerprint: str,
+        processing_started_at: str,
+    ) -> bool:
+        with self._connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE report_idempotency
+                SET status = 'PROCESSING',
+                    processing_started_at = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE idempotency_key = ?
+                  AND request_fingerprint = ?
+                  AND status = 'PROCESSING'
+                """,
+                (processing_started_at, idempotency_key, request_fingerprint),
+            )
+            return cursor.rowcount == 1
 
     def update_idempotency_record(
         self,
@@ -287,6 +321,7 @@ class Database:
         resolution_status: str | None = None,
         response_payload: str | None = None,
         error_message: str | None = None,
+        processing_started_at: str | None = None,
     ) -> None:
         fields = []
         params = []
@@ -308,6 +343,10 @@ class Database:
         if error_message is not None:
             fields.append("error_message = ?")
             params.append(error_message)
+
+        if processing_started_at is not None:
+            fields.append("processing_started_at = ?")
+            params.append(processing_started_at)
 
         if not fields:
             return

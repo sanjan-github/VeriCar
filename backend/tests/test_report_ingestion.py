@@ -591,3 +591,61 @@ def test_error_responses_do_not_leak_sensitive_data(tmp_path):
     assert "SECRET-VIN-99999" not in text
     assert "Extremely secret" not in text
     assert "Traceback" not in text
+
+
+def test_stale_processing_record_can_be_reclaimed(tmp_path):
+    from datetime import timedelta
+    from backend.app.main import IDEMPOTENCY_LEASE_SECONDS, _idempotency_is_stale
+
+    db = Database(tmp_path / "stale.db")
+    stale = datetime.now(timezone.utc) - timedelta(seconds=IDEMPOTENCY_LEASE_SECONDS + 1)
+    assert db.create_idempotency_record(
+        idempotency_key="stale-key",
+        request_fingerprint="fingerprint",
+        report_id="RPT-STALE",
+        status="PROCESSING",
+        processing_started_at=stale.isoformat(),
+    )
+    row = db.get_idempotency_record(idempotency_key="stale-key")
+    assert _idempotency_is_stale(row) is True
+
+    refreshed = datetime.now(timezone.utc).isoformat()
+    assert db.reclaim_stale_idempotency_record(
+        idempotency_key="stale-key",
+        request_fingerprint="fingerprint",
+        processing_started_at=refreshed,
+    )
+    row = db.get_idempotency_record(idempotency_key="stale-key")
+    assert row["status"] == "PROCESSING"
+    assert row["processing_started_at"] == refreshed
+
+
+def test_existing_database_migrates_idempotency_timestamp(tmp_path):
+    import sqlite3
+
+    db_file = tmp_path / "legacy.db"
+    with sqlite3.connect(db_file) as connection:
+        connection.execute("""
+            CREATE TABLE report_idempotency (
+                idempotency_key TEXT UNIQUE,
+                request_fingerprint TEXT NOT NULL,
+                report_id TEXT PRIMARY KEY,
+                status TEXT NOT NULL,
+                vehicle_memory_status TEXT NOT NULL DEFAULT 'PENDING',
+                source_memory_status TEXT NOT NULL DEFAULT 'PENDING',
+                resolution_status TEXT NOT NULL DEFAULT 'PENDING',
+                response_payload TEXT,
+                error_message TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        connection.commit()
+
+    migrated = Database(db_file)
+    with migrated._connect() as connection:
+        columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(report_idempotency)").fetchall()
+        }
+    assert "processing_started_at" in columns
