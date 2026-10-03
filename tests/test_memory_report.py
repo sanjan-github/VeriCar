@@ -24,3 +24,17 @@ def test_memory_report_preserves_repair_evidence():
     report = build_vehicle_memory_report(car, condition)
     assert '"Transmission"' in report.text
     assert '"Clutch replacement reported"' in report.text
+
+
+
+def test_identical_evidence_produces_stable_report_id():
+    car = Car(car_id="CAR-IDEMPOTENT", brand="Toyota", model="City", manufacture_year=2020)
+    condition = ConditionRecord.empty(car.car_id)
+    first = build_vehicle_memory_report(
+        car, condition, observed_at=datetime(2026, 9, 30, 10, 0, tzinfo=timezone.utc)
+    )
+    second = build_vehicle_memory_report(
+        car, condition, observed_at=datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)
+    )
+
+    assert first.report_id == second.report_id

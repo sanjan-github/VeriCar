@@ -1,12 +1,11 @@
 streamlit>=1.40,<2
 pydantic>=2.8,<3
-# Existing verification dependencies retained during the migration.
-fastapi
-uvicorn[standard]
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
 hindsight-client==0.10.1
 reportlab>=4.0,<6
 pypdf>=5.0,<7
 pytest
 pytest-asyncio
-httpx
+httpx>=0.28.1,<1
 python-dotenv>=1.0,<2

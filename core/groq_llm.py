@@ -58,7 +58,7 @@ class GroqLLM:
                     break
                 except (httpx.TimeoutException, httpx.NetworkError) as exc:
                     if attempt >= self.retries:
-                        raise RuntimeError(f"Groq is unavailable after retries: {exc}") from exc
+                        raise RuntimeError(f"Groq is unavailable after retries: {type(exc).__name__}") from exc
                     time.sleep(0.2 * (2 ** attempt))
             if response is None:
                 raise RuntimeError("Groq returned no response.")
@@ -72,11 +72,11 @@ class GroqLLM:
                 )
                 return LLMExplanation.model_validate(parsed)
             except (KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:
-                raise RuntimeError(f"Groq returned an invalid structured explanation: {exc}") from exc
+                raise RuntimeError(f"Groq returned an invalid structured explanation: {type(exc).__name__}") from exc
         except httpx.HTTPStatusError as exc:
             raise RuntimeError(f"Groq request failed with HTTP {exc.response.status_code}.") from exc
         except httpx.HTTPError as exc:
-            raise RuntimeError(f"Groq request failed: {exc}") from exc
+            raise RuntimeError(f"Groq request failed: {type(exc).__name__}.") from exc
         finally:
             if self.client is None:
                 client.close()
