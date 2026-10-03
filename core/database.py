@@ -22,7 +22,7 @@ class Database:
 
     @contextmanager
     def _connect(self):
-        connection = sqlite3.connect(self.path)
+        connection = sqlite3.connect(self.path, timeout=30.0)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA foreign_keys = ON")
         try:
@@ -89,6 +89,23 @@ class Database:
                     error TEXT,
                     synced_at TEXT,
                     FOREIGN KEY(car_id) REFERENCES cars(car_id)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS report_idempotency (
+                    idempotency_key TEXT UNIQUE,
+                    request_fingerprint TEXT NOT NULL,
+                    report_id TEXT PRIMARY KEY,
+                    status TEXT NOT NULL,
+                    vehicle_memory_status TEXT NOT NULL DEFAULT 'PENDING',
+                    source_memory_status TEXT NOT NULL DEFAULT 'PENDING',
+                    resolution_status TEXT NOT NULL DEFAULT 'PENDING',
+                    response_payload TEXT,
+                    error_message TEXT,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
@@ -213,3 +230,92 @@ class Database:
         if row is None:
             return None
         return ExpectedProfile.from_record(json.loads(row["payload"]))
+
+    def get_idempotency_record(
+        self,
+        *,
+        idempotency_key: str | None = None,
+        report_id: str | None = None,
+    ) -> sqlite3.Row | None:
+        if idempotency_key is None and report_id is None:
+            raise ValueError("Either idempotency_key or report_id must be provided.")
+        with self._connect() as connection:
+            if idempotency_key is not None:
+                row = connection.execute(
+                    "SELECT * FROM report_idempotency WHERE idempotency_key = ?",
+                    (idempotency_key,),
+                ).fetchone()
+                if row is not None:
+                    return row
+            if report_id is not None:
+                return connection.execute(
+                    "SELECT * FROM report_idempotency WHERE report_id = ?",
+                    (report_id,),
+                ).fetchone()
+            return None
+
+    def create_idempotency_record(
+        self,
+        *,
+        idempotency_key: str | None,
+        request_fingerprint: str,
+        report_id: str,
+        status: str = "PROCESSING",
+    ) -> bool:
+        try:
+            with self._connect() as connection:
+                connection.execute(
+                    """
+                    INSERT INTO report_idempotency (
+                        idempotency_key, request_fingerprint, report_id, status,
+                        vehicle_memory_status, source_memory_status, resolution_status
+                    ) VALUES (?, ?, ?, ?, 'PENDING', 'PENDING', 'PENDING')
+                    """,
+                    (idempotency_key, request_fingerprint, report_id, status),
+                )
+                return True
+        except sqlite3.IntegrityError:
+            return False
+
+    def update_idempotency_record(
+        self,
+        report_id: str,
+        *,
+        status: str | None = None,
+        vehicle_memory_status: str | None = None,
+        source_memory_status: str | None = None,
+        resolution_status: str | None = None,
+        response_payload: str | None = None,
+        error_message: str | None = None,
+    ) -> None:
+        fields = []
+        params = []
+        if status is not None:
+            fields.append("status = ?")
+            params.append(status)
+        if vehicle_memory_status is not None:
+            fields.append("vehicle_memory_status = ?")
+            params.append(vehicle_memory_status)
+        if source_memory_status is not None:
+            fields.append("source_memory_status = ?")
+            params.append(source_memory_status)
+        if resolution_status is not None:
+            fields.append("resolution_status = ?")
+            params.append(resolution_status)
+        if response_payload is not None:
+            fields.append("response_payload = ?")
+            params.append(response_payload)
+        if error_message is not None:
+            fields.append("error_message = ?")
+            params.append(error_message)
+
+        if not fields:
+            return
+
+        fields.append("updated_at = CURRENT_TIMESTAMP")
+        query = f"UPDATE report_idempotency SET {', '.join(fields)} WHERE report_id = ?"
+        params.append(report_id)
+
+        with self._connect() as connection:
+            connection.execute(query, params)
+
