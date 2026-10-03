@@ -8,6 +8,8 @@ from typing import Any, Protocol
 from dotenv import load_dotenv
 from hindsight_client import Hindsight
 
+from core.config import env_float, env_url
+
 load_dotenv()
 
 
@@ -47,9 +49,9 @@ class HindsightMemory:
 
     @staticmethod
     def _build_client() -> HindsightClient:
-        base_url = os.getenv("HINDSIGHT_BASE_URL", "http://localhost:8888")
+        base_url = env_url("HINDSIGHT_BASE_URL", "http://localhost:8888")
         api_key = os.getenv("HINDSIGHT_API_KEY") or None
-        timeout = float(os.getenv("HINDSIGHT_TIMEOUT", "30"))
+        timeout = env_float("HINDSIGHT_TIMEOUT", 30.0)
         return Hindsight(
             base_url=base_url,
             api_key=api_key,

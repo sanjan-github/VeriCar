@@ -159,7 +159,7 @@ def test_end_to_end_external_failures_preserve_local_assessment(tmp_path, monkey
     )
 
     assert report_id.startswith("RPT-")
-    assert "Hindsight unavailable" in memory_error
+    assert memory_error == "RuntimeError: Hindsight service unavailable."
     assert db.get_condition(scenario.car.car_id) is not None
     assert db.get_memory_report(report_id)["status"] == "failed"
 
