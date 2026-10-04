@@ -26,7 +26,9 @@ from backend.app.services.groq_explanation_service import GroqExplanationService
 from core.database import Database, DEFAULT_DB_PATH
 
 
-logger = getLogger(__name__)\nIDEMPOTENCY_LEASE_SECONDS = 30.0\nIDEMPOTENCY_POLL_SECONDS = 5.0
+logger = getLogger(__name__)
+IDEMPOTENCY_LEASE_SECONDS = 30.0
+IDEMPOTENCY_POLL_SECONDS = 5.0
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
 
