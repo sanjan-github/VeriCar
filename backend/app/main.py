@@ -226,13 +226,13 @@ async def create_report(
                         status_code=status.HTTP_201_CREATED,
                         content=json.loads(existing["response_payload"]),
                     )
-        elif _idempotency_is_stale(existing):
-            db.reclaim_stale_idempotency_record(
-                idempotency_key=idempotency_key,
-                request_fingerprint=request_fingerprint,
-                processing_started_at=datetime.now(timezone.utc).isoformat(),
-            )
-            existing = db.get_idempotency_record(idempotency_key=idempotency_key)
+            if existing["status"] == "PROCESSING" and _idempotency_is_stale(existing):
+                db.reclaim_stale_idempotency_record(
+                    idempotency_key=idempotency_key,
+                    request_fingerprint=request_fingerprint,
+                    processing_started_at=datetime.now(timezone.utc).isoformat(),
+                )
+                existing = db.get_idempotency_record(idempotency_key=idempotency_key)
         else:
             inserted = db.create_idempotency_record(
                 idempotency_key=idempotency_key,
