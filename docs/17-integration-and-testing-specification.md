@@ -369,6 +369,12 @@ Repeated request
 
 The exact idempotency mechanism is defined by the backend implementation.
 
+For accepted API reports, the integration tests must also verify that SQLite retains
+the complete report and its processing state before external memory work starts. A
+Hindsight failure or process restart must leave enough local state to retry with the
+same report identity. This is durable local persistence, not an atomic SQLite and
+Hindsight transaction.
+
 ---
 
 # 13. Hindsight Persistence Test
