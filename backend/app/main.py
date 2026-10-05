@@ -144,17 +144,6 @@ def _failed_response(report_id: str) -> JSONResponse:
                     "source_memory": "pending",
                     "resolution": "pending",
                 },
-                "detail": {
-                    "status": "failed",
-                    "error": "failed",
-                    "message": "Report persistence failed before any memory was recorded.",
-                    "report_id": report_id,
-                    "stages": {
-                        "vehicle_memory": "failed",
-                        "source_memory": "pending",
-                        "resolution": "pending",
-                    },
-                },
             },
         },
     )
