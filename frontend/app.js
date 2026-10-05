@@ -1,4 +1,4 @@
-const state = { vehicleId: "", assessment: null, explanation: null };
+const state = { vehicleId: "", assessment: null, explanation: null, history: null };
 
 function generateIdempotencyKey() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -59,26 +59,43 @@ function allEvidence(finding) {
   ].sort((a, b) => String(b.observed_at).localeCompare(String(a.observed_at)));
 }
 
+function renderEvidenceItems(items) {
+  if (!items.length) {
+    elements.timeline.innerHTML = '<p class="muted">No reports are available for this vehicle.</p>';
+    return;
+  }
+
+  elements.timeline.innerHTML = items.map((item) =>
+    '<article class="evidence-item">' +
+      '<div class="evidence-meta"><time datetime="' + escapeHtml(item.observed_at) + '">' +
+      formatDate(item.observed_at) + '</time><span>·</span><span>' +
+      escapeHtml(titleCase(item.source_type)) + ' · ' + escapeHtml(item.source_id) +
+      '</span><span class="evidence-polarity ' + escapeHtml(item.polarity || "unresolved") + '">' +
+      escapeHtml(item.polarity || "unresolved") + '</span></div>' +
+      '<p class="evidence-text">' + escapeHtml(item.text) + '</p>' +
+      (item.effective_reliability == null ? "" :
+        '<p class="evidence-weight">Effective source weight: ' +
+        Number(item.effective_reliability).toFixed(2) + '</p>') +
+      '</article>'
+  ).join("");
+}
+
+function renderHistory(history) {
+  const reports = Array.isArray(history?.reports) ? history.reports : [];
+  elements.evidenceCount.textContent = reports.length + " report" + (reports.length === 1 ? "" : "s");
+  renderEvidenceItems(reports);
+}
+
 function renderEvidence(finding) {
   const evidence = allEvidence(finding);
   elements.evidenceCount.textContent = evidence.length + " report" + (evidence.length === 1 ? "" : "s");
 
   if (!evidence.length) {
-    elements.timeline.innerHTML = '<p class="muted">No reports matched this finding.</p>';
+    renderHistory(state.history);
     return;
   }
 
-  elements.timeline.innerHTML = evidence.map((item) =>
-    '<article class="evidence-item">' +
-      '<div class="evidence-meta"><time datetime="' + escapeHtml(item.observed_at) + '">' +
-      formatDate(item.observed_at) + '</time><span>·</span><span>' +
-      escapeHtml(titleCase(item.source_type)) + ' · ' + escapeHtml(item.source_id) +
-      '</span><span class="evidence-polarity ' + escapeHtml(item.polarity) + '">' +
-      escapeHtml(item.polarity) + '</span></div>' +
-      '<p class="evidence-text">' + escapeHtml(item.text) + '</p>' +
-      '<p class="evidence-weight">Effective source weight: ' +
-      Number(item.effective_reliability ?? 0).toFixed(2) + '</p></article>'
-  ).join("");
+  renderEvidenceItems(evidence);
 }
 
 function renderExplanation(explanation, status) {
@@ -201,20 +218,47 @@ async function checkBackend() {
 }
 
 async function loadVehicle(vehicleId) {
-  setStatus("Retrieving historical evidence…");
+  setStatus("Retrieving durable vehicle history…");
   elements.emptyState.hidden = true;
   elements.vehicleView.hidden = true;
   elements.searchButton.disabled = true;
 
   try {
-    const payload = await fetchJson(
-      "/api/vehicles/" + encodeURIComponent(vehicleId) +
-      "/assessment/explanation?issue=transmission_shift_behavior",
+    const history = await fetchJson(
+      "/api/vehicles/" + encodeURIComponent(vehicleId),
       { headers: { Accept: "application/json" } }
     );
     state.vehicleId = vehicleId;
-    renderAssessment(payload);
-    setStatus("", false);
+    state.history = history;
+    elements.vehicleTitle.textContent = vehicleId;
+    elements.reportVehicleId.value = vehicleId;
+    elements.vehicleView.hidden = false;
+    renderHistory(history);
+
+    try {
+      const payload = await fetchJson(
+        "/api/vehicles/" + encodeURIComponent(vehicleId) +
+        "/assessment/explanation?issue=transmission_shift_behavior",
+        { headers: { Accept: "application/json" } }
+      );
+      renderAssessment(payload);
+      setStatus("", false);
+    } catch (error) {
+      elements.findingState.textContent = "Assessment unavailable";
+      elements.confidenceValue.textContent = "—";
+      elements.confidenceCopy.textContent =
+        "The durable vehicle history is available, but historical-memory assessment is temporarily unavailable.";
+      elements.supportCount.textContent = "—";
+      elements.contradictionCount.textContent = "—";
+      elements.supportWeight.textContent = "—";
+      elements.contradictionWeight.textContent = "—";
+      elements.explanationStatus.textContent = "Unavailable";
+      elements.explanationContent.innerHTML =
+        '<p class="muted">Assessment is unavailable because the external memory service could not be reached. The local history below remains available.</p>';
+      elements.memoryStatus.textContent = "Local history available · assessment unavailable";
+      renderHistory(history);
+      setStatus(error.message || "Historical-memory assessment is temporarily unavailable.");
+    }
   } catch (error) {
     setStatus(error.message || "Vehicle history could not be retrieved.");
     elements.emptyState.hidden = true;
