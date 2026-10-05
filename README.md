@@ -275,23 +275,42 @@ A successful run should report all tests passing. The exact count changes as dev
 
 An existing FastAPI/Starlette `httpx` deprecation warning may appear. A warning is not a failed test; check the final summary for failures or errors.
 
-## 6. Start the application
+## 6. Start the canonical browser application
+
+Run the FastAPI application:
+
+~~~powershell
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+~~~
+
+Open:
+
+~~~text
+http://127.0.0.1:8000/
+~~~
+
+The FastAPI application is the canonical browser product surface. It serves the browser UI, durable vehicle history API, report submission API, deterministic assessment API, and optional explanation layer from one same-origin application.
+
+The Streamlit application in app/main.py remains available for the existing Streamlit workflow, but new browser-facing product behavior should target the FastAPI-served application and API contracts.
+
+## Using the canonical browser application
+
+1. Open the FastAPI-served VeriCar page.
+2. Enter a vehicle ID with durable history.
+3. VeriCar retrieves the durable SQLite history first.
+4. VeriCar then requests the historical-memory assessment and optional explanation.
+5. If the external memory service is unavailable, durable local history remains visible and the assessment is explicitly marked unavailable.
+6. Add another report through the browser. Report submission uses an idempotency key so retries do not create duplicate accepted submissions.
+
+### Streamlit workflow
+
+The existing Streamlit application remains available for the broader condition-input and PDF workflow:
 
 ~~~powershell
 streamlit run app/main.py
 ~~~
 
-Streamlit normally provides:
-
-~~~text
-http://localhost:8501
-~~~
-
-Open that address in your browser.
-
-**You do not need to start the old FastAPI application to use the current Streamlit product surface.**
-
-## Using the application
+Use the Streamlit workflow when you need its full structured condition form, deterministic assessment pipeline, or PDF report generation.
 
 ### Option A — Demo Mode
 
