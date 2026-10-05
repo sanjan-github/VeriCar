@@ -144,6 +144,17 @@ def _failed_response(report_id: str) -> JSONResponse:
                     "source_memory": "pending",
                     "resolution": "pending",
                 },
+                "detail": {
+                    "status": "failed",
+                    "error": "failed",
+                    "message": "Report persistence failed before any memory was recorded.",
+                    "report_id": report_id,
+                    "stages": {
+                        "vehicle_memory": "failed",
+                        "source_memory": "pending",
+                        "resolution": "pending",
+                    },
+                },
             },
         },
     )
@@ -350,7 +361,7 @@ async def create_report(
                 detail="Report persistence could not be initialized.",
             )
 
-    if existing is not None and existing["status"] in ("PARTIAL", "FAILED"):
+    if existing is not None and idempotency_key is not None and existing["status"] in ("PARTIAL", "FAILED"):
         claimed = db.claim_idempotency_retry(
             idempotency_key=idempotency_key,
             request_fingerprint=request_fingerprint,
@@ -399,6 +410,12 @@ async def create_report(
             )
     vehicle_report, claim = _stored_vehicle_report(stored_report)
     submitted_at = vehicle_report.submitted_at
+    if submitted_at is None:
+        logger.error("Stored API report is missing submitted_at report_id=%s", report_id)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Stored report persistence is incomplete.",
+        )
 
     # Stage 1: Retain vehicle memory
     if not vehicle_done:
