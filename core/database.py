@@ -87,11 +87,39 @@ class Database:
                     observed_at TEXT NOT NULL,
                     status TEXT NOT NULL,
                     error TEXT,
-                    synced_at TEXT,
-                    FOREIGN KEY(car_id) REFERENCES cars(car_id)
+                    synced_at TEXT
                 )
                 """
             )
+            memory_report_foreign_keys = connection.execute(
+                "PRAGMA foreign_key_list(vehicle_memory_reports)"
+            ).fetchall()
+            if memory_report_foreign_keys:
+                connection.execute(
+                    """
+                    CREATE TABLE vehicle_memory_reports_migrated (
+                        report_id TEXT PRIMARY KEY,
+                        car_id TEXT NOT NULL,
+                        observed_at TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        error TEXT,
+                        synced_at TEXT
+                    )
+                    """
+                )
+                connection.execute(
+                    """
+                    INSERT INTO vehicle_memory_reports_migrated (
+                        report_id, car_id, observed_at, status, error, synced_at
+                    )
+                    SELECT report_id, car_id, observed_at, status, error, synced_at
+                    FROM vehicle_memory_reports
+                    """
+                )
+                connection.execute("DROP TABLE vehicle_memory_reports")
+                connection.execute(
+                    "ALTER TABLE vehicle_memory_reports_migrated RENAME TO vehicle_memory_reports"
+                )
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS report_idempotency (
