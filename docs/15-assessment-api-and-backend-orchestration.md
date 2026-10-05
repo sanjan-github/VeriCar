@@ -284,6 +284,13 @@ The report must retain:
 
 The original report must remain unchanged.
 
+Accepted API reports are committed to SQLite together with their initial idempotency
+processing state before any Hindsight operation begins. SQLite is the durable local
+source of truth for the accepted report, including its original text and derived claim.
+Hindsight remains an external memory system; the two systems do not share an atomic
+transaction. A retry reconstructs the stable report identity from SQLite and resumes
+only stages that have not completed.
+
 ---
 
 # 11. Claim Processing

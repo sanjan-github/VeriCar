@@ -354,7 +354,7 @@ If Hindsight is unavailable:
 
 ## Data storage
 
-VeriCar uses SQLite for structured local persistence. It stores vehicle records, condition records, expected profiles and memory-report synchronization state.
+VeriCar uses SQLite for structured local persistence. It stores vehicle records, condition records, expected profiles, memory-report synchronization state, and accepted API reports with their idempotency and downstream processing state. SQLite is the durable local source of truth for accepted API reports; Hindsight is an external memory system and is not part of the SQLite transaction.
 
 The design intentionally keeps structured evidence locally available even when an external memory service is unavailable.
 
