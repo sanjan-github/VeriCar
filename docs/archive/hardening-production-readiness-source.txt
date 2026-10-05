@@ -1,0 +1,14 @@
+Hardening source snapshot
+==========================
+Repository: sanjan-github/VeriCar
+Branch: hardening/production-readiness
+HEAD: 11e4a3330791ca7cd4f7d73a18726feeb8cbac45
+Parent 1: e4b564c15411007a4ea854cbb84d1212c8e22e50
+Parent 2: 98b211600fe473677f7d21654f2966c6d1989994
+
+This archive records the exact source branch tip and important source commits before branch deletion. The complete Git object history remains recoverable from these referenced SHAs while they remain reachable by GitHub; the recovery target is main. The source tree was inspected and verified to contain committed conflict markers in backend/app/main.py, so it must not be merged wholesale.
+
+Key source commits:
+e4b564c15411007a4ea854cbb84d1212c8e22e50 feat: persist API reports durably before memory processing
+98b211600fe473677f7d21654f2966c6d1989994 feat: add browser report submission idempotency
+11e4a3330791ca7cd4f7d73a18726feeb8cbac45 merge branch containing unresolved conflict markers
