@@ -1,4 +1,18 @@
 const state = { vehicleId: "", assessment: null, explanation: null };
+
+function generateIdempotencyKey() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "idem-" + Date.now() + "-" + Math.random().toString(36).substring(2, 11);
+}
+
+function getIdempotencyKey() {
+  if (!elements.reportForm.dataset.idempotencyKey) {
+    elements.reportForm.dataset.idempotencyKey = generateIdempotencyKey();
+  }
+  return elements.reportForm.dataset.idempotencyKey;
+}
 const $ = (selector) => document.querySelector(selector);
 
 const elements = {
@@ -222,6 +236,10 @@ elements.confidenceToggle.addEventListener("click", () => {
   elements.confidenceDetails.hidden = expanded;
 });
 
+elements.reportForm.addEventListener("reset", () => {
+  delete elements.reportForm.dataset.idempotencyKey;
+});
+
 elements.reportForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   elements.reportResult.textContent = "Saving…";
@@ -237,9 +255,14 @@ elements.reportForm.addEventListener("submit", async (event) => {
   };
 
   try {
+    const idempotencyKey = getIdempotencyKey();
     const payload = await fetchJson("/api/reports", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "Idempotency-Key": idempotencyKey
+      },
       body: JSON.stringify(body)
     });
 
