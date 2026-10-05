@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 FRONTEND_APP = Path(__file__).resolve().parents[1] / "frontend" / "app.js"
+FRONTEND_HTML = Path(__file__).resolve().parents[1] / "frontend" / "index.html"
 
 
 def test_browser_loads_durable_vehicle_history_before_memory_assessment():
@@ -28,7 +29,7 @@ def test_browser_keeps_idempotent_report_submission_in_canonical_flow():
     source = FRONTEND_APP.read_text(encoding="utf-8")
 
     assert '"Idempotency-Key": idempotencyKey' in source
-    assert 'await loadVehicle(state.vehicleId);' in source
+    assert "await loadVehicle(state.vehicleId);" in source
 
 
 def test_browser_uses_same_origin_api_routes():
@@ -38,3 +39,14 @@ def test_browser_uses_same_origin_api_routes():
     assert '"/api/vehicles/"' in source
     assert 'fetchJson("/api/reports"' in source
     assert "localhost:8000" not in source
+
+
+def test_browser_exposes_the_canonical_pdf_report_action():
+    html = FRONTEND_HTML.read_text(encoding="utf-8")
+    source = FRONTEND_APP.read_text(encoding="utf-8")
+
+    assert 'id="pdf-button"' in html
+    assert 'Download inspection report' in html
+    assert 'pdfButton: $("#pdf-button")' in source
+    assert '/assessment/report.pdf' in source
+    assert 'elements.pdfButton.hidden = false;' in source
