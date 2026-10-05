@@ -115,6 +115,44 @@ It should not perform unnecessary LLM generation.
 
 ---
 
+### Vehicle history response
+
+The vehicle history endpoint is backed by the durable SQLite `api_reports` store. It returns the persisted vehicle record when one exists and the accepted reports for the requested vehicle in chronological order.
+
+Example:
+
+```json
+{
+  "vehicle_id": "CAR-001",
+  "vehicle": {
+    "car_id": "CAR-001",
+    "brand": "Toyota",
+    "model": "City",
+    "manufacture_year": 2020
+  },
+  "reports": [
+    {
+      "report_id": "RPT-001",
+      "vehicle_id": "CAR-001",
+      "source_id": "SRC-001",
+      "source_type": "mechanic",
+      "observed_at": "2026-09-20T00:00:00+00:00",
+      "submitted_at": "2026-09-20T09:00:00+00:00",
+      "text": "Transmission hesitation observed.",
+      "claim": {
+        "claim_id": "CLM-RPT-001",
+        "issue_candidate": "transmission_shift_behavior",
+        "polarity": "supporting"
+      }
+    }
+  ],
+  "report_count": 1,
+  "history_status": "available"
+}
+```
+
+A known vehicle with no accepted reports returns `200` with an empty `reports` list and `history_status: "empty"`. A vehicle with neither a persisted vehicle record nor accepted reports returns `404` with the stable `VEHICLE_NOT_FOUND` error code. The endpoint reads durable local history and therefore does not convert Hindsight unavailability into an empty history result.
+
 ## `GET /api/vehicles/{vehicle_id}/assessment`
 
 Returns the current deterministic assessment for the vehicle.
