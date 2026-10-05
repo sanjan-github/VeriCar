@@ -9,7 +9,7 @@ from logging import getLogger
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from backend.app.config import settings
@@ -24,6 +24,7 @@ from backend.app.services.hindsight_factory import create_hindsight_repository
 from backend.app.services.memory_service import MemoryService
 from backend.app.services.assessment_service import AssessmentService
 from backend.app.services.groq_explanation_service import GroqExplanationService
+from backend.app.services.pdf_report_service import PdfReportService
 from core.database import Database, DEFAULT_DB_PATH
 
 
@@ -82,6 +83,12 @@ def get_assessment_service() -> AssessmentService:
 
 def get_groq_explanation_service() -> GroqExplanationService:
     return GroqExplanationService()
+
+
+def get_pdf_report_service(
+    db: Database = Depends(get_database),
+) -> PdfReportService:
+    return PdfReportService(db)
 
 
 @app.get("/", include_in_schema=False)
@@ -675,3 +682,95 @@ async def get_vehicle_assessment_explanation(
         "explanation_status": "available",
         "explanation": explanation.model_dump(),
     }
+
+
+@app.get("/api/vehicles/{vehicle_id}/assessment/report.pdf")
+async def download_vehicle_assessment_pdf(
+    vehicle_id: str,
+    db: Database = Depends(get_database),
+    pdf_service: PdfReportService = Depends(get_pdf_report_service),
+) -> Response:
+    """Return the deterministic assessment PDF for a durably stored vehicle."""
+    vehicle = db.get_car(vehicle_id)
+    reports = db.list_api_reports(vehicle_id)
+
+    if vehicle is None and not reports:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": {
+                    "code": "VEHICLE_NOT_FOUND",
+                    "message": "Vehicle history was not found.",
+                }
+            },
+        )
+
+    condition = db.get_condition(vehicle_id)
+    if condition is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": {
+                    "code": "CONDITION_NOT_AVAILABLE",
+                    "message": "A saved condition record is required to generate the inspection report.",
+                }
+            },
+        )
+
+    try:
+        pdf = pdf_service.build_vehicle_report(vehicle_id=vehicle_id)
+    except LookupError as exc:
+        logger.info(
+            "PDF report unavailable vehicle_id=%s reason=%s",
+            vehicle_id,
+            str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": {
+                    "code": "REPORT_NOT_READY",
+                    "message": str(exc),
+                }
+            },
+        ) from exc
+    except ValueError as exc:
+        logger.error(
+            "PDF report generation failed vehicle_id=%s error_type=%s",
+            vehicle_id,
+            type(exc).__name__,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "error": {
+                    "code": "PDF_GENERATION_FAILED",
+                    "message": "The inspection report could not be generated.",
+                }
+            },
+        ) from exc
+    except Exception as exc:
+        logger.error(
+            "PDF report generation failed vehicle_id=%s error_type=%s",
+            vehicle_id,
+            type(exc).__name__,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "error": {
+                    "code": "PDF_GENERATION_FAILED",
+                    "message": "The inspection report could not be generated.",
+                }
+            },
+        ) from exc
+
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="vericar-assessment-{vehicle_id}.pdf"'
+            )
+        },
+    )
