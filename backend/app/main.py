@@ -565,6 +565,55 @@ async def _get_assessment(
         ) from exc
 
 
+@app.get("/api/vehicles/{vehicle_id}")
+async def get_vehicle_history(
+    vehicle_id: str,
+    db: Database = Depends(get_database),
+) -> dict:
+    """Return the durable vehicle record and chronological accepted report history."""
+    vehicle = db.get_car(vehicle_id)
+    reports = db.list_api_reports(vehicle_id)
+
+    if vehicle is None and not reports:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": {
+                    "code": "VEHICLE_NOT_FOUND",
+                    "message": "Vehicle history was not found.",
+                }
+            },
+        )
+
+    vehicle_payload = dict(vehicle) if vehicle is not None else None
+    report_payload = [
+        {
+            "report_id": row["report_id"],
+            "vehicle_id": row["vehicle_id"],
+            "vin": row["vin"],
+            "source_id": row["source_id"],
+            "source_type": row["source_type"],
+            "observed_at": row["observed_at"],
+            "submitted_at": row["submitted_at"],
+            "text": row["report_text"],
+            "claim": {
+                "claim_id": row["claim_id"],
+                "issue_candidate": row["issue_candidate"],
+                "polarity": row["polarity"],
+            },
+        }
+        for row in reports
+    ]
+
+    return {
+        "vehicle_id": vehicle_id,
+        "vehicle": vehicle_payload,
+        "reports": report_payload,
+        "report_count": len(report_payload),
+        "history_status": "available" if report_payload else "empty",
+    }
+
+
 @app.get("/api/vehicles/{vehicle_id}/assessment")
 async def get_vehicle_assessment(
     vehicle_id: str,
