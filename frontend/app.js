@@ -24,7 +24,7 @@ const elements = {
   supportCount: $("#support-count"), contradictionCount: $("#contradiction-count"),
   supportWeight: $("#support-weight"), contradictionWeight: $("#contradiction-weight"),
   explanationStatus: $("#explanation-status"), explanationContent: $("#explanation-content"),
-  evidenceCount: $("#evidence-count"), timeline: $("#timeline"), reportForm: $("#report-form"),
+  evidenceCount: $("#evidence-count"), timeline: $("#timeline"), reportForm: $("#report-form"), pdfButton: $("#pdf-button"),
   reportVehicleId: $("#report-vehicle-id"), reportVin: $("#report-vin"), reportSourceId: $("#report-source-id"),
   reportSourceType: $("#report-source-type"), reportObservedAt: $("#report-observed-at"),
   reportText: $("#report-text"), reportButton: $("#report-form button"), reportResult: $("#report-result")
@@ -233,6 +233,8 @@ async function loadVehicle(vehicleId) {
     elements.vehicleTitle.textContent = vehicleId;
     elements.reportVehicleId.value = vehicleId;
     elements.vehicleView.hidden = false;
+    elements.pdfButton.href = "/api/vehicles/" + encodeURIComponent(vehicleId) + "/assessment/report.pdf";
+    elements.pdfButton.hidden = false;
     renderHistory(history);
 
     try {
