@@ -185,16 +185,17 @@ eval(appCode);
   const event = { preventDefault() {} };
   await reportForm.listeners['submit'][0](event);
 
-  // Check that vehicle history GET request was issued after the POST failure
+  // Fail the test explicitly if the history refresh did not happen.
   const vehicleCalls = calls.filter(c => c.url.includes('/api/vehicles/VEH-FIX3'));
-  console.assert(vehicleCalls.length >= 1, 'Should reload vehicle history on report failure');
+  if (vehicleCalls.length < 1) {
+    throw new Error('Expected vehicle history reload after report failure');
+  }
 
-  // Check that the error message is preserved on the reportResult element
+  // Fail explicitly if the original report error was not preserved.
   const reportResult = getEl('#report-result');
-  console.assert(
-    reportResult.textContent.includes('Report saved locally'),
-    'Error message must be preserved on reportResult element'
-  );
+  if (!reportResult.textContent.includes('Report saved locally')) {
+    throw new Error('Expected original report error message to remain visible');
+  }
 
   console.log('JS_FIX3_REFRESH_PASS');
 })();
