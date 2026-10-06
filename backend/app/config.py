@@ -112,13 +112,15 @@ def env_bool(
 
 def env_url(
     key: str,
-    default: str,
+    default: str | None,
     *,
     env: Mapping[str, str] | None = None,
 ) -> str:
     source = env if env is not None else os.environ
     raw = source.get(key)
     if raw is None or not raw.strip():
+        if default is None:
+            return ""
         val = default
     else:
         val = raw.strip()
@@ -141,17 +143,17 @@ class Settings:
         self.host: str = env_str("HOST", "127.0.0.1", env=source)
         self.port: int = env_int("PORT", 8000, min_value=1, max_value=65535, env=source)
 
-        self.hindsight_base_url: str = env_url("HINDSIGHT_BASE_URL", "http://localhost:8888", env=source)
-        self.hindsight_api_key: str = source.get("HINDSIGHT_API_KEY", "")
+        self.hindsight_base_url: str = env_url("HINDSIGHT_BASE_URL", None, env=source)
+        self.hindsight_api_key: str = source.get("HINDSIGHT_API_KEY", "").strip()
         self.hindsight_timeout: float = env_float("HINDSIGHT_TIMEOUT", 30.0, min_value=0.001, env=source)
         self.hindsight_startup_check: bool = env_bool("HINDSIGHT_STARTUP_CHECK", False, env=source)
 
         self.groq_base_url: str = env_url("GROQ_BASE_URL", "https://api.groq.com/openai/v1", env=source)
-        self.groq_api_key: str = source.get("GROQ_API_KEY", "")
+        self.groq_api_key: str = source.get("GROQ_API_KEY", "").strip()
         self.groq_model: str = env_str("GROQ_MODEL", "llama-3.3-70b-versatile", env=source)
         self.groq_timeout: float = env_float("GROQ_TIMEOUT", 20.0, min_value=0.001, env=source)
 
-        self.db_path: str = source.get("DB_PATH", "data/vericar.db")
+        self.db_path: str = env_str("DB_PATH", "data/vericar.db", env=source)
 
 
 settings = Settings()
