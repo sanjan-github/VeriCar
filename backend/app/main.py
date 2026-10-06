@@ -113,6 +113,52 @@ def health() -> dict[str, str]:
     }
 
 
+@app.get("/readiness")
+async def readiness(
+    db: Database = Depends(get_database),
+    memory_service: MemoryService = Depends(get_memory_service),
+) -> JSONResponse:
+    """Return dependency readiness for the application."""
+    checks: dict[str, str] = {}
+    is_ready = True
+
+    # 1. Required: Durable SQLite persistence
+    try:
+        with db._connect() as conn:
+            conn.execute("SELECT 1").fetchone()
+        checks["database"] = "available"
+    except Exception:
+        checks["database"] = "unavailable"
+        is_ready = False
+
+    # 2. Optional: Hindsight memory service
+    if not settings.hindsight_base_url:
+        checks["hindsight"] = "unconfigured"
+    else:
+        try:
+            await memory_service.check_version()
+            checks["hindsight"] = "available"
+        except Exception:
+            checks["hindsight"] = "unavailable"
+
+    # 3. Optional: Groq explanation service
+    if settings.groq_api_key:
+        checks["groq"] = "configured"
+    else:
+        checks["groq"] = "unconfigured"
+
+    status_code = status.HTTP_200_OK if is_ready else status.HTTP_503_SERVICE_UNAVAILABLE
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "ready" if is_ready else "unready",
+            "service": settings.app_name,
+            "environment": settings.app_env,
+            "checks": checks,
+        },
+    )
+
+
 def _idempotency_is_stale(row) -> bool:
     if row["status"] != "PROCESSING":
         return False
