@@ -689,16 +689,18 @@ def test_retry_after_ambiguous_hindsight_success_reuses_stable_document_ids(tmp_
             self.vehicle_document_ids = []
             self.fail_after_apply = True
 
-        async def retain_vehicle_report(self, report):
+        async def retain_vehicle_report(self, report) -> dict[str, str]:
             # Model Hindsight's documented document_id upsert semantics.
             self.vehicle_document_ids.append(f"report_{report.report_id}")
             if self.fail_after_apply:
                 self.fail_after_apply = False
                 raise TimeoutError("response lost after retain applied")
             self.vehicle_calls += 1
+            return {"bank": f"vehicle_{report.vehicle_id}"}
 
-        async def retain_source_report(self, report):
+        async def retain_source_report(self, report) -> dict[str, str]:
             self.source_calls += 1
+            return {"bank": f"source_{report.source_id}"}
 
     memory = AppliedThenTimedOutMemory()
     app = make_app(memory, db=db)
@@ -723,6 +725,7 @@ def test_retry_after_ambiguous_hindsight_success_reuses_stable_document_ids(tmp_
     assert first.json()["report_id"] == second.json()["report"]["report_id"]
     assert memory.vehicle_document_ids[0] == memory.vehicle_document_ids[1]
     record = db.get_idempotency_record(idempotency_key="ambiguous-key")
+    assert record is not None
     assert record["status"] == "COMPLETED"
     assert record["vehicle_memory_status"] == "STORED"
 
@@ -767,6 +770,7 @@ def test_stale_processing_record_can_be_reclaimed(tmp_path):
         processing_started_at=stale.isoformat(),
     )
     row = db.get_idempotency_record(idempotency_key="stale-key")
+    assert row is not None
     assert _idempotency_is_stale(row) is True
 
     refreshed = datetime.now(timezone.utc).isoformat()
@@ -777,6 +781,7 @@ def test_stale_processing_record_can_be_reclaimed(tmp_path):
         processing_started_at=refreshed,
     )
     row = db.get_idempotency_record(idempotency_key="stale-key")
+    assert row is not None
     assert row["status"] == "PROCESSING"
     assert row["processing_started_at"] == refreshed
 
