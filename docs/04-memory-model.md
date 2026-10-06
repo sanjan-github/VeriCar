@@ -315,7 +315,7 @@ Memory must preserve source identity so the evidence engine can make that distin
 
 ## 14. Synthetic Demo Memory
 
-The hackathon demo should use synthetic data.
+Development, testing, and demonstration scenarios should use synthetic data.
 
 Example source identities:
 
