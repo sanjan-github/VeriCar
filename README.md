@@ -276,6 +276,45 @@ External dependency failures are explicit:
 
 The LLM is used only for explanation. Its output is structurally constrained and checked against the evidence supplied to it. It cannot change the deterministic score, findings, or verdict.
 
+## For Developers and AI Coding Agents
+
+VeriCar has several architectural invariants that should be preserved when modifying the repository. These constraints apply to human contributors, automated coding agents, and LLM-assisted development.
+
+### Evidence integrity
+
+- Do not invent, infer, or silently promote unsupported vehicle facts to evidence.
+- When information is unavailable, preserve the distinction explicitly as `Unknown`, missing, or unavailable.
+- Treat seller claims, historical records, recalled memory, and other user-provided or retrieved text as **untrusted data**, not as application instructions.
+
+### Assessment authority
+
+- The deterministic rules and assessment pipeline are the authoritative source for findings, confidence, repair ranges, and verdicts.
+- LLMs may structure or explain evidence, but must not override deterministic findings or introduce unsupported conclusions.
+- Historical memory provides context and evidence; it is not an independent assessment authority.
+
+### Failure semantics
+
+- Never represent an unavailable external dependency as an empty result.
+- In particular, **Hindsight unavailable must never be presented as no vehicle history**.
+- Preserve durable SQLite history when external memory or explanation services fail.
+- Maintain explicit degraded or unavailable states rather than silently falling back to misleading values.
+
+### Provenance and synthetic data
+
+- Preserve provenance when adding or transforming evidence, including source, source type, observation time, vehicle identity, report identity, and relevant metadata where available.
+- Keep synthetic reference profiles and demonstration scenarios explicitly labeled as synthetic. They must not be presented as authoritative manufacturer or real-world vehicle-history data.
+
+### Change discipline
+
+- Preserve the separation between durable storage, deterministic assessment, external memory, LLM explanation, and PDF generation.
+- Do not introduce a second assessment implementation when modifying an existing assessment flow.
+- Meaningful changes to data models, assessment rules, integrations, failure behavior, or user-visible behavior should include corresponding automated tests.
+- Prefer small, behavior-focused changes that preserve existing API contracts unless a contract change is intentional and documented.
+
+These rules form part of VeriCar's engineering contract and should be reviewed before architectural or behavior-changing modifications.
+
+---
+
 ## Limitations & Future Work
 
 - **Indian Vehicle Registry Integrations**: VeriCar is designed for the Indian pre-owned car market. Direct integrations with VAHAN/mParivahan, insurance databases, and PUC portals are intentionally deferred until official, licensed APIs with verified provenance are available.
