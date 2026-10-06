@@ -46,7 +46,7 @@ def test_valid_default_config_loads_successfully():
     assert cfg.app_env == "development"
     assert cfg.host == "127.0.0.1"
     assert cfg.port == 8000
-    assert cfg.hindsight_base_url == "http://localhost:8888"
+    assert cfg.hindsight_base_url == ""
     assert cfg.hindsight_timeout == 30.0
     assert cfg.hindsight_startup_check is False
     assert cfg.groq_base_url == "https://api.groq.com/openai/v1"
@@ -149,7 +149,7 @@ def test_missing_groq_api_key_results_in_unavailable_explanation_without_crashin
 
 
 def test_groq_upstream_failure_leaves_deterministic_assessment_intact(tmp_path):
-    """Upstream Groq error or malformed response does not fail the assessment endpoint."""
+    """Upstream Groq failure does not fail the assessment endpoint."""
     db = Database(tmp_path / "test.db")
     db.save_car(Car(car_id="VEH-CFG-002", brand="Honda", model="City", manufacture_year=2020))
 
@@ -272,7 +272,7 @@ def test_readiness_endpoint_reports_optional_hindsight_unavailability_without_50
 def test_readiness_endpoint_returns_503_when_database_fails():
     """Unreachable or corrupted database causes /readiness to return 503 unready."""
     class BrokenDatabase:
-        def _connect(self):
+        def check_connection(self):
             raise RuntimeError("Database file locked / unreachable")
 
     app.dependency_overrides[get_database] = lambda: BrokenDatabase()
@@ -287,3 +287,101 @@ def test_readiness_endpoint_returns_503_when_database_fails():
             assert data["checks"]["database"] == "unavailable"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_credential_and_database_values_are_trimmed():
+    cfg = Settings(env={
+        "HINDSIGHT_API_KEY": "  hindsight-key  ",
+        "GROQ_API_KEY": "  groq-key  ",
+        "DB_PATH": "  custom.db  ",
+    })
+    assert cfg.hindsight_api_key == "hindsight-key"
+    assert cfg.groq_api_key == "groq-key"
+    assert cfg.db_path == "custom.db"
+
+
+def test_readiness_skips_hindsight_check_when_base_url_is_unconfigured(tmp_path, monkeypatch):
+    db = Database(tmp_path / "test.db")
+
+    class ExplodingMemoryService:
+        async def check_version(self):
+            raise AssertionError("Hindsight should not be contacted when unconfigured")
+
+    app.dependency_overrides[get_database] = lambda: db
+    app.dependency_overrides[get_memory_service] = lambda: ExplodingMemoryService()
+
+    try:
+        monkeypatch.setattr("backend.app.main.settings.hindsight_base_url", "")
+        with TestClient(app) as client:
+            res = client.get("/readiness")
+            assert res.status_code == 200
+            data = res.json()
+            assert data["status"] == "ready"
+            assert data["checks"]["database"] == "available"
+            assert data["checks"]["hindsight"] == "unconfigured"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_readiness_uses_public_database_connection_check():
+    class BrokenDatabase:
+        def check_connection(self):
+            raise RuntimeError("database unavailable")
+
+    app.dependency_overrides[get_database] = lambda: BrokenDatabase()
+    app.dependency_overrides[get_memory_service] = lambda: FakeMemoryService()
+
+    try:
+        with TestClient(app) as client:
+            res = client.get("/readiness")
+            assert res.status_code == 503
+            assert res.json()["checks"]["database"] == "unavailable"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_groq_malformed_json_is_rejected():
+    from backend.app.models.evidence import Assessment
+    from backend.app.services.groq_explanation_service import GroqExplanationService
+    from unittest.mock import patch
+    import asyncio
+
+    class Response:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": "not-json"}}]}
+
+    class Client:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def post(self, *args, **kwargs):
+            return Response()
+
+    assessment = Assessment(
+        issue_key="test_issue",
+        state="unknown",
+        confidence=0.0,
+        support_weight=0.0,
+        contradiction_weight=0.0,
+        independent_supporting_sources=0,
+        independent_contradicting_sources=0,
+        supporting_evidence=(),
+        contradicting_evidence=(),
+        unresolved_evidence=(),
+    )
+    service = GroqExplanationService(
+        api_key="test-key",
+        base_url="https://example.test",
+    )
+    with patch(
+        "backend.app.services.groq_explanation_service.httpx.AsyncClient",
+        return_value=Client(),
+    ):
+        with pytest.raises(ValueError, match="invalid explanation payload"):
+            asyncio.run(service.explain(assessment))
