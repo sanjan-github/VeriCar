@@ -35,6 +35,11 @@ class Database:
         finally:
             connection.close()
 
+    def check_connection(self) -> None:
+        """Verify that the SQLite database can accept a simple read."""
+        with self._connect() as connection:
+            connection.execute("SELECT 1").fetchone()
+
     def _initialize(self) -> None:
         with self._connect() as connection:
             connection.execute(
