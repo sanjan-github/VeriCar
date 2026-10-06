@@ -191,6 +191,7 @@ def test_hindsight_unavailable_produces_503_and_preserves_durable_sqlite_history
     app.dependency_overrides[get_memory_service] = lambda: FailingMemoryService()
 
     try:
+        monkeypatch.setattr("backend.app.main.settings.hindsight_base_url", "http://hindsight.test")
         with TestClient(app) as client:
             # 1. Assessment fails with explicit 503 MEMORY_UNAVAILABLE (not silent empty history)
             res_assessment = client.get("/api/vehicles/VEH-CFG-003/assessment")
@@ -224,7 +225,7 @@ def test_health_endpoint_returns_200_liveness():
         assert "environment" in data
 
 
-def test_readiness_endpoint_when_dependencies_healthy(tmp_path):
+def test_readiness_endpoint_when_dependencies_healthy(tmp_path, monkeypatch):
     db = Database(tmp_path / "test.db")
 
     class HealthyMemoryService:
@@ -235,6 +236,7 @@ def test_readiness_endpoint_when_dependencies_healthy(tmp_path):
     app.dependency_overrides[get_memory_service] = lambda: HealthyMemoryService()
 
     try:
+        monkeypatch.setattr("backend.app.main.settings.hindsight_base_url", "http://hindsight.test")
         with TestClient(app) as client:
             res = client.get("/readiness")
             assert res.status_code == 200
@@ -246,7 +248,7 @@ def test_readiness_endpoint_when_dependencies_healthy(tmp_path):
         app.dependency_overrides.clear()
 
 
-def test_readiness_endpoint_reports_optional_hindsight_unavailability_without_503(tmp_path):
+def test_readiness_endpoint_reports_optional_hindsight_unavailability_without_503(tmp_path, monkeypatch):
     """Hindsight unavailability marks check as 'unavailable' but does not fail the app readiness."""
     db = Database(tmp_path / "test.db")
 
