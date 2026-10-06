@@ -119,9 +119,9 @@ The initial product does not require React, Next.js, Vue, or another frontend fr
 The documentation directory should contain the design documents already created:
 
 docs/
-|
+│
 ├── 01-project-concept.md
-├── 02-hackathon-strategy.md
+├── 02-product-requirements.md
 ├── 03-system-architecture.md
 ├── 04-memory-model.md
 ├── 05-scoring-and-evidence-model.md
@@ -683,7 +683,7 @@ V1 does not require:
 
 These can be introduced only if an actual requirement appears.
 
-The goal is a functional, understandable hackathon system.
+The goal is a functional, understandable standalone system.
 
 ---
 
@@ -733,7 +733,7 @@ Implementation should proceed in this order:
 
 21. Polish UX
 
-22. Prepare submission materials
+22. Prepare release and documentation materials
 
 ---
 

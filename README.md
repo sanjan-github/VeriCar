@@ -234,7 +234,7 @@ Run the full automated test suite:
 python -m pytest -q
 ```
 
-All 227 tests execute locally without live external network dependencies via isolated fixtures and mock transports.
+The test suite runs locally without live external network dependencies through isolated fixtures and mock transports.
 
 ---
 

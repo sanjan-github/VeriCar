@@ -1381,7 +1381,7 @@ This is important for:
 * testing
 * reproducibility
 * trust
-* hackathon demonstration
+* demonstration and verification
 
 ---
 
