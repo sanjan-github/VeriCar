@@ -1,65 +1,79 @@
-# VeriCar — Hackathon Strategy
+# VeriCar — Product Requirements
 
-## 1. Hackathon Context
+## 1. Product Purpose
 
-VeriCar is being developed for the **Hindsight Hackathon**.
+VeriCar helps used-car buyers understand accumulated vehicle evidence and identify issues that may warrant further inspection.
 
-The judging criteria are:
+The product is designed around a simple principle:
 
-| Criterion                | Weight |
-| ------------------------ | -----: |
-| Innovation               |    30% |
-| Hindsight / Memory       |    25% |
-| Technical Implementation |    20% |
-| UX                       |    15% |
-| Real-world Impact        |    10% |
+> A vehicle assessment should improve as relevant, trustworthy evidence accumulates over time.
 
-The architecture and demo should therefore make persistent memory a central part of the product rather than an invisible backend dependency.
+VeriCar is not intended to guarantee vehicle quality, detect every hidden defect, or replace a professional inspection.
 
-## 2. Hindsight Must Be Load-Bearing
+## 2. Persistent Evidence Is a Core Capability
 
-The project should NOT be:
+Historical evidence is central to the product rather than an invisible storage concern.
+
+The intended progression is:
 
 ```text
-Normal application
-+
-LLM
-+
-Hindsight somewhere in the backend
+Historical reports
+      ↓
+Relevant evidence
+      ↓
+Corroboration and source context
+      ↓
+Deterministic assessment
+      ↓
+Explainable recommendation
 ```
 
-It should be:
+A new report should be interpreted in the context of relevant previous observations.
+
+## 3. Reference Assessment Workflow
+
+The canonical workflow is:
 
 ```text
-Persistent memory
+Identify vehicle
       ↓
-Historical evidence
+Retrieve durable history
       ↓
-Retrieval
+Retrieve relevant memory
       ↓
-Cross-time reasoning
+View current assessment
       ↓
-Evolving assessment
+Submit a new report
+      ↓
+Persist the report
+      ↓
+Process external memory
+      ↓
+Recalculate evidence
+      ↓
+Update assessment
+      ↓
+Explain material changes
 ```
 
-The user should be able to see that the current assessment depends on accumulated history.
+The browser application should make this progression understandable without requiring the user to understand the underlying infrastructure.
 
-## 3. Core Demo Story
+## 4. Reference Evidence Scenario
 
-The demo should use one synthetic vehicle.
+The following synthetic scenario illustrates the intended behavior. It is a development and demonstration fixture, not real-world vehicle data.
 
-Example:
+Example vehicle:
 
 ```text
 VIN-VERICAR-001
 ```
 
-### Stage 0 — Unknown
+### Stage 0 — Insufficient Evidence
 
 ```text
-No history found.
+No relevant history found.
 
-There isn't enough evidence to assess this vehicle.
+There is not enough evidence to assess this vehicle.
 
 Recommendation:
 Obtain an independent inspection.
@@ -75,218 +89,139 @@ Two owner reports:
 "No known issues."
 ```
 
-Result:
+The system should recognize that these are owner observations and that independent corroboration is still limited.
 
-```text
-LIMITED EVIDENCE
+### Stage 2 — Independent Inspection
 
-2 reports
-2 owner sources
-
-No strong independent corroboration yet.
-```
-
-### Stage 2 — Inspector
-
-Inspector reports:
+Inspector report:
 
 ```text
 "Hard 2→3 shift observed during inspection."
 ```
 
-Result:
+The assessment should increase concern for the transmission because an independent inspection introduced a specific observation.
 
-```text
-TRANSMISSION
+### Stage 3 — Mechanic Confirmation
 
-Elevated concern
-
-3 reports
-1 independent high-reliability source
-```
-
-The explanation should explicitly state that the assessment changed because an independent inspection introduced a specific transmission observation.
-
-### Stage 3 — Mechanic
-
-Mechanic reports:
+Mechanic report:
 
 ```text
 "Transmission hesitation confirmed."
 ```
 
-Result:
+The assessment should reflect stronger evidence because another professional source corroborates the earlier observation.
 
-```text
-Stronger evidence
+### Stage 4 — Additional Buyer Observation
 
-4 reports
-2 independent professional sources
-```
-
-### Stage 4 — Previous Buyer
-
-Previous buyer reports:
+Previous buyer report:
 
 ```text
 "Experienced hard shifting during test drive."
 ```
 
-The system now has multiple independent observations over time.
+The system now has multiple observations from distinct sources over time.
 
-## 4. The Key Demo Moment
+## 5. Explainable Assessment Changes
 
-The most important interaction is:
+A user should be able to understand why the assessment changed.
 
-```text
-User:
-"Why did the assessment change?"
-```
-
-VeriCar should explain:
+For the reference scenario, the explanation should distinguish:
 
 ```text
-Earlier history contained only owner reports
-describing normal operation.
+Earlier history:
+Owner reports described normal operation.
 
-A later independent inspection reported
-hard 2→3 shifting.
+Later evidence:
+An independent inspection reported hard 2→3 shifting.
 
-A mechanic subsequently reported similar
-transmission hesitation.
+Corroboration:
+A mechanic reported similar transmission hesitation.
 
-A previous buyer later described the same
-behavior.
+Additional context:
+A previous buyer described hard shifting during a test drive.
 
-The assessment increased because independent
-observations accumulated over time.
+Result:
+Independent observations accumulated and increased the
+strength of the transmission-related evidence.
 ```
 
-This demonstrates:
+The explanation must remain grounded in the evidence available to the assessment pipeline.
+
+## 6. Evidence and Source Semantics
+
+The product must preserve distinctions between:
+
+- owner observations
+- independent inspections
+- mechanic reports
+- previous-buyer observations
+- unknown or missing information
+
+Repeated observations from one source must not be treated as equivalent to independent corroboration from multiple sources.
+
+Unknown information must remain unknown. It must not silently become negative evidence.
+
+## 7. Failure and Availability Semantics
+
+The product must distinguish successful empty results from unavailable dependencies.
+
+For example:
 
 ```text
-Persistent memory
-+
-Retrieval
-+
-Corroboration
-+
-Source history
-+
-Evolving assessment
+Successful memory lookup
+→ no relevant history found
+
+Memory service unavailable
+→ memory unavailable
 ```
 
-## 5. Submission Materials
+The second state must never be rendered as though the vehicle has no history.
 
-The final project should be prepared for:
+Durable local history should remain available when external memory or explanation services fail.
 
-* GitHub repository
-* live project demo
-* 2–5 minute demo video
-* technical article
-* social/video content
+## 8. Real-World Scope
 
-## 6. Demo Video
+VeriCar is intended to help users:
 
-Recommended structure:
+- organize fragmented vehicle information
+- understand accumulated evidence
+- identify recurring or corroborated issues
+- understand why an assessment changed
+- identify issues that may warrant further inspection
+
+VeriCar does not claim to:
+
+- guarantee vehicle quality
+- detect every hidden defect
+- prevent bad purchases
+- replace a qualified inspection or mechanic
+
+The product should communicate these boundaries clearly in user-facing experiences.
+
+## 9. Synthetic Data Policy
+
+Synthetic vehicles, reports, profiles, and source histories may be used for development, testing, and demonstrations.
+
+Synthetic data must remain explicitly labeled and must never be presented as authoritative manufacturer information or real-world vehicle history.
+
+## 10. Product Design Principle
+
+The product should prioritize one coherent, understandable workflow over a large collection of loosely connected features.
+
+The primary experience is:
 
 ```text
-0:00–0:20
-Problem
-
-0:20–0:50
-What VeriCar is
-
-0:50–2:30
-Live persistent-memory demonstration
-
-2:30–3:30
-Why assessment changed
-
-3:30–4:30
-Architecture / Hindsight explanation
-
-4:30–5:00
-Limitations and conclusion
+History
+  ↓
+Evidence
+  ↓
+Assessment
+  ↓
+Explanation
+  ↓
+New evidence
+  ↓
+Updated assessment
 ```
 
-Use actual application behavior and screen recording.
-
-Avoid cinematic AI-generated filler.
-
-## 7. Technical Article
-
-The article should:
-
-* explain the actual problem
-* explain why persistent memory is necessary
-* show actual implementation
-* include relevant code
-* demonstrate before/after behavior
-* include screenshots
-* acknowledge limitations honestly
-
-Avoid generic promotional AI language.
-
-## 8. Real-World Impact
-
-The intended value is helping users understand fragmented vehicle information and identify issues that may warrant further investigation.
-
-Do not claim that VeriCar:
-
-* guarantees vehicle quality
-* detects every hidden defect
-* prevents bad purchases
-* replaces professional inspection
-
-Prefer:
-
-> VeriCar helps users understand accumulated evidence and identify issues that may warrant further inspection.
-
-## 9. Innovation Story
-
-The innovation is:
-
-```text
-Vehicle memory
-+
-Source memory
-+
-Evidence accumulation
-+
-Source reliability history
-+
-Temporal context
-+
-Explainable assessment
-```
-
-The project should make this combination obvious to judges.
-
-## 10. Hackathon Strategy
-
-The strongest strategy is to build **one tight, polished workflow** rather than many loosely connected features.
-
-The core workflow is:
-
-```text
-Search VIN
-   ↓
-Retrieve memory
-   ↓
-View current assessment
-   ↓
-Submit report
-   ↓
-Store memory
-   ↓
-Retrieve relevant history
-   ↓
-Recalculate evidence
-   ↓
-Assessment changes
-   ↓
-Explain why
-```
-
-The project should optimize for genuine memory behavior, not feature count.
+Each stage should be traceable to the evidence and system state that produced it.
