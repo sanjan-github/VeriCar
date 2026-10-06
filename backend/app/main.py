@@ -124,8 +124,7 @@ async def readiness(
 
     # 1. Required: Durable SQLite persistence
     try:
-        with db._connect() as conn:
-            conn.execute("SELECT 1").fetchone()
+        db.check_connection()
         checks["database"] = "available"
     except Exception:
         checks["database"] = "unavailable"
