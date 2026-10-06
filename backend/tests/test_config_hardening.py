@@ -174,7 +174,7 @@ def test_groq_upstream_failure_leaves_deterministic_assessment_intact(tmp_path):
         app.dependency_overrides.clear()
 
 
-def test_hindsight_unavailable_produces_503_and_preserves_durable_sqlite_history(tmp_path):
+def test_hindsight_unavailable_produces_503_and_preserves_durable_sqlite_history(tmp_path, monkeypatch):
     """When Hindsight is unreachable, assessment returns 503 MEMORY_UNAVAILABLE, but SQLite history is intact."""
     db = Database(tmp_path / "test.db")
     car = Car(car_id="VEH-CFG-003", brand="Tata", model="Harrier", manufacture_year=2022)
@@ -260,6 +260,7 @@ def test_readiness_endpoint_reports_optional_hindsight_unavailability_without_50
     app.dependency_overrides[get_memory_service] = lambda: FailingMemoryService()
 
     try:
+        monkeypatch.setattr("backend.app.main.settings.hindsight_base_url", "http://hindsight.test")
         with TestClient(app) as client:
             res = client.get("/readiness")
             assert res.status_code == 200
