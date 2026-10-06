@@ -133,6 +133,18 @@ async def test_recall_normalizes_evidence_without_scoring_it():
 
 
 @pytest.mark.asyncio
+async def test_recall_rejects_evidence_items_without_text():
+    class MalformedHindsight(FakeHindsight):
+        async def arecall(self, **kwargs):
+            return {"results": [{"id": "memory-1"}]}
+
+    repository = HindsightRepository(MalformedHindsight())
+
+    with pytest.raises(ValueError, match="invalid recall item"):
+        await repository.recall_vehicle("VEH-001", "transmission problems")
+
+
+@pytest.mark.asyncio
 async def test_reflect_returns_only_hindsight_explanation_text():
     fake = FakeHindsight()
     repository = HindsightRepository(fake)

@@ -205,14 +205,23 @@ class HindsightRepository:
                         "document_id", "chunk_id",
                     )
                 }
+            text = value.get("text")
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("Hindsight returned an invalid recall item.")
+            metadata = value.get("metadata")
+            if metadata is not None and not isinstance(metadata, dict):
+                raise ValueError("Hindsight returned an invalid recall item.")
+            tags = value.get("tags")
+            if tags is not None and not isinstance(tags, (list, tuple)):
+                raise ValueError("Hindsight returned an invalid recall item.")
             normalized.append(
                 MemoryEvidence(
                     memory_id=str(value.get("id", "")),
-                    text=str(value.get("text", "")),
+                    text=text,
                     memory_type=value.get("type"),
                     context=value.get("context"),
-                    metadata=value.get("metadata") or {},
-                    tags=value.get("tags") or [],
+                    metadata=metadata or {},
+                    tags=list(tags or []),
                     occurred_start=value.get("occurred_start"),
                     occurred_end=value.get("occurred_end"),
                     mentioned_at=value.get("mentioned_at"),
