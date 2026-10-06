@@ -127,7 +127,7 @@ function renderAssessment(payload) {
   elements.vehicleTitle.textContent = payload.vehicle_id || state.vehicleId;
   const memoryStatusCopy = {
     available: "Historical memory available",
-    empty: "No matching history",
+    empty: "No matching assessment evidence",
     unavailable: "Historical memory temporarily unavailable"
   };
   elements.memoryStatus.textContent =
@@ -319,7 +319,17 @@ elements.reportForm.addEventListener("submit", async (event) => {
     await loadVehicle(state.vehicleId);
     elements.reportResult.textContent = "Saved " + reportId + ".";
   } catch (error) {
-    elements.reportResult.textContent = error.message || "The report could not be saved.";
+    const errorMsg = error.message || "The report could not be saved.";
+    elements.reportResult.textContent = errorMsg;
+    const vehicleId = state.vehicleId || body.vehicle_id;
+    if (vehicleId) {
+      try {
+        await loadVehicle(vehicleId);
+        elements.reportResult.textContent = errorMsg;
+      } catch {
+        // Ignore secondary vehicle load errors, keeping report error message visible
+      }
+    }
   } finally {
     elements.reportButton.disabled = false;
   }

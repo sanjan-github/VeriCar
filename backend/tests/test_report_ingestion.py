@@ -53,6 +53,12 @@ class FakeMemoryService:
         self.resolution_calls += 1
         return None
 
+    async def recall_vehicle_history(self, vehicle_id: str, query: str) -> list:
+        return []
+
+    async def recall_source_history(self, source_id: str, query: str) -> list:
+        return []
+
 
 def make_app(memory_service: FakeMemoryService, db: Database | None = None) -> FastAPI:
     if db is None:

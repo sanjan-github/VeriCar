@@ -2,8 +2,11 @@ from datetime import date
 
 from fastapi.testclient import TestClient
 
+from backend.app.config import settings
 from backend.app.main import app, get_groq_explanation_service, get_memory_service
 from backend.app.models.memory import MemoryEvidence
+from core.database import Database, DEFAULT_DB_PATH
+from core.models import Car
 
 
 class AssessmentMemoryService:
@@ -20,6 +23,13 @@ class AssessmentMemoryService:
         return None
 
 
+def ensure_test_car(vehicle_id: str = "VEH-001"):
+    db = getattr(app.state, "database", None)
+    if db is None:
+        db = Database(getattr(settings, "db_path", DEFAULT_DB_PATH))
+    db.save_car(Car(car_id=vehicle_id, brand="Toyota", model="Corolla", manufacture_year=2020))
+
+
 def memory(*, memory_id, text, metadata, tags=None):
     return MemoryEvidence(
         memory_id=memory_id,
@@ -32,6 +42,7 @@ def memory(*, memory_id, text, metadata, tags=None):
 
 def test_get_vehicle_assessment_returns_deterministic_evidence_state():
     app.dependency_overrides.clear()
+    ensure_test_car("VEH-001")
     service = AssessmentMemoryService(
         [
             memory(
@@ -83,6 +94,7 @@ def test_get_vehicle_assessment_returns_deterministic_evidence_state():
 
 
 def test_get_vehicle_assessment_distinguishes_memory_unavailable():
+    ensure_test_car("VEH-001")
     class UnavailableMemoryService:
         async def recall_vehicle_history(self, vin, query):
             raise RuntimeError("Hindsight unavailable")
@@ -102,6 +114,7 @@ def test_get_vehicle_assessment_distinguishes_memory_unavailable():
 
 
 def test_groq_failure_keeps_deterministic_assessment_available():
+    ensure_test_car("VEH-001")
     class UnavailableExplanationService:
         async def explain(self, assessment):
             raise RuntimeError("Groq unavailable")

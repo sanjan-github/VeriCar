@@ -129,12 +129,13 @@ def _idempotency_is_stale(row) -> bool:
 
 
 def _failed_response(report_id: str) -> JSONResponse:
+    message = "Report saved locally, but external memory processing did not complete. Retry to reconcile memory storage."
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         content={
             "status": "failed",
             "error": "failed",
-            "message": "Report persistence failed before any memory was recorded.",
+            "message": message,
             "report_id": report_id,
             "stages": {
                 "vehicle_memory": "failed",
@@ -144,7 +145,7 @@ def _failed_response(report_id: str) -> JSONResponse:
             "detail": {
                 "status": "failed",
                 "error": "failed",
-                "message": "Report persistence failed before any memory was recorded.",
+                "message": message,
                 "report_id": report_id,
                 "stages": {
                     "vehicle_memory": "failed",
@@ -438,7 +439,7 @@ async def create_report(
                 report_id=report_id,
                 status="FAILED",
                 vehicle_memory_status="FAILED",
-                error_message="Report persistence failed before any memory was recorded.",
+                error_message="Report saved locally, but external memory processing did not complete. Retry to reconcile memory storage.",
             )
             return _failed_response(report_id)
 
@@ -633,8 +634,23 @@ async def get_vehicle_assessment(
     issue: str = "transmission_shift_behavior",
     memory_service: MemoryService = Depends(get_memory_service),
     assessment_service: AssessmentService = Depends(get_assessment_service),
+    db: Database = Depends(get_database),
 ) -> dict:
     """Return the current deterministic assessment for one vehicle finding."""
+    vehicle = db.get_car(vehicle_id)
+    reports = db.list_api_reports(vehicle_id)
+
+    if vehicle is None and not reports:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": {
+                    "code": "VEHICLE_NOT_FOUND",
+                    "message": "Vehicle history was not found.",
+                }
+            },
+        )
+
     assessment, memory_status = await _get_assessment(
         vehicle_id=vehicle_id,
         issue=issue,
@@ -651,8 +667,23 @@ async def get_vehicle_assessment_explanation(
     memory_service: MemoryService = Depends(get_memory_service),
     assessment_service: AssessmentService = Depends(get_assessment_service),
     explanation_service: GroqExplanationService = Depends(get_groq_explanation_service),
+    db: Database = Depends(get_database),
 ) -> dict:
     """Return a deterministic assessment plus an optional LLM explanation."""
+    vehicle = db.get_car(vehicle_id)
+    reports = db.list_api_reports(vehicle_id)
+
+    if vehicle is None and not reports:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": {
+                    "code": "VEHICLE_NOT_FOUND",
+                    "message": "Vehicle history was not found.",
+                }
+            },
+        )
+
     assessment, memory_status = await _get_assessment(
         vehicle_id=vehicle_id,
         issue=issue,
