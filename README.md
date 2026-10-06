@@ -251,15 +251,30 @@ All 227 tests execute locally without live external network dependencies via iso
 
 ---
 
-## Resume / Portfolio Highlights
+## Engineering Design
 
-- **Durable Write-Ahead Idempotency**: Designed an atomic SQLite idempotency mechanism supporting distributed lease recovery, SHA-256 fingerprint verification, and multi-stage downstream transaction resumption.
-- **Deterministic & Bounded Scoring Engine**: Built a transparent rules-based scoring pipeline that calculates confidence bounds, repair cost intervals, and buy/negotiate/avoid verdicts from structured inspection evidence.
-- **Graceful Degradation Architecture**: Implemented strict failure isolation preventing external LLM and vector memory outages from corrupting local records or misrepresenting failed lookups as clean vehicle histories.
-- **Secure LLM Guardrails**: Architected a prompt-fenced explanation service with temperature zero, JSON-schema constraints, and post-generation evidence ID validation preventing hallucinated claims.
-- **Comprehensive Quality Assurance**: Maintained a 227-test automated test suite verifying edge cases across race conditions, schema migrations, and external failure modes.
+### Durable and idempotent ingestion
 
----
+`POST /api/reports` persists the report and idempotency state locally before attempting downstream memory processing. Requests use payload fingerprints and idempotency keys so retries can be detected safely. Interrupted downstream processing can be represented and resumed without creating duplicate durable records.
+
+### Deterministic assessment
+
+Vehicle findings, confidence, repair-cost ranges, and `BUY` / `NEGOTIATE` / `AVOID` verdicts are produced by deterministic rules. The LLM is not an authority over the assessment.
+
+### Explicit unknown and failure states
+
+Unknown inspection fields remain unknown and reduce assessment confidence rather than being interpreted as negative evidence.
+
+External dependency failures are explicit:
+
+- Hindsight unavailable → assessment reports a controlled memory-unavailable state.
+- Groq unavailable → deterministic assessment remains usable and the explanation is marked unavailable.
+- Hindsight unavailable ≠ empty history.
+- SQLite remains the durable local history source.
+
+### Evidence-constrained explanations
+
+The LLM is used only for explanation. Its output is structurally constrained and checked against the evidence supplied to it. It cannot change the deterministic score, findings, or verdict.
 
 ## Limitations & Future Work
 
