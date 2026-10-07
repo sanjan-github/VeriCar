@@ -153,7 +153,11 @@ class Settings:
         self.groq_model: str = env_str("GROQ_MODEL", "llama-3.3-70b-versatile", env=source)
         self.groq_timeout: float = env_float("GROQ_TIMEOUT", 20.0, min_value=0.001, env=source)
 
-        self.db_path: str = env_str("DB_PATH", "data/vericar.db", env=source)
+        # Vercel serverless functions do not provide a writable persistent project filesystem.
+        # Keep local development on the repository database path, while using /tmp for
+        # hosted execution unless an explicit DB_PATH is supplied by the deployment.
+        default_db_path = "/tmp/vericar.db" if source.get("VERCEL") else "data/vericar.db"
+        self.db_path: str = env_str("DB_PATH", default_db_path, env=source)
 
 
 settings = Settings()
