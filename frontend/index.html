@@ -3,325 +3,371 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="VeriCar — Deterministic Used-Car History, Evidence Reconciliation & Assessment Engine">
-  <title>VeriCar — Used Car Assessment & History Engine</title>
+  <meta name="description" content="VeriCar — Used vehicle condition evaluation, longitudinal memory corroboration, and inspection report engine">
+  <title>VeriCar — Vehicle Assessment & Evidence Engine</title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-left">
-      <a class="brand" href="/" aria-label="VeriCar home">
-        <span class="brand-mark">V</span>
-        <div class="brand-text">
-          <span class="brand-name">VeriCar</span>
-          <span class="brand-tagline">Automotive Evidence Engine</span>
-        </div>
-      </a>
-    </div>
-    <div class="topbar-meta">
-      <span class="product-label">Deterministic Assessment · Longitudinal Memory</span>
-      <span id="api-status" class="api-status">API: checking</span>
-      <span id="db-status" class="api-status">DB: checking</span>
+  <!-- Masthead -->
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="masthead-brand">
+        <a class="brand" href="/" aria-label="VeriCar home">
+          <span class="brand-name">VERICAR</span>
+          <span class="brand-divider">/</span>
+          <span class="brand-sub">Vehicle Evidence & Assessment</span>
+        </a>
+      </div>
+      <nav class="masthead-nav">
+        <a href="#search-section" class="nav-link">Vehicle Lookup</a>
+        <a href="#reference-cases" class="nav-link">Reference Scenarios</a>
+      </nav>
     </div>
   </header>
 
-  <main class="shell">
-    <!-- Top Control Bar: Demo Scenarios & Search -->
-    <section class="control-panel">
-      <div class="control-header">
-        <div>
-          <p class="eyebrow">DEMO SCENARIOS & VEHICLE LOOKUP</p>
-          <h1>Vehicle Assessment & Historical Evidence</h1>
-          <p class="lede">Explore synthetic benchmark cases or look up / register a real vehicle to evaluate deterministic findings, memory corroboration, and PDF reports.</p>
-        </div>
-        <div class="demo-chips-container">
-          <span class="demo-label">Quick Scenarios:</span>
-          <div class="demo-chips" id="demo-chips">
-            <button type="button" class="demo-chip" data-scenario="DEMO-CLEAN">
-              <span class="chip-verdict buy">BUY</span>
-              <span class="chip-title">Clean History (Nexon)</span>
-            </button>
-            <button type="button" class="demo-chip" data-scenario="DEMO-NEGOTIATE">
-              <span class="chip-verdict negotiate">NEGOTIATE</span>
-              <span class="chip-title">High Km / Repairs</span>
-            </button>
-            <button type="button" class="demo-chip" data-scenario="DEMO-CRITICAL">
-              <span class="chip-verdict avoid">AVOID</span>
-              <span class="chip-title">VIN Mismatch</span>
-            </button>
-          </div>
-        </div>
-      </div>
+  <main class="page-container">
+    <!-- Lead Section: Golden Ratio Split (61.8% Lookup & Intro / 38.2% Reference Cases Index) -->
+    <section class="lead-section" id="search-section">
+      <div class="lead-primary">
+        <div class="section-label">Vehicle Verification</div>
+        <h1 class="lead-headline">Verify a used car before purchase.</h1>
+        <p class="lead-description">
+          Evaluate recorded vehicle condition, reconcile historical inspection notes across multiple sources, and review deterministic findings backed by durable records.
+        </p>
 
-      <div class="lookup-grid">
-        <form id="search-form" class="search-form">
-          <label for="vehicle-id">Review by Vehicle ID</label>
-          <div class="search-row">
+        <!-- Primary Lookup Input -->
+        <form id="search-form" class="lookup-form">
+          <label for="vehicle-id" class="lookup-label">Enter Vehicle Identifier</label>
+          <div class="lookup-input-group">
             <input id="vehicle-id" name="vehicle-id" type="text" placeholder="e.g. DEMO-CLEAN, DEMO-NEGOTIATE, or custom ID" autocomplete="off" required>
-            <button type="submit" id="search-submit-btn">Review vehicle</button>
+            <button type="submit" id="search-submit-btn" class="btn-primary">Review vehicle</button>
           </div>
         </form>
 
-        <div class="register-action">
-          <label>Register a New Vehicle</label>
-          <button type="button" id="toggle-register-btn" class="secondary-button">+ New Vehicle Record</button>
+        <div class="lead-actions">
+          <button type="button" id="toggle-register-btn" class="btn-text">
+            <span>+ Register custom vehicle record</span>
+          </button>
         </div>
       </div>
 
-      <!-- Collapsible Vehicle Registration Form -->
-      <div id="register-drawer" class="register-drawer" hidden>
-        <div class="drawer-header">
-          <h3>Register Vehicle in Durable Database</h3>
-          <p class="muted">Creates a durable SQLite record and initializes condition state.</p>
-        </div>
-        <form id="register-form" class="register-form">
-          <div class="form-grid-3">
-            <label>Vehicle ID (Unique)<input id="reg-car-id" type="text" placeholder="e.g. VEH-901" required></label>
-            <label>Brand / Make<input id="reg-brand" type="text" placeholder="e.g. Tata, Hyundai, Maruti" required></label>
-            <label>Model<input id="reg-model" type="text" placeholder="e.g. Nexon, Creta, Swift" required></label>
-          </div>
-          <div class="form-grid-4">
-            <label>Mfg Year<input id="reg-year" type="number" min="1980" max="2030" value="2022" required></label>
-            <label>Variant <span>optional</span><input id="reg-variant" type="text" placeholder="e.g. XZ+, SX(O)"></label>
-            <label>Fuel Type<select id="reg-fuel"><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="CNG">CNG</option><option value="Hybrid">Hybrid</option></select></label>
-            <label>Transmission<select id="reg-transmission"><option value="Manual">Manual</option><option value="Automatic">Automatic</option><option value="DCT">DCT</option><option value="AMT">AMT</option><option value="CVT">CVT</option></select></label>
-          </div>
-          <div class="form-grid-4">
-            <label>Odometer (km)<input id="reg-odometer" type="number" min="0" placeholder="e.g. 45000"></label>
-            <label>Asking Price (₹ INR)<input id="reg-price" type="number" min="0" placeholder="e.g. 850000"></label>
-            <label>Previous Owners<input id="reg-owners" type="number" min="0" value="1"></label>
-            <label>Registration State<input id="reg-state" type="text" placeholder="e.g. MH, KA, DL" maxlength="4"></label>
-          </div>
-          <div class="form-grid-2">
-            <label>VIN / Chassis Number <span>optional</span><input id="reg-vin" type="text" placeholder="e.g. MAT612345N..."></label>
-            <div class="drawer-actions">
-              <button type="submit" id="reg-submit-btn">Save Vehicle Record</button>
-              <button type="button" id="reg-cancel-btn" class="text-button">Cancel</button>
-              <span id="reg-status" class="muted"></span>
+      <!-- Reference Cases Editorial Index (38.2%) -->
+      <aside class="lead-secondary" id="reference-cases">
+        <div class="section-label">Reference Cases</div>
+        <div class="reference-index">
+          <button type="button" class="reference-row demo-chip" data-scenario="DEMO-CLEAN">
+            <span class="reference-num">01</span>
+            <div class="reference-info">
+              <span class="reference-title">Clean Service History</span>
+              <span class="reference-desc">Tata Nexon · 45,000 km · Regular annual maintenance</span>
             </div>
-          </div>
-        </form>
+            <span class="reference-tag tag-buy">BUY</span>
+          </button>
+
+          <button type="button" class="reference-row demo-chip" data-scenario="DEMO-NEGOTIATE">
+            <span class="reference-num">02</span>
+            <div class="reference-info">
+              <span class="reference-title">Service Gaps & Recurring Repairs</span>
+              <span class="reference-desc">Tata Nexon · 90,000 km · Engine mount replacements</span>
+            </div>
+            <span class="reference-tag tag-negotiate">NEGOTIATE</span>
+          </button>
+
+          <button type="button" class="reference-row demo-chip" data-scenario="DEMO-CRITICAL">
+            <span class="reference-num">03</span>
+            <div class="reference-info">
+              <span class="reference-title">Identity & Document Discrepancy</span>
+              <span class="reference-desc">Tata Nexon · 52,000 km · VIN / RC number mismatch</span>
+            </div>
+            <span class="reference-tag tag-avoid">AVOID</span>
+          </button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Collapsible Vehicle Registration Docket -->
+    <section id="register-drawer" class="docket-drawer" hidden>
+      <div class="docket-header">
+        <div>
+          <div class="section-label">Database Ingestion</div>
+          <h2 class="docket-title">Register New Vehicle Record</h2>
+        </div>
+        <button type="button" id="reg-cancel-btn" class="btn-text">Close docket</button>
       </div>
+
+      <form id="register-form" class="docket-form">
+        <div class="form-row-3">
+          <label>Vehicle ID (Unique)<input id="reg-car-id" type="text" placeholder="e.g. VEH-102" required></label>
+          <label>Make / Brand<input id="reg-brand" type="text" placeholder="e.g. Tata, Hyundai, Maruti" required></label>
+          <label>Model<input id="reg-model" type="text" placeholder="e.g. Nexon, Creta, Swift" required></label>
+        </div>
+        <div class="form-row-4">
+          <label>Manufacture Year<input id="reg-year" type="number" min="1980" max="2035" value="2022" required></label>
+          <label>Variant <span>optional</span><input id="reg-variant" type="text" placeholder="e.g. XZ+, SX(O)"></label>
+          <label>Fuel Type<select id="reg-fuel"><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="CNG">CNG</option><option value="Hybrid">Hybrid</option></select></label>
+          <label>Transmission<select id="reg-transmission"><option value="Manual">Manual</option><option value="Automatic">Automatic</option><option value="DCT">DCT</option><option value="AMT">AMT</option><option value="CVT">CVT</option></select></label>
+        </div>
+        <div class="form-row-4">
+          <label>Odometer (km)<input id="reg-odometer" type="number" min="0" placeholder="e.g. 45000"></label>
+          <label>Asking Price (₹ INR)<input id="reg-price" type="number" min="0" placeholder="e.g. 850000"></label>
+          <label>Previous Owners<input id="reg-owners" type="number" min="0" value="1"></label>
+          <label>Registration State<input id="reg-state" type="text" placeholder="e.g. MH, KA, DL" maxlength="4"></label>
+        </div>
+        <div class="form-row-2">
+          <label>VIN / Chassis Number <span>optional</span><input id="reg-vin" type="text" placeholder="e.g. MAT612345N..."></label>
+          <div class="form-actions-inline">
+            <button type="submit" id="reg-submit-btn" class="btn-primary">Save to durable record</button>
+            <span id="reg-status" class="form-feedback"></span>
+          </div>
+        </div>
+      </form>
     </section>
 
     <!-- Global Status Banner -->
-    <div id="status-banner" class="status-banner" hidden role="status"></div>
+    <div id="status-banner" class="notification-bar" hidden role="status"></div>
 
-    <!-- Empty State -->
-    <section id="empty-state" class="empty-state">
-      <div class="empty-icon">🚗</div>
-      <p class="eyebrow">NO VEHICLE SELECTED</p>
-      <h2>Start with a vehicle ID or demo scenario.</h2>
-      <p>VeriCar reconciles durable SQLite records with persistent longitudinal memory to produce deterministic purchase assessments, repair estimates, and inspection checklists. It will not invent missing history.</p>
+    <!-- Empty State (Editorial Document Guide) -->
+    <section id="empty-state" class="empty-state-guide">
+      <div class="guide-grid">
+        <div class="guide-column">
+          <span class="guide-step">Step 1</span>
+          <h3>Select or enter vehicle</h3>
+          <p>Choose one of the reference benchmark cases above or enter a registered vehicle ID.</p>
+        </div>
+        <div class="guide-column">
+          <span class="guide-step">Step 2</span>
+          <h3>Review deterministic verdict</h3>
+          <p>Examine factual discrepancies, estimated near-term repair ranges, and fair negotiation reductions.</p>
+        </div>
+        <div class="guide-column">
+          <span class="guide-step">Step 3</span>
+          <h3>Audit evidence & history</h3>
+          <p>Inspect multi-source historical observations, source credibility weights, and download the inspection report.</p>
+        </div>
+      </div>
     </section>
 
-    <!-- Main Vehicle Dashboard View -->
-    <section id="vehicle-view" hidden>
-      <!-- Vehicle Identity Banner -->
-      <div class="vehicle-overview-card">
-        <div class="vehicle-heading">
-          <div>
-            <p class="eyebrow">DURABLE VEHICLE RECORD</p>
-            <h2 id="vehicle-title">—</h2>
-            <div id="vehicle-badges" class="vehicle-specs-pills"></div>
-          </div>
-          <div class="vehicle-actions">
-            <span id="memory-status" class="status-pill">Memory: Initializing</span>
-            <a id="pdf-button" class="button-link pdf-btn" href="#" target="_blank" rel="noopener" hidden>Download inspection report</a>
-          </div>
+    <!-- Main Vehicle Inspection Sheet -->
+    <section id="vehicle-view" class="vehicle-sheet" hidden>
+      <!-- Vehicle Metadata Sheet Header -->
+      <div class="sheet-header">
+        <div class="sheet-title-group">
+          <div class="section-label">Inspection Docket</div>
+          <h2 id="vehicle-title" class="sheet-headline">—</h2>
+          <div id="vehicle-badges" class="sheet-specs-bar"></div>
+        </div>
+        <div class="sheet-actions">
+          <span id="memory-status" class="memory-badge">Initializing</span>
+          <a id="pdf-button" class="btn-secondary" href="#" target="_blank" rel="noopener" hidden>Download inspection report</a>
         </div>
       </div>
 
-      <!-- Verdict Banner & Financial Breakdown (Deterministic Engine) -->
-      <div id="overall-assessment-card" class="verdict-banner">
-        <div class="verdict-main">
-          <div class="verdict-badge-container">
-            <span class="summary-label">OVERALL VERDICT</span>
-            <div id="verdict-badge" class="verdict-badge buy">BUY</div>
-          </div>
-          <div class="verdict-metrics">
-            <div class="metric-block">
-              <span class="metric-label">Assessment Confidence</span>
-              <strong id="overall-confidence" class="metric-value">90%</strong>
-              <span class="metric-sub">Based on explicit evidence</span>
+      <!-- Overall Verdict & Actuarial Summary (38.2% / 61.8% Split) -->
+      <section id="overall-assessment-card" class="verdict-section">
+        <div class="verdict-asymmetric-grid">
+          <!-- Left: Authoritative Verdict Box -->
+          <div class="verdict-primary-box">
+            <span class="verdict-label">Deterministic Verdict</span>
+            <div id="verdict-badge" class="verdict-stamp buy">BUY</div>
+            <div class="verdict-meta-row">
+              <span>Rule Confidence</span>
+              <strong id="overall-confidence">—</strong>
             </div>
-            <div class="metric-block">
-              <span class="metric-label">Near-Term Repair Range</span>
-              <strong id="repair-range" class="metric-value">₹0 – ₹0</strong>
-              <span class="metric-sub">Estimated component maintenance</span>
-            </div>
-            <div class="metric-block">
-              <span class="metric-label">Recommended Negotiation</span>
-              <strong id="negotiation-reduction" class="metric-value">₹0</strong>
-              <span class="metric-sub">Fair price adjustment</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Deterministic Categorized Findings -->
-      <section id="findings-categorized-section" class="findings-container">
-        <div class="findings-grid">
-          <!-- Critical Findings -->
-          <div class="finding-group-card critical-group" id="critical-group-card" hidden>
-            <div class="group-header">
-              <span class="group-icon">⚠️</span>
-              <h4>Critical Risk Flags (<span id="critical-count">0</span>)</h4>
-            </div>
-            <ul id="critical-list" class="findings-ul"></ul>
           </div>
 
-          <!-- Warnings / Needs Attention -->
-          <div class="finding-group-card warning-group" id="warning-group-card" hidden>
-            <div class="group-header">
-              <span class="group-icon">⚡</span>
-              <h4>Needs Attention / Discrepancies (<span id="warning-count">0</span>)</h4>
+          <!-- Right: Financial & Exposure Breakdown -->
+          <div class="verdict-details-box">
+            <div class="financial-metric">
+              <span class="metric-caption">Near-Term Maintenance Range</span>
+              <strong id="repair-range" class="metric-figure">₹0 – ₹0</strong>
+              <span class="metric-subtext">Estimated component repairs from inspection records</span>
             </div>
-            <ul id="warning-list" class="findings-ul"></ul>
-          </div>
-
-          <!-- Good Signs / Positive Evidence -->
-          <div class="finding-group-card info-group" id="info-group-card" hidden>
-            <div class="group-header">
-              <span class="group-icon">✓</span>
-              <h4>Positive Indicators & Clear Records (<span id="info-count">0</span>)</h4>
+            <div class="financial-metric">
+              <span class="metric-caption">Recommended Price Adjustment</span>
+              <strong id="negotiation-reduction" class="metric-figure">₹0</strong>
+              <span class="metric-subtext">Fair valuation discount based on verified issues</span>
             </div>
-            <ul id="info-list" class="findings-ul"></ul>
-          </div>
-
-          <!-- Actionable Recommended Next Checks -->
-          <div class="finding-group-card action-group" id="action-group-card">
-            <div class="group-header">
-              <span class="group-icon">📋</span>
-              <h4>Recommended Next Inspection Checks</h4>
-            </div>
-            <ul id="next-checks-list" class="findings-ul"></ul>
           </div>
         </div>
       </section>
 
-      <!-- Memory Corroboration & LLM Explanation Side-by-Side -->
-      <div class="finding-layout">
-        <!-- Hindsight Corroborated Memory Finding -->
-        <article class="finding-panel">
-          <div class="section-heading">
+      <!-- Categorized Findings Ledger -->
+      <section id="findings-categorized-section" class="findings-ledger">
+        <div class="section-label">Inspection Findings & Rule Evaluation</div>
+
+        <div class="ledger-stack">
+          <!-- Critical Findings -->
+          <div id="critical-group-card" class="ledger-row critical-row" hidden>
+            <div class="ledger-category">Critical Flags (<span id="critical-count">0</span>)</div>
+            <div class="ledger-content">
+              <ul id="critical-list" class="ledger-list"></ul>
+            </div>
+          </div>
+
+          <!-- Warnings / Needs Attention -->
+          <div id="warning-group-card" class="ledger-row warning-row" hidden>
+            <div class="ledger-category">Needs Attention (<span id="warning-count">0</span>)</div>
+            <div class="ledger-content">
+              <ul id="warning-list" class="ledger-list"></ul>
+            </div>
+          </div>
+
+          <!-- Positive Indicators -->
+          <div id="info-group-card" class="ledger-row info-row" hidden>
+            <div class="ledger-category">Verified Baselines (<span id="info-count">0</span>)</div>
+            <div class="ledger-content">
+              <ul id="info-list" class="ledger-list"></ul>
+            </div>
+          </div>
+
+          <!-- Next Checks Checklist -->
+          <div id="action-group-card" class="ledger-row action-row">
+            <div class="ledger-category">Actionable Next Steps</div>
+            <div class="ledger-content">
+              <ul id="next-checks-list" class="ledger-list"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Two-Column Ledger: Longitudinal Memory Analysis & LLM Rationale -->
+      <div class="analysis-split-grid">
+        <!-- Persistent Memory Corroboration -->
+        <article class="analysis-panel">
+          <div class="panel-header">
             <div>
-              <p class="eyebrow">CURRENT FINDING</p>
+              <div class="section-label">Historical Memory</div>
               <h3 id="focus-finding-title">Transmission shift behavior</h3>
             </div>
-            <span id="finding-state" class="finding-state">sufficient</span>
+            <span id="finding-state" class="state-pill">sufficient</span>
           </div>
 
-          <div class="finding-summary">
-            <span class="summary-label">Evidence confidence</span>
-            <strong id="confidence-value">—</strong>
-            <p id="confidence-copy">Evaluating historical evidence memory…</p>
-          </div>
-
-          <button id="confidence-toggle" class="text-button" type="button" aria-expanded="false">How is this calculated?</button>
-
-          <div id="confidence-details" class="details-panel" hidden>
-            <div class="metric-grid">
-              <div><span>Independent support</span><strong id="support-count">0</strong></div>
-              <div><span>Independent contradiction</span><strong id="contradiction-count">0</strong></div>
-              <div><span>Support weight</span><strong id="support-weight">0.00</strong></div>
-              <div><span>Contradiction weight</span><strong id="contradiction-weight">0.00</strong></div>
+          <div class="panel-body">
+            <div class="evidence-score-block">
+              <span class="caption">Evidence confidence</span>
+              <strong id="confidence-value" class="score-figure">—</strong>
+              <p id="confidence-copy" class="caption-text">Evaluating historical memory bank…</p>
             </div>
-            <p class="disclaimer">Evidence-based estimate, not a probability or mechanical diagnosis.</p>
+
+            <button id="confidence-toggle" class="btn-text" type="button" aria-expanded="false">How is this calculated?</button>
+
+            <div id="confidence-details" class="details-docket" hidden>
+              <table class="metric-table">
+                <tbody>
+                  <tr>
+                    <td>Independent support</td>
+                    <td><strong id="support-count">0</strong> sources</td>
+                  </tr>
+                  <tr>
+                    <td>Independent contradiction</td>
+                    <td><strong id="contradiction-count">0</strong> sources</td>
+                  </tr>
+                  <tr>
+                    <td>Support weight</td>
+                    <td><strong id="support-weight">0.00</strong></td>
+                  </tr>
+                  <tr>
+                    <td>Contradiction weight</td>
+                    <td><strong id="contradiction-weight">0.00</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p class="disclaimer">Calculated from independent source identity and historical veracity. Not a subjective probability.</p>
+            </div>
           </div>
         </article>
 
         <!-- LLM Explanation -->
-        <article class="explanation-panel">
-          <div class="section-heading">
+        <article class="analysis-panel">
+          <div class="panel-header">
             <div>
-              <p class="eyebrow">WHY THIS ASSESSMENT?</p>
-              <h3>Evidence-backed explanation</h3>
+              <div class="section-label">Evidence-Backed Explanation</div>
+              <h3>Why this assessment?</h3>
             </div>
-            <span id="explanation-status" class="status-pill-small muted">Generating</span>
+            <span id="explanation-status" class="subtle-tag">Auxiliary context</span>
           </div>
-          <div id="explanation-content" class="explanation-content">
-            <p class="muted">Explanation will appear when evidence is available.</p>
-          </div>
-          <div class="explanation-footer">
-            <span class="small-tag">Auxiliary explanation only</span>
-            <span class="small-tag">Deterministic assessment is authoritative</span>
+
+          <div class="panel-body">
+            <div id="explanation-content" class="explanation-text-block">
+              <p class="muted">Explanation will appear when evidence is available.</p>
+            </div>
           </div>
         </article>
       </div>
 
-      <!-- Longitudinal Report Timeline -->
-      <section class="evidence-section">
-        <div class="section-heading">
+      <!-- Chronological Observation Timeline -->
+      <section class="timeline-section">
+        <div class="section-header-row">
           <div>
-            <p class="eyebrow">EVIDENCE</p>
-            <h3>History timeline</h3>
+            <div class="section-label">Audit Trail</div>
+            <h3 class="section-heading-clean">Historical Reports & Evidence Timeline</h3>
           </div>
-          <span id="evidence-count" class="status-pill-small">0 reports</span>
+          <span id="evidence-count" class="counter-badge">0 reports</span>
         </div>
-        <div id="timeline" class="timeline"></div>
+        <div id="timeline" class="audit-timeline"></div>
       </section>
 
-      <!-- Ingest New Report Form (with Idempotency Key) -->
-      <section class="report-section">
-        <div class="section-heading">
+      <!-- Ingest New Observation Docket -->
+      <section class="ingest-section">
+        <div class="section-header-row">
           <div>
-            <p class="eyebrow">ADD HISTORY</p>
-            <h3>Record another report</h3>
+            <div class="section-label">Record Additional Evidence</div>
+            <h3 class="section-heading-clean">Record another report</h3>
           </div>
-          <span class="idempotency-badge" title="Guarantees single execution even upon network retry">Idempotent Submission</span>
+          <span class="idempotent-flag">Idempotent submission</span>
         </div>
-        <form id="report-form" class="report-form">
+
+        <form id="report-form" class="ingest-form">
           <input id="report-vehicle-id" type="hidden">
-          <div class="form-grid">
+          <div class="form-row-4">
             <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128" placeholder="e.g. MAL612..."></label>
             <label>Source ID<input id="report-source-id" type="text" maxlength="128" placeholder="e.g. inspector-007" required></label>
             <label>Source type<select id="report-source-type" required><option value="inspector">Inspector</option><option value="mechanic">Mechanic</option><option value="owner">Owner</option><option value="buyer">Buyer</option></select></label>
             <label>Observed date<input id="report-observed-at" type="date" required></label>
           </div>
-          <label>Report<textarea id="report-text" maxlength="10000" rows="4" placeholder="Describe what was observed. Preserve the original wording where practical." required></textarea></label>
-          <div class="form-actions">
-            <button type="submit" id="save-report-btn">Save report</button>
-            <span id="report-result" class="muted"></span>
+          <label>Report observation<textarea id="report-text" maxlength="10000" rows="3" placeholder="Describe the physical observation or service record. Preserve factual terminology (e.g. 'Hard 2-to-3 shift observed under load' or 'No transmission issues observed')." required></textarea></label>
+          <div class="form-actions-inline">
+            <button type="submit" id="save-report-btn" class="btn-primary">Save report</button>
+            <span id="report-result" class="form-feedback"></span>
           </div>
         </form>
       </section>
 
-      <!-- India Used-Car Document Verification Guidelines -->
-      <section class="india-checklist-section">
-        <div class="checklist-header">
-          <span class="eyebrow">INDIAN MARKET GUIDELINES</span>
-          <h3>Standard Document & Compliance Verification</h3>
-          <p class="muted">Essential physical and legal verification before finalizing any used car transaction in India.</p>
-        </div>
-        <div class="checklist-grid">
-          <div class="check-card">
-            <span class="check-title">RC & Ownership</span>
-            <p>Verify Original RC smart card, chassis number stamp under hood vs RC, and clear transfer NOC via Parivahan Sewa.</p>
+      <!-- Indian Market Compliance Verification Checklist -->
+      <section class="compliance-section">
+        <div class="section-label">Regional Compliance</div>
+        <h3 class="section-heading-clean">Indian Market Document Verification Checklist</h3>
+        <div class="compliance-grid">
+          <div class="compliance-item">
+            <span class="compliance-title">01. RC & Parivahan NOC</span>
+            <p>Verify original RC smart card, match physical chassis stamp under hood against RC, and check transfer clearance on Parivahan Sewa.</p>
           </div>
-          <div class="check-card">
-            <span class="check-title">Insurance & NCB</span>
-            <p>Ensure active third-party/comprehensive insurance and verify No Claim Bonus (NCB) history for undisclosed accident claims.</p>
+          <div class="compliance-item">
+            <span class="compliance-title">02. Insurance & NCB History</span>
+            <p>Ensure continuous insurance cover and examine No Claim Bonus (NCB) records to uncover undisclosed accident repairs.</p>
           </div>
-          <div class="check-card">
-            <span class="check-title">Hypothecation (HP)</span>
-            <p>Confirm Form 35 and Bank NOC if the vehicle was previously financed to remove hypothecation from the RC.</p>
+          <div class="compliance-item">
+            <span class="compliance-title">03. Hypothecation (HP) Removal</span>
+            <p>Verify Form 35 and Bank NOC to ensure active loan liens are formally removed from the registration certificate.</p>
           </div>
-          <div class="check-card">
-            <span class="check-title">Service Book & PUC</span>
-            <p>Inspect stamped authorized service bills to cross-verify odometer tamper flags and valid PUC certificate.</p>
+          <div class="compliance-item">
+            <span class="compliance-title">04. Service Invoices & PUC</span>
+            <p>Examine stamped authorized workshop invoices to cross-verify odometer mileage progression and valid emissions certificate.</p>
           </div>
         </div>
       </section>
 
-      <p class="safety-note">VeriCar assessments reflect the reports available to the system. Reports may be incomplete, inaccurate, outdated, or contradictory. Obtain an independent vehicle inspection before making a purchase decision.</p>
+      <p class="safety-disclaimer">
+        VeriCar assessments reflect the reports available to the system. Reports may be incomplete, inaccurate, outdated, or contradictory. Obtain an independent vehicle inspection before making a purchase decision.
+      </p>
     </section>
   </main>
 
-  <footer class="footer">
-    <div class="footer-content">
-      <span>VeriCar v1.0 — Deterministic Automotive Verification</span>
-      <span class="muted">FastAPI + SQLite + Hindsight Memory + Groq LLM + ReportLab</span>
+  <!-- Restrained Document Footer -->
+  <footer class="document-footer">
+    <div class="footer-inner">
+      <span class="footer-copy">VeriCar — Evidence-First Automotive Assessment Engine</span>
+      <span class="footer-meta">Deterministic rules & longitudinal provenance</span>
     </div>
   </footer>
 

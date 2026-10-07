@@ -223,7 +223,7 @@ function renderExplanation(explanation, status) {
 function renderVehicleSpecs(car) {
   if (!elements.vehicleBadges) return;
   if (!car) {
-    elements.vehicleBadges.innerHTML = '<span class="spec-pill">Unregistered Vehicle ID</span>';
+    elements.vehicleBadges.innerHTML = '<span class="spec-entry">Unregistered Vehicle ID</span>';
     return;
   }
 
@@ -239,7 +239,7 @@ function renderVehicleSpecs(car) {
   if (car.vin) badges.push("VIN: " + car.vin);
 
   elements.vehicleBadges.innerHTML = badges
-    .map((b) => '<span class="spec-pill">' + escapeHtml(b) + '</span>')
+    .map((b) => '<span class="spec-entry">' + escapeHtml(b) + '</span>')
     .join("");
 }
 
@@ -247,7 +247,7 @@ function renderOverallAssessment(overall) {
   if (!elements.verdictBadge) return;
   if (!overall) {
     elements.verdictBadge.textContent = "REVIEW";
-    elements.verdictBadge.className = "verdict-badge negotiate";
+    elements.verdictBadge.className = "verdict-stamp negotiate";
     if (elements.overallConfidence) elements.overallConfidence.textContent = "—";
     if (elements.repairRange) elements.repairRange.textContent = "—";
     if (elements.negotiationReduction) elements.negotiationReduction.textContent = "—";
@@ -262,7 +262,7 @@ function renderOverallAssessment(overall) {
 
   const verdict = (overall.verdict || "REVIEW").toUpperCase();
   elements.verdictBadge.textContent = verdict;
-  elements.verdictBadge.className = "verdict-badge " + verdict.toLowerCase();
+  elements.verdictBadge.className = "verdict-stamp " + verdict.toLowerCase();
 
   if (elements.overallConfidence) elements.overallConfidence.textContent = overall.confidence != null ? overall.confidence + "%" : "—";
   if (elements.repairRange) {
