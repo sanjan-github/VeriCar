@@ -3,56 +3,223 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="VeriCar vehicle history evidence review">
-  <title>VeriCar — Vehicle Evidence</title>
+  <meta name="description" content="VeriCar — Deterministic Used-Car History, Evidence Reconciliation & Assessment Engine">
+  <title>VeriCar — Used Car Assessment & History Engine</title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="VeriCar home"><span class="brand-mark">V</span><span>VeriCar</span></a>
-    <div class="topbar-meta"><span class="product-label">Vehicle history evidence</span><span id="api-status" class="api-status">API: checking</span></div>
+    <div class="topbar-left">
+      <a class="brand" href="/" aria-label="VeriCar home">
+        <span class="brand-mark">V</span>
+        <div class="brand-text">
+          <span class="brand-name">VeriCar</span>
+          <span class="brand-tagline">Automotive Evidence Engine</span>
+        </div>
+      </a>
+    </div>
+    <div class="topbar-meta">
+      <span class="product-label">Deterministic Assessment · Longitudinal Memory</span>
+      <span id="api-status" class="api-status">API: checking</span>
+      <span id="db-status" class="api-status">DB: checking</span>
+    </div>
   </header>
+
   <main class="shell">
-    <section class="search-panel">
-      <div>
-        <p class="eyebrow">VEHICLE REVIEW</p>
-        <h1>What does the accumulated evidence say?</h1>
-        <p class="lede">Review historical reports, corroboration, contradiction, and evidence strength for a vehicle.</p>
-      </div>
-      <form id="search-form" class="search-form">
-        <label for="vehicle-id">Vehicle ID</label>
-        <div class="search-row">
-          <input id="vehicle-id" name="vehicle-id" type="text" placeholder="e.g. VEH-001" autocomplete="off" required>
-          <button type="submit">Review vehicle</button>
+    <!-- Top Control Bar: Demo Scenarios & Search -->
+    <section class="control-panel">
+      <div class="control-header">
+        <div>
+          <p class="eyebrow">DEMO SCENARIOS & VEHICLE LOOKUP</p>
+          <h1>Vehicle Assessment & Historical Evidence</h1>
+          <p class="lede">Explore synthetic benchmark cases or look up / register a real vehicle to evaluate deterministic findings, memory corroboration, and PDF reports.</p>
         </div>
-      </form>
+        <div class="demo-chips-container">
+          <span class="demo-label">Quick Scenarios:</span>
+          <div class="demo-chips" id="demo-chips">
+            <button type="button" class="demo-chip" data-scenario="DEMO-CLEAN">
+              <span class="chip-verdict buy">BUY</span>
+              <span class="chip-title">Clean History (Nexon)</span>
+            </button>
+            <button type="button" class="demo-chip" data-scenario="DEMO-NEGOTIATE">
+              <span class="chip-verdict negotiate">NEGOTIATE</span>
+              <span class="chip-title">High Km / Repairs</span>
+            </button>
+            <button type="button" class="demo-chip" data-scenario="DEMO-CRITICAL">
+              <span class="chip-verdict avoid">AVOID</span>
+              <span class="chip-title">VIN Mismatch</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="lookup-grid">
+        <form id="search-form" class="search-form">
+          <label for="vehicle-id">Review by Vehicle ID</label>
+          <div class="search-row">
+            <input id="vehicle-id" name="vehicle-id" type="text" placeholder="e.g. DEMO-CLEAN, DEMO-NEGOTIATE, or custom ID" autocomplete="off" required>
+            <button type="submit" id="search-submit-btn">Review vehicle</button>
+          </div>
+        </form>
+
+        <div class="register-action">
+          <label>Register a New Vehicle</label>
+          <button type="button" id="toggle-register-btn" class="secondary-button">+ New Vehicle Record</button>
+        </div>
+      </div>
+
+      <!-- Collapsible Vehicle Registration Form -->
+      <div id="register-drawer" class="register-drawer" hidden>
+        <div class="drawer-header">
+          <h3>Register Vehicle in Durable Database</h3>
+          <p class="muted">Creates a durable SQLite record and initializes condition state.</p>
+        </div>
+        <form id="register-form" class="register-form">
+          <div class="form-grid-3">
+            <label>Vehicle ID (Unique)<input id="reg-car-id" type="text" placeholder="e.g. VEH-901" required></label>
+            <label>Brand / Make<input id="reg-brand" type="text" placeholder="e.g. Tata, Hyundai, Maruti" required></label>
+            <label>Model<input id="reg-model" type="text" placeholder="e.g. Nexon, Creta, Swift" required></label>
+          </div>
+          <div class="form-grid-4">
+            <label>Mfg Year<input id="reg-year" type="number" min="1980" max="2030" value="2022" required></label>
+            <label>Variant <span>optional</span><input id="reg-variant" type="text" placeholder="e.g. XZ+, SX(O)"></label>
+            <label>Fuel Type<select id="reg-fuel"><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="CNG">CNG</option><option value="Hybrid">Hybrid</option></select></label>
+            <label>Transmission<select id="reg-transmission"><option value="Manual">Manual</option><option value="Automatic">Automatic</option><option value="DCT">DCT</option><option value="AMT">AMT</option><option value="CVT">CVT</option></select></label>
+          </div>
+          <div class="form-grid-4">
+            <label>Odometer (km)<input id="reg-odometer" type="number" min="0" placeholder="e.g. 45000"></label>
+            <label>Asking Price (₹ INR)<input id="reg-price" type="number" min="0" placeholder="e.g. 850000"></label>
+            <label>Previous Owners<input id="reg-owners" type="number" min="0" value="1"></label>
+            <label>Registration State<input id="reg-state" type="text" placeholder="e.g. MH, KA, DL" maxlength="4"></label>
+          </div>
+          <div class="form-grid-2">
+            <label>VIN / Chassis Number <span>optional</span><input id="reg-vin" type="text" placeholder="e.g. MAT612345N..."></label>
+            <div class="drawer-actions">
+              <button type="submit" id="reg-submit-btn">Save Vehicle Record</button>
+              <button type="button" id="reg-cancel-btn" class="text-button">Cancel</button>
+              <span id="reg-status" class="muted"></span>
+            </div>
+          </div>
+        </form>
+      </div>
     </section>
+
+    <!-- Global Status Banner -->
     <div id="status-banner" class="status-banner" hidden role="status"></div>
+
+    <!-- Empty State -->
     <section id="empty-state" class="empty-state">
+      <div class="empty-icon">🚗</div>
       <p class="eyebrow">NO VEHICLE SELECTED</p>
-      <h2>Start with a vehicle ID.</h2>
-      <p>VeriCar will retrieve the historical evidence available in persistent memory. It will not invent missing history.</p>
+      <h2>Start with a vehicle ID or demo scenario.</h2>
+      <p>VeriCar reconciles durable SQLite records with persistent longitudinal memory to produce deterministic purchase assessments, repair estimates, and inspection checklists. It will not invent missing history.</p>
     </section>
+
+    <!-- Main Vehicle Dashboard View -->
     <section id="vehicle-view" hidden>
-      <div class="vehicle-heading">
-        <div><p class="eyebrow">VEHICLE</p><h2 id="vehicle-title"></h2></div>
-        <div class="vehicle-actions">
-          <span id="memory-status" class="status-pill"></span>
-          <a id="pdf-button" class="button-link" href="#" hidden>Download inspection report</a>
+      <!-- Vehicle Identity Banner -->
+      <div class="vehicle-overview-card">
+        <div class="vehicle-heading">
+          <div>
+            <p class="eyebrow">DURABLE VEHICLE RECORD</p>
+            <h2 id="vehicle-title">—</h2>
+            <div id="vehicle-badges" class="vehicle-specs-pills"></div>
+          </div>
+          <div class="vehicle-actions">
+            <span id="memory-status" class="status-pill">Memory: Initializing</span>
+            <a id="pdf-button" class="button-link pdf-btn" href="#" target="_blank" rel="noopener" hidden>Download inspection report</a>
+          </div>
         </div>
       </div>
+
+      <!-- Verdict Banner & Financial Breakdown (Deterministic Engine) -->
+      <div id="overall-assessment-card" class="verdict-banner">
+        <div class="verdict-main">
+          <div class="verdict-badge-container">
+            <span class="summary-label">OVERALL VERDICT</span>
+            <div id="verdict-badge" class="verdict-badge buy">BUY</div>
+          </div>
+          <div class="verdict-metrics">
+            <div class="metric-block">
+              <span class="metric-label">Assessment Confidence</span>
+              <strong id="overall-confidence" class="metric-value">90%</strong>
+              <span class="metric-sub">Based on explicit evidence</span>
+            </div>
+            <div class="metric-block">
+              <span class="metric-label">Near-Term Repair Range</span>
+              <strong id="repair-range" class="metric-value">₹0 – ₹0</strong>
+              <span class="metric-sub">Estimated component maintenance</span>
+            </div>
+            <div class="metric-block">
+              <span class="metric-label">Recommended Negotiation</span>
+              <strong id="negotiation-reduction" class="metric-value">₹0</strong>
+              <span class="metric-sub">Fair price adjustment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deterministic Categorized Findings -->
+      <section id="findings-categorized-section" class="findings-container">
+        <div class="findings-grid">
+          <!-- Critical Findings -->
+          <div class="finding-group-card critical-group" id="critical-group-card" hidden>
+            <div class="group-header">
+              <span class="group-icon">⚠️</span>
+              <h4>Critical Risk Flags (<span id="critical-count">0</span>)</h4>
+            </div>
+            <ul id="critical-list" class="findings-ul"></ul>
+          </div>
+
+          <!-- Warnings / Needs Attention -->
+          <div class="finding-group-card warning-group" id="warning-group-card" hidden>
+            <div class="group-header">
+              <span class="group-icon">⚡</span>
+              <h4>Needs Attention / Discrepancies (<span id="warning-count">0</span>)</h4>
+            </div>
+            <ul id="warning-list" class="findings-ul"></ul>
+          </div>
+
+          <!-- Good Signs / Positive Evidence -->
+          <div class="finding-group-card info-group" id="info-group-card" hidden>
+            <div class="group-header">
+              <span class="group-icon">✓</span>
+              <h4>Positive Indicators & Clear Records (<span id="info-count">0</span>)</h4>
+            </div>
+            <ul id="info-list" class="findings-ul"></ul>
+          </div>
+
+          <!-- Actionable Recommended Next Checks -->
+          <div class="finding-group-card action-group" id="action-group-card">
+            <div class="group-header">
+              <span class="group-icon">📋</span>
+              <h4>Recommended Next Inspection Checks</h4>
+            </div>
+            <ul id="next-checks-list" class="findings-ul"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Memory Corroboration & LLM Explanation Side-by-Side -->
       <div class="finding-layout">
+        <!-- Hindsight Corroborated Memory Finding -->
         <article class="finding-panel">
           <div class="section-heading">
-            <div><p class="eyebrow">CURRENT FINDING</p><h3>Transmission shift behavior</h3></div>
-            <span id="finding-state" class="finding-state"></span>
+            <div>
+              <p class="eyebrow">CURRENT FINDING</p>
+              <h3 id="focus-finding-title">Transmission shift behavior</h3>
+            </div>
+            <span id="finding-state" class="finding-state">sufficient</span>
           </div>
+
           <div class="finding-summary">
             <span class="summary-label">Evidence confidence</span>
             <strong id="confidence-value">—</strong>
-            <p id="confidence-copy">No assessment loaded.</p>
+            <p id="confidence-copy">Evaluating historical evidence memory…</p>
           </div>
+
           <button id="confidence-toggle" class="text-button" type="button" aria-expanded="false">How is this calculated?</button>
+
           <div id="confidence-details" class="details-panel" hidden>
             <div class="metric-grid">
               <div><span>Independent support</span><strong id="support-count">0</strong></div>
@@ -63,38 +230,101 @@
             <p class="disclaimer">Evidence-based estimate, not a probability or mechanical diagnosis.</p>
           </div>
         </article>
+
+        <!-- LLM Explanation -->
         <article class="explanation-panel">
           <div class="section-heading">
-            <div><p class="eyebrow">WHY THIS ASSESSMENT?</p><h3>Evidence-backed explanation</h3></div>
-            <span id="explanation-status" class="muted"></span>
+            <div>
+              <p class="eyebrow">WHY THIS ASSESSMENT?</p>
+              <h3>Evidence-backed explanation</h3>
+            </div>
+            <span id="explanation-status" class="status-pill-small muted">Generating</span>
           </div>
-          <div id="explanation-content" class="explanation-content"><p class="muted">Explanation will appear when evidence is available.</p></div>
+          <div id="explanation-content" class="explanation-content">
+            <p class="muted">Explanation will appear when evidence is available.</p>
+          </div>
+          <div class="explanation-footer">
+            <span class="small-tag">Auxiliary explanation only</span>
+            <span class="small-tag">Deterministic assessment is authoritative</span>
+          </div>
         </article>
       </div>
+
+      <!-- Longitudinal Report Timeline -->
       <section class="evidence-section">
         <div class="section-heading">
-          <div><p class="eyebrow">EVIDENCE</p><h3>History timeline</h3></div>
-          <span id="evidence-count" class="muted"></span>
+          <div>
+            <p class="eyebrow">EVIDENCE</p>
+            <h3>History timeline</h3>
+          </div>
+          <span id="evidence-count" class="status-pill-small">0 reports</span>
         </div>
         <div id="timeline" class="timeline"></div>
       </section>
+
+      <!-- Ingest New Report Form (with Idempotency Key) -->
       <section class="report-section">
-        <div class="section-heading"><div><p class="eyebrow">ADD HISTORY</p><h3>Record another report</h3></div></div>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ADD HISTORY</p>
+            <h3>Record another report</h3>
+          </div>
+          <span class="idempotency-badge" title="Guarantees single execution even upon network retry">Idempotent Submission</span>
+        </div>
         <form id="report-form" class="report-form">
           <input id="report-vehicle-id" type="hidden">
           <div class="form-grid">
-            <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128"></label>
-            <label>Source ID<input id="report-source-id" type="text" maxlength="128" required></label>
-            <label>Source type<select id="report-source-type" required><option value="owner">Owner</option><option value="buyer">Buyer</option><option value="mechanic">Mechanic</option><option value="inspector">Inspector</option></select></label>
+            <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128" placeholder="e.g. MAL612..."></label>
+            <label>Source ID<input id="report-source-id" type="text" maxlength="128" placeholder="e.g. inspector-007" required></label>
+            <label>Source type<select id="report-source-type" required><option value="inspector">Inspector</option><option value="mechanic">Mechanic</option><option value="owner">Owner</option><option value="buyer">Buyer</option></select></label>
             <label>Observed date<input id="report-observed-at" type="date" required></label>
           </div>
-          <label>Report<textarea id="report-text" maxlength="10000" rows="5" placeholder="Describe what was observed. Preserve the original wording where practical." required></textarea></label>
-          <div class="form-actions"><button type="submit">Save report</button><span id="report-result" class="muted"></span></div>
+          <label>Report<textarea id="report-text" maxlength="10000" rows="4" placeholder="Describe what was observed. Preserve the original wording where practical." required></textarea></label>
+          <div class="form-actions">
+            <button type="submit" id="save-report-btn">Save report</button>
+            <span id="report-result" class="muted"></span>
+          </div>
         </form>
       </section>
+
+      <!-- India Used-Car Document Verification Guidelines -->
+      <section class="india-checklist-section">
+        <div class="checklist-header">
+          <span class="eyebrow">INDIAN MARKET GUIDELINES</span>
+          <h3>Standard Document & Compliance Verification</h3>
+          <p class="muted">Essential physical and legal verification before finalizing any used car transaction in India.</p>
+        </div>
+        <div class="checklist-grid">
+          <div class="check-card">
+            <span class="check-title">RC & Ownership</span>
+            <p>Verify Original RC smart card, chassis number stamp under hood vs RC, and clear transfer NOC via Parivahan Sewa.</p>
+          </div>
+          <div class="check-card">
+            <span class="check-title">Insurance & NCB</span>
+            <p>Ensure active third-party/comprehensive insurance and verify No Claim Bonus (NCB) history for undisclosed accident claims.</p>
+          </div>
+          <div class="check-card">
+            <span class="check-title">Hypothecation (HP)</span>
+            <p>Confirm Form 35 and Bank NOC if the vehicle was previously financed to remove hypothecation from the RC.</p>
+          </div>
+          <div class="check-card">
+            <span class="check-title">Service Book & PUC</span>
+            <p>Inspect stamped authorized service bills to cross-verify odometer tamper flags and valid PUC certificate.</p>
+          </div>
+        </div>
+      </section>
+
       <p class="safety-note">VeriCar assessments reflect the reports available to the system. Reports may be incomplete, inaccurate, outdated, or contradictory. Obtain an independent vehicle inspection before making a purchase decision.</p>
     </section>
   </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <span>VeriCar v1.0 — Deterministic Automotive Verification</span>
+      <span class="muted">FastAPI + SQLite + Hindsight Memory + Groq LLM + ReportLab</span>
+    </div>
+  </footer>
+
   <script src="/assets/app.js" defer></script>
 </body>
 </html>

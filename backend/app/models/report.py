@@ -39,6 +39,35 @@ class ReportSubmission(BaseModel):
         return value
 
 
+class VehicleCreateRequest(BaseModel):
+    """Validated API payload for creating or updating a vehicle record."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    car_id: str = Field(min_length=1, max_length=100)
+    brand: str = Field(min_length=1, max_length=100)
+    model: str = Field(min_length=1, max_length=100)
+    manufacture_year: int = Field(ge=1980, le=2050)
+    variant: str | None = Field(default=None, max_length=100)
+    fuel_type: str | None = Field(default=None, max_length=50)
+    transmission: str | None = Field(default=None, max_length=50)
+    odometer_km: int | None = Field(default=None, ge=0)
+    asking_price_inr: int | None = Field(default=None, ge=0)
+    previous_owners: int | None = Field(default=None, ge=0)
+    vin: str | None = Field(default=None, max_length=100)
+    registration_state: str | None = Field(default=None, max_length=10)
+
+    @field_validator("car_id", "brand", "model", "variant", "fuel_type", "transmission", "vin", "registration_state")
+    @classmethod
+    def reject_blank_values(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            raise ValueError("value must not be blank")
+        return value
+
+
 class Claim(BaseModel):
     """A structured interpretation of what a report states."""
 

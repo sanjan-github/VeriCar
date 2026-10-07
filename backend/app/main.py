@@ -16,6 +16,7 @@ from backend.app.config import settings
 from backend.app.models.report import (
     Claim,
     ReportSubmission,
+    VehicleCreateRequest,
     build_claim,
     generate_report_id,
 )
@@ -25,7 +26,12 @@ from backend.app.services.memory_service import MemoryService
 from backend.app.services.assessment_service import AssessmentService
 from backend.app.services.groq_explanation_service import GroqExplanationService
 from backend.app.services.pdf_report_service import PdfReportService
+from core.assessment_pipeline import run_assessment
+from core.condition import ConditionRecord
 from core.database import Database, DEFAULT_DB_PATH
+from core.demo_scenarios import build_demo_scenarios
+from core.models import Car
+from core.profile_seed import seed_expected_profiles
 
 
 logger = getLogger(__name__)
@@ -34,13 +40,44 @@ IDEMPOTENCY_POLL_SECONDS = 5.0
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
 
 
+def seed_demo_scenarios(db: Database) -> list[dict]:
+    """Seed synthetic reference profiles and demo vehicle scenarios into SQLite."""
+    scenarios = build_demo_scenarios()
+    seed_expected_profiles(db)
+    result = []
+    for s in scenarios:
+        db.save_car(s.car)
+        db.save_condition(s.condition)
+        result.append({
+            "key": s.key,
+            "name": s.name,
+            "description": s.description,
+            "car_id": s.car.car_id,
+            "brand": s.car.brand,
+            "model": s.car.model,
+            "manufacture_year": s.car.manufacture_year,
+            "variant": s.car.variant,
+            "fuel_type": s.car.fuel_type,
+            "transmission": s.car.transmission,
+            "odometer_km": s.car.odometer_km,
+            "asking_price_inr": s.car.asking_price_inr,
+        })
+    return result
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     repository = create_hindsight_repository()
     memory_service = MemoryService(repository)
     app.state.memory_service = memory_service
     db_path = getattr(settings, "db_path", DEFAULT_DB_PATH)
-    app.state.database = Database(db_path)
+    db = Database(db_path)
+    app.state.database = db
+
+    try:
+        seed_demo_scenarios(db)
+    except Exception as exc:
+        logger.warning("Could not auto-seed demo scenarios at startup: %s", exc)
 
     if settings.hindsight_startup_check:
         try:
@@ -577,8 +614,72 @@ async def create_report(
     )
 
 
-def _assessment_payload(vehicle_id: str, assessment, memory_status: str) -> dict:
-    return {
+def _build_overall_assessment(vehicle_id: str, db: Database) -> dict | None:
+    car_row = db.get_car(vehicle_id)
+    if car_row is None:
+        return None
+    raw_cond = db.get_condition(vehicle_id)
+    if raw_cond is None:
+        return None
+    try:
+        car_obj = Car(
+            car_id=car_row["car_id"],
+            brand=car_row["brand"],
+            model=car_row["model"],
+            manufacture_year=car_row["manufacture_year"],
+            variant=car_row["variant"],
+            fuel_type=car_row["fuel_type"],
+            transmission=car_row["transmission"],
+            vin=car_row["vin"],
+            registration_state=car_row["registration_state"],
+            previous_owners=car_row["previous_owners"],
+            odometer_km=car_row["odometer_km"],
+            asking_price_inr=car_row["asking_price_inr"],
+        )
+        pipeline_res = run_assessment(car_obj, raw_cond, db)
+        if pipeline_res.assessment is None:
+            return None
+        return {
+            "verdict": pipeline_res.assessment.verdict,
+            "confidence": pipeline_res.assessment.confidence,
+            "near_term_repair_range_inr": list(pipeline_res.assessment.near_term_repair_range_inr),
+            "negotiation_reduction_inr": pipeline_res.assessment.negotiation_reduction_inr,
+            "critical_findings": list(pipeline_res.assessment.critical_findings),
+            "warning_findings": list(pipeline_res.assessment.warning_findings),
+            "info_findings": list(pipeline_res.assessment.info_findings),
+            "next_checks": list(pipeline_res.assessment.next_checks),
+            "rule_flags": [
+                {
+                    "rule": rf.rule,
+                    "severity": rf.severity,
+                    "message": rf.message,
+                    "evidence": list(rf.evidence),
+                }
+                for rf in pipeline_res.rule_flags
+            ],
+            "comparison_findings": [
+                {
+                    "category": cf.category,
+                    "severity": cf.severity,
+                    "message": cf.message,
+                    "evidence": list(cf.evidence),
+                }
+                for cf in pipeline_res.comparison_findings
+            ],
+            "profile_matched": pipeline_res.profile_resolution.profile is not None,
+        }
+    except Exception as exc:
+        logger.warning("Could not build overall assessment for vehicle_id=%s: %s", vehicle_id, exc)
+        return None
+
+
+def _assessment_payload(
+    vehicle_id: str,
+    assessment,
+    memory_status: str,
+    overall_assessment: dict | None = None,
+) -> dict:
+    payload = {
         "vehicle_id": vehicle_id,
         "memory_status": memory_status,
         "findings": [
@@ -596,6 +697,9 @@ def _assessment_payload(vehicle_id: str, assessment, memory_status: str) -> dict
             }
         ],
     }
+    if overall_assessment is not None:
+        payload["overall_assessment"] = overall_assessment
+    return payload
 
 
 async def _get_assessment(
@@ -622,6 +726,43 @@ async def _get_assessment(
                 }
             },
         ) from exc
+
+
+@app.get("/api/demo-scenarios")
+def get_demo_scenarios(db: Database = Depends(get_database)) -> dict:
+    """Return available demo scenarios and ensure they are seeded in SQLite."""
+    scenarios = seed_demo_scenarios(db)
+    return {"scenarios": scenarios}
+
+
+@app.post("/api/vehicles", status_code=status.HTTP_201_CREATED)
+def create_vehicle(
+    payload: VehicleCreateRequest,
+    db: Database = Depends(get_database),
+) -> dict:
+    """Register or update a vehicle in SQLite and initialize a condition record."""
+    car = Car(
+        car_id=payload.car_id.strip(),
+        brand=payload.brand.strip(),
+        model=payload.model.strip(),
+        manufacture_year=payload.manufacture_year,
+        variant=payload.variant.strip() if payload.variant else None,
+        fuel_type=payload.fuel_type.strip() if payload.fuel_type else None,
+        transmission=payload.transmission.strip() if payload.transmission else None,
+        vin=payload.vin.strip() if payload.vin else None,
+        registration_state=payload.registration_state.strip() if payload.registration_state else None,
+        previous_owners=payload.previous_owners,
+        odometer_km=payload.odometer_km,
+        asking_price_inr=payload.asking_price_inr,
+    )
+    db.save_car(car)
+    if db.get_condition(car.car_id) is None:
+        db.save_condition(ConditionRecord.empty(car.car_id))
+    return {
+        "status": "created",
+        "car_id": car.car_id,
+        "vehicle": car.to_record(),
+    }
 
 
 @app.get("/api/vehicles/{vehicle_id}")
@@ -702,7 +843,8 @@ async def get_vehicle_assessment(
         memory_service=memory_service,
         assessment_service=assessment_service,
     )
-    return _assessment_payload(vehicle_id, assessment, memory_status)
+    overall = _build_overall_assessment(vehicle_id, db)
+    return _assessment_payload(vehicle_id, assessment, memory_status, overall)
 
 
 @app.get("/api/vehicles/{vehicle_id}/assessment/explanation")
@@ -735,10 +877,11 @@ async def get_vehicle_assessment_explanation(
         memory_service=memory_service,
         assessment_service=assessment_service,
     )
+    overall = _build_overall_assessment(vehicle_id, db)
 
     if memory_status == "empty":
         return {
-            **_assessment_payload(vehicle_id, assessment, memory_status),
+            **_assessment_payload(vehicle_id, assessment, memory_status, overall),
             "explanation_status": "unavailable",
             "explanation": None,
         }
@@ -748,13 +891,13 @@ async def get_vehicle_assessment_explanation(
     except Exception as exc:
         logger.error("Assessment explanation failed stage=groq error_type=%s", type(exc).__name__)
         return {
-            **_assessment_payload(vehicle_id, assessment, memory_status),
+            **_assessment_payload(vehicle_id, assessment, memory_status, overall),
             "explanation_status": "unavailable",
             "explanation": None,
         }
 
     return {
-        **_assessment_payload(vehicle_id, assessment, memory_status),
+        **_assessment_payload(vehicle_id, assessment, memory_status, overall),
         "explanation_status": "available",
         "explanation": explanation.model_dump(),
     }

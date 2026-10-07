@@ -112,9 +112,8 @@ VeriCar solves this by separating **durable storage**, **deterministic assessmen
   - Groq API / LLaMA 3.3 70B (JSON-mode structured explanations)
   - HTTPX (Asynchronous HTTP transport)
 - **Reporting & UI**:
+  - HTML5, CSS3 (Modern Automotive Theme, CSS Variables, Responsive Grid, Dark/Light Mode), Vanilla JavaScript
   - ReportLab & PyPDF (Deterministic A4 PDF compilation)
-  - HTML5, CSS3 (CSS Variables, Responsive Grid, Dark Mode), Vanilla JavaScript
-  - Streamlit (Optional manual condition-input workstation)
 - **Quality & Testing**: Pytest, Pytest-Asyncio, Python-Dotenv
 
 ---
@@ -184,16 +183,11 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### 3. Start Canonical FastAPI Application
+### 3. Start VeriCar Application
 ```powershell
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
-Open your browser at **`http://127.0.0.1:8000/`**.
-
-*(Optional)* To run the legacy Streamlit condition workstation:
-```powershell
-streamlit run app/main.py
-```
+Open your browser at **`http://127.0.0.1:8000/`** to access the complete VeriCar web application, including benchmark demo scenarios, vehicle registration, deterministic assessment breakdowns, memory corroboration, and PDF report downloads.
 
 ---
 

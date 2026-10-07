@@ -154,3 +154,62 @@ def test_groq_failure_keeps_deterministic_assessment_available():
     assert body["explanation_status"] == "unavailable"
     assert body["explanation"] is None
     app.dependency_overrides.clear()
+
+
+def test_get_demo_scenarios_returns_scenarios_and_seeds_db():
+    app.dependency_overrides.clear()
+    with TestClient(app) as client:
+        response = client.get("/api/demo-scenarios")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "scenarios" in data
+    assert len(data["scenarios"]) == 3
+    keys = [s["key"] for s in data["scenarios"]]
+    assert "clean" in keys
+    assert "negotiate" in keys
+    assert "critical" in keys
+
+
+def test_create_vehicle_registers_car_and_empty_condition():
+    app.dependency_overrides.clear()
+    payload = {
+        "car_id": "TEST-REG-001",
+        "brand": "Hyundai",
+        "model": "Creta",
+        "manufacture_year": 2021,
+        "variant": "SX(O)",
+        "fuel_type": "Diesel",
+        "transmission": "Automatic",
+        "odometer_km": 35000,
+        "asking_price_inr": 1200000,
+        "previous_owners": 1,
+        "vin": "MALTESTVIN001",
+        "registration_state": "KA",
+    }
+    with TestClient(app) as client:
+        response = client.post("/api/vehicles", json=payload)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["status"] == "created"
+    assert data["car_id"] == "TEST-REG-001"
+    assert data["vehicle"]["brand"] == "Hyundai"
+
+
+def test_get_vehicle_assessment_includes_overall_assessment_when_available():
+    app.dependency_overrides.clear()
+    app.dependency_overrides[get_memory_service] = lambda: AssessmentMemoryService([])
+    with TestClient(app) as client:
+        # First ensure demo scenarios are seeded
+        client.get("/api/demo-scenarios")
+        response = client.get("/api/vehicles/DEMO-CLEAN/assessment")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["vehicle_id"] == "DEMO-CLEAN"
+    assert "overall_assessment" in body
+    assert body["overall_assessment"] is not None
+    assert body["overall_assessment"]["verdict"] in ("BUY", "NEGOTIATE", "AVOID")
+    assert "confidence" in body["overall_assessment"]
+    app.dependency_overrides.clear()
