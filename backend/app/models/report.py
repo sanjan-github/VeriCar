@@ -44,10 +44,10 @@ class VehicleCreateRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    car_id: str = Field(min_length=1, max_length=100)
-    brand: str = Field(min_length=1, max_length=100)
-    model: str = Field(min_length=1, max_length=100)
-    manufacture_year: int = Field(ge=1980, le=2050)
+    car_id: str | None = Field(default=None, min_length=1, max_length=100)
+    brand: str | None = Field(default=None, max_length=100)
+    model: str | None = Field(default=None, max_length=100)
+    manufacture_year: int | None = Field(default=None, ge=1980, le=2050)
     variant: str | None = Field(default=None, max_length=100)
     fuel_type: str | None = Field(default=None, max_length=50)
     transmission: str | None = Field(default=None, max_length=50)
