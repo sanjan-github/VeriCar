@@ -197,6 +197,25 @@ def test_create_vehicle_registers_car_and_empty_condition():
     assert data["vehicle"]["brand"] == "Hyundai"
 
 
+def test_create_vehicle_allows_partial_details_without_vin():
+    app.dependency_overrides.clear()
+    payload = {
+        "brand": "Tata",
+        "model": "Nexon",
+        "vin": None,
+    }
+
+    with TestClient(app) as client:
+        response = client.post("/api/vehicles", json=payload)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["car_id"].startswith("CAR-")
+    assert data["vehicle"]["brand"] == "Tata"
+    assert data["vehicle"]["model"] == "Nexon"
+    assert data["vehicle"]["vin"] is None
+
+
 def test_get_vehicle_assessment_includes_overall_assessment_when_available():
     app.dependency_overrides.clear()
     app.dependency_overrides[get_memory_service] = lambda: AssessmentMemoryService([])
