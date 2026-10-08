@@ -228,6 +228,26 @@ def test_create_vehicle_registers_car_and_empty_condition():
     assert data["vehicle"]["brand"] == "Hyundai"
 
 
+def test_create_vehicle_preserves_extended_setup_dates():
+    app.dependency_overrides.clear()
+    payload = {
+        "brand": "Tata",
+        "model": "Nexon",
+        "manufacture_year": 2022,
+        "manufacture_month": 6,
+        "registration_date": "2022-07-01",
+        "purchase_date": "2026-01-10",
+    }
+    with TestClient(app) as client:
+        response = client.post("/api/vehicles", json=payload)
+
+    assert response.status_code == 201
+    vehicle = response.json()["vehicle"]
+    assert vehicle["manufacture_month"] == 6
+    assert vehicle["registration_date"] == "2022-07-01"
+    assert vehicle["purchase_date"] == "2026-01-10"
+
+
 def test_create_vehicle_allows_partial_details_without_vin():
     app.dependency_overrides.clear()
     payload = {
