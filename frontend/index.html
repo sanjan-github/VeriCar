@@ -3,105 +3,72 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="VeriCar — Used car condition evaluation, history corroboration, and inspection decision support">
-  <title>VeriCar — Used Car Inspection & Decision Support</title>
+  <meta name="description" content="VeriCar — Used car inspection, history check, and purchase decision support">
+  <title>VeriCar — Used Car Inspection</title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-  <!-- Header / Navigation -->
-  <header class="masthead">
-    <div class="masthead-inner">
-      <div class="masthead-brand">
-        <a class="brand" href="/" aria-label="VeriCar home">
-          <span class="brand-name">VERICAR</span>
-          <span class="brand-divider">/</span>
-          <span class="brand-sub">Used Car Inspection & Decision</span>
-        </a>
+  <!-- Clean Consumer Masthead -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="/" aria-label="VeriCar home">
+        <span class="brand-name">VERICAR</span>
+        <span class="brand-tag">Used Car Inspection</span>
+      </a>
+      <div class="header-actions">
+        <button type="button" id="toggle-register-btn" class="btn-text">+ Register a car</button>
+        <!-- Internal status kept for health check polling without cluttering primary UI -->
+        <span id="api-status" hidden></span>
+        <span id="db-status" hidden></span>
       </div>
-      <nav class="masthead-nav">
-        <a href="#search-section" class="nav-link">Find a Car</a>
-        <a href="#reference-cases" class="nav-link">Demo Examples</a>
-        <span id="api-status" class="status-indicator">API: checking</span>
-        <span id="db-status" class="status-indicator">DB: checking</span>
-      </nav>
     </div>
   </header>
 
-  <main class="page-container">
-    <!-- Global Status / Notification Banner -->
+  <main class="main-content">
+    <!-- Notification Banner -->
     <div id="status-banner" class="notification-bar" hidden role="status"></div>
 
-    <!-- Hero & Vehicle Lookup Section -->
-    <section class="lead-section" id="search-section">
-      <div class="lead-primary">
-        <div class="section-label">Inspection & Verification</div>
-        <h1 class="lead-headline">Know the car before you buy it.</h1>
-        <p class="lead-description">
-          Inspect physical condition signals, recorded service history, and legal paperwork against objective benchmarks to get an unbiased recommendation: <strong>BUY</strong>, <strong>NEGOTIATE</strong>, or <strong>AVOID</strong>.
-        </p>
+    <!-- Simple Hero & Search Section -->
+    <section class="hero-section" id="search-section">
+      <h1 class="hero-headline">Know the car before you buy it.</h1>
+      <p class="hero-subhead">
+        Condition checks, recorded history, and unbiased purchase recommendations.
+      </p>
 
-        <!-- Primary Lookup Input -->
-        <form id="search-form" class="lookup-form">
-          <label for="vehicle-id" class="lookup-label">Enter a vehicle ID or registration number</label>
-          <div class="lookup-input-group">
-            <input id="vehicle-id" name="vehicle-id" type="text" placeholder="e.g. DEMO-CLEAN, DEMO-NEGOTIATE, or custom ID" autocomplete="off" required>
-            <button type="submit" id="search-submit-btn" class="btn-primary">Open record</button>
-          </div>
-        </form>
+      <form id="search-form" class="search-form">
+        <div class="search-input-group">
+          <input id="vehicle-id" name="vehicle-id" type="text" placeholder="Enter vehicle ID (e.g. DEMO-CLEAN)" autocomplete="off" required>
+          <button type="submit" id="search-submit-btn" class="btn-primary">Check car</button>
+        </div>
+      </form>
 
-        <div class="lead-actions">
-          <button type="button" id="toggle-register-btn" class="btn-text">
-            <span>+ Register a new car to inspect</span>
+      <div class="demo-strip" id="reference-cases">
+        <span class="demo-label">Or try an example:</span>
+        <div class="demo-chips">
+          <button type="button" class="demo-chip" data-scenario="DEMO-CLEAN">
+            <span class="chip-verdict buy">BUY</span>
+            <span>Clean history</span>
+          </button>
+          <button type="button" class="demo-chip" data-scenario="DEMO-NEGOTIATE">
+            <span class="chip-verdict negotiate">NEGOTIATE</span>
+            <span>Service gaps</span>
+          </button>
+          <button type="button" class="demo-chip" data-scenario="DEMO-CRITICAL">
+            <span class="chip-verdict avoid">AVOID</span>
+            <span>VIN discrepancy</span>
           </button>
         </div>
       </div>
-
-      <!-- Demo Examples / Benchmark Scenarios -->
-      <aside class="lead-secondary" id="reference-cases">
-        <div class="section-label">Synthetic Demos · Pre-filled Examples</div>
-        <p class="demo-note">Click any example below to see how VeriCar assesses clean records, service concerns, or legal discrepancies.</p>
-        <div class="reference-index">
-          <button type="button" class="reference-row demo-chip" data-scenario="DEMO-CLEAN">
-            <span class="reference-num">01</span>
-            <div class="reference-info">
-              <span class="reference-title">Clean Service History</span>
-              <span class="reference-desc">Tata Nexon · 45,000 km · Regular annual maintenance</span>
-            </div>
-            <span class="reference-tag tag-buy">BUY</span>
-          </button>
-
-          <button type="button" class="reference-row demo-chip" data-scenario="DEMO-NEGOTIATE">
-            <span class="reference-num">02</span>
-            <div class="reference-info">
-              <span class="reference-title">Service Gaps & Recurring Repairs</span>
-              <span class="reference-desc">Tata Nexon · 90,000 km · Engine mount replacements</span>
-            </div>
-            <span class="reference-tag tag-negotiate">NEGOTIATE</span>
-          </button>
-
-          <button type="button" class="reference-row demo-chip" data-scenario="DEMO-CRITICAL">
-            <span class="reference-num">03</span>
-            <div class="reference-info">
-              <span class="reference-title">Identity & Document Discrepancy</span>
-              <span class="reference-desc">Tata Nexon · 52,000 km · VIN / RC number mismatch</span>
-            </div>
-            <span class="reference-tag tag-avoid">AVOID</span>
-          </button>
-        </div>
-      </aside>
     </section>
 
     <!-- Collapsible Vehicle Registration Drawer -->
-    <section id="register-drawer" class="docket-drawer" hidden>
-      <div class="docket-header">
-        <div>
-          <div class="section-label">Register Vehicle</div>
-          <h2 class="docket-title">Add a Car for Inspection</h2>
-        </div>
+    <section id="register-drawer" class="register-drawer" hidden>
+      <div class="drawer-header">
+        <h2>Register a car to inspect</h2>
         <button type="button" id="reg-cancel-btn" class="btn-text">Close</button>
       </div>
 
-      <form id="register-form" class="docket-form">
+      <form id="register-form" class="register-form">
         <div class="form-row-3">
           <label>Vehicle ID (Unique)<input id="reg-car-id" type="text" placeholder="e.g. VEH-102" required></label>
           <label>Make / Brand<input id="reg-brand" type="text" placeholder="e.g. Tata, Hyundai, Maruti" required></label>
@@ -115,14 +82,14 @@
         </div>
         <div class="form-row-4">
           <label>Odometer (km)<input id="reg-odometer" type="number" min="0" placeholder="e.g. 45000"></label>
-          <label>Asking Price (₹ INR)<input id="reg-price" type="number" min="0" placeholder="e.g. 850000"></label>
+          <label>Asking Price (₹)<input id="reg-price" type="number" min="0" placeholder="e.g. 850000"></label>
           <label>Previous Owners<input id="reg-owners" type="number" min="0" value="1"></label>
           <label>Registration State<input id="reg-state" type="text" placeholder="e.g. MH, KA, DL" maxlength="4"></label>
         </div>
         <div class="form-row-2">
           <label>VIN / Chassis Number <span>optional</span><input id="reg-vin" type="text" placeholder="e.g. MAT612345N..."></label>
           <div class="form-actions-inline">
-            <button type="submit" id="reg-submit-btn" class="btn-primary">Save car record</button>
+            <button type="submit" id="reg-submit-btn" class="btn-primary">Save car</button>
             <span id="reg-status" class="form-feedback"></span>
           </div>
         </div>
@@ -130,402 +97,336 @@
     </section>
 
     <!-- Empty State Guide -->
-    <section id="empty-state" class="empty-state-guide">
-      <div class="guide-grid">
-        <div class="guide-column">
-          <span class="guide-step">Step 1</span>
-          <h3>Select or register a car</h3>
-          <p>Choose one of the demo examples above or enter a car ID to inspect its records.</p>
-        </div>
-        <div class="guide-column">
-          <span class="guide-step">Step 2</span>
-          <h3>Fill inspection checklist</h3>
-          <p>Record document checks, physical signs, and test drive observations. Keep unknowns honest.</p>
-        </div>
-        <div class="guide-column">
-          <span class="guide-step">Step 3</span>
-          <h3>Get recommendation & report</h3>
-          <p>Review the BUY / NEGOTIATE / AVOID verdict, fair price adjustment, and download the full inspection PDF.</p>
-        </div>
-      </div>
-    </section>
+    <div id="empty-state" class="empty-state-wrap">
+      <p class="empty-hint">Enter a vehicle ID above or select a sample car to see its inspection results.</p>
+    </div>
 
-    <!-- Main Vehicle Inspection View -->
+    <!-- Main Vehicle Inspection Sheet -->
     <section id="vehicle-view" class="vehicle-sheet" hidden>
-      <!-- Section 1: Vehicle Overview -->
-      <div class="sheet-header">
-        <div class="sheet-title-group">
-          <div class="section-label">Vehicle Overview</div>
-          <h2 id="vehicle-title" class="sheet-headline">—</h2>
-          <div id="vehicle-badges" class="sheet-specs-bar"></div>
+      <!-- 1. Vehicle Identity Header -->
+      <div class="vehicle-header">
+        <div class="vehicle-info">
+          <h2 id="vehicle-title" class="vehicle-title">—</h2>
+          <div id="vehicle-badges" class="vehicle-specs"></div>
         </div>
-        <div class="sheet-actions">
-          <span id="memory-status" class="memory-badge">Initializing</span>
+        <div class="vehicle-actions">
+          <span id="memory-status" class="status-badge"></span>
           <a id="pdf-button" class="btn-secondary" href="#" target="_blank" rel="noopener" hidden>Download inspection report</a>
         </div>
       </div>
 
-      <!-- Section 2: Interactive Inspection Checklist -->
-      <section id="condition-section" class="condition-section">
-        <div class="section-header-row">
-          <div>
-            <div class="section-label">Step 2 · Condition Checklist</div>
-            <h3 class="section-heading-clean">Vehicle Condition & Physical Verification</h3>
-            <p class="section-subtext">Record what you inspected. Not sure about a check? Leave it as <strong>Unknown</strong>. Unknown is never treated as No; it remains missing evidence and informs confidence.</p>
-          </div>
-          <div id="condition-summary-bar" class="condition-summary-pill">
-            0 repairs · 0 services · 0 flood flags · 0 unknowns
+      <!-- 2. Verdict & Key Metrics (Dominant Element) -->
+      <section id="overall-assessment-card" class="verdict-card">
+        <div class="verdict-primary">
+          <span class="verdict-kicker">Recommendation</span>
+          <div id="verdict-badge" class="verdict-stamp buy">BUY</div>
+          <div class="verdict-meta">
+            <span>Evidence confidence:</span>
+            <strong id="overall-confidence">—</strong>
           </div>
         </div>
 
-        <form id="condition-form" class="condition-form">
-          <!-- Category A: Seller & Service History -->
-          <details class="condition-group" open>
-            <summary><span class="group-num">A</span><strong>Seller & Service Records</strong><span id="cond-summary-a" class="group-meta">0 repairs · 0 services</span></summary>
-            <div class="group-body">
-              <div class="form-row-2">
-                <label>Seller Claims / Declarations
-                  <input type="text" id="cond-seller-claims" placeholder="e.g. Single owner, authorized dealer serviced, accident-free">
-                </label>
-                <div class="mini-metrics">
-                  <div class="mini-metric"><span class="mini-label">Recorded Repairs</span><strong id="cond-repairs-count">0</strong></div>
-                  <div class="mini-metric"><span class="mini-label">Recorded Services</span><strong id="cond-services-count">0</strong></div>
-                </div>
+        <div class="verdict-financials">
+          <div class="financial-box">
+            <span class="financial-label">Estimated near-term repairs</span>
+            <strong id="repair-range" class="financial-amount">₹0 – ₹0</strong>
+            <span class="financial-note">Based on inspected condition and records</span>
+          </div>
+          <div class="financial-box">
+            <span class="financial-label">Suggested price reduction</span>
+            <strong id="negotiation-reduction" class="financial-amount">₹0</strong>
+            <span class="financial-note">Fair discount based on verified issues</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Why This Result (Findings & Next Checks) -->
+      <section id="findings-categorized-section" class="findings-section">
+        <h3 class="section-title">Why this result</h3>
+
+        <div class="findings-stack">
+          <!-- Critical Flags -->
+          <div id="critical-group-card" class="finding-group critical-group" hidden>
+            <div class="group-heading">Critical issues (<span id="critical-count">0</span>)</div>
+            <ul id="critical-list" class="finding-list"></ul>
+          </div>
+
+          <!-- Needs Attention -->
+          <div id="warning-group-card" class="finding-group warning-group" hidden>
+            <div class="group-heading">Needs attention (<span id="warning-count">0</span>)</div>
+            <ul id="warning-list" class="finding-list"></ul>
+          </div>
+
+          <!-- Good Signs -->
+          <div id="info-group-card" class="finding-group info-group" hidden>
+            <div class="group-heading">Good signs (<span id="info-count">0</span>)</div>
+            <ul id="info-list" class="finding-list"></ul>
+          </div>
+
+          <!-- Actionable Next Steps -->
+          <div id="action-group-card" class="finding-group action-group">
+            <div class="group-heading">What to check before buying</div>
+            <ul id="next-checks-list" class="finding-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Vehicle History -->
+      <section class="history-section">
+        <div class="section-header-row">
+          <h3 class="section-title">Vehicle history</h3>
+          <span id="evidence-count" class="count-pill">0 reports</span>
+        </div>
+        <div id="timeline" class="history-timeline"></div>
+      </section>
+
+      <!-- Secondary Explanation & Corroboration Details (Progressive Disclosure) -->
+      <details class="secondary-accordion">
+        <summary>Analysis details & summary</summary>
+        <div class="accordion-content">
+          <div class="analysis-box">
+            <div class="analysis-row">
+              <h4 id="focus-finding-title">Transmission shift behavior</h4>
+              <span id="finding-state" class="state-pill">sufficient</span>
+            </div>
+            <p>Evidence confidence: <strong id="confidence-value">—</strong></p>
+            <p id="confidence-copy" class="muted-note"></p>
+            <button id="confidence-toggle" class="btn-text" type="button" aria-expanded="false">Show source counts</button>
+            <div id="confidence-details" hidden>
+              <p>Supporting sources: <strong id="support-count">0</strong> | Contradicting: <strong id="contradiction-count">0</strong></p>
+              <span id="support-weight" hidden>0.00</span>
+              <span id="contradiction-weight" hidden>0.00</span>
+            </div>
+          </div>
+          <div class="analysis-box">
+            <div class="analysis-row">
+              <h4>Summary</h4>
+              <span id="explanation-status" class="state-pill">Available</span>
+            </div>
+            <div id="explanation-content" class="explanation-text"></div>
+          </div>
+        </div>
+      </details>
+
+      <!-- 5. Check The Car (Interactive Inspection Checklist — Progressive Disclosure) -->
+      <section id="condition-section" class="checklist-section">
+        <div class="section-header-row">
+          <div>
+            <h3 class="section-title">Check the car</h3>
+            <p class="section-subtitle">Record physical and document checks. Unknown checks remain transparent.</p>
+          </div>
+          <div id="condition-summary-bar" class="summary-pill">0 checks</div>
+        </div>
+
+        <form id="condition-form" class="checklist-form">
+          <!-- Category A: Seller & Service Records -->
+          <details class="category-accordion">
+            <summary>
+              <span class="category-name">Seller & Service Records</span>
+              <span id="cond-summary-a" class="category-meta">0 records</span>
+            </summary>
+            <div class="category-content">
+              <label class="field-label">Seller claims
+                <input type="text" id="cond-seller-claims" placeholder="e.g. Single owner, authorized dealer serviced">
+              </label>
+              <div class="mini-metrics">
+                <span>Repairs: <strong id="cond-repairs-count">0</strong></span>
+                <span>Services: <strong id="cond-services-count">0</strong></span>
               </div>
             </div>
           </details>
 
-          <!-- Category B: Legal & Document Verification -->
-          <details class="condition-group" open>
-            <summary><span class="group-num">B</span><strong>Documents & Legal Papers</strong><span id="cond-summary-b" class="group-meta">8 checks</span></summary>
-            <div class="group-body">
+          <!-- Category B: Documents & Legal -->
+          <details class="category-accordion">
+            <summary>
+              <span class="category-name">Documents & Legal Papers</span>
+              <span id="cond-summary-b" class="category-meta">8 checks</span>
+            </summary>
+            <div class="category-content">
               <div class="checks-grid">
-                <label class="check-item"><span>RC matches vehicle details</span>
+                <label class="check-control"><span>RC matches vehicle details</span>
                   <select id="cond-doc-rc-match"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Chassis / VIN matches RC</span>
+                <label class="check-control"><span>Chassis / VIN matches RC</span>
                   <select id="cond-doc-vin-matches-rc"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Insurance valid & active</span>
+                <label class="check-control"><span>Insurance valid</span>
                   <select id="cond-doc-insurance-valid"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Insurance claim history known</span>
+                <label class="check-control"><span>Insurance claim history known</span>
                   <select id="cond-doc-insurance-claims"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>No-Claim Bonus (NCB) known</span>
+                <label class="check-control"><span>No-Claim Bonus (NCB) known</span>
                   <select id="cond-doc-ncb"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>PUC emissions certificate valid</span>
+                <label class="check-control"><span>PUC certificate valid</span>
                   <select id="cond-doc-puc-valid"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Bank loan hypothecation closed (NOC)</span>
+                <label class="check-control"><span>Hypothecation (loan) closed</span>
                   <select id="cond-doc-hypothecation-closed"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Form 29 / 30 transfer forms available</span>
+                <label class="check-control"><span>Form 29 / 30 available</span>
                   <select id="cond-doc-form-29-30"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
               </div>
             </div>
           </details>
 
-          <!-- Category C: Exterior & Interior Physical Checks -->
-          <details class="condition-group" open>
-            <summary><span class="group-num">C</span><strong>Exterior & Interior Condition</strong><span id="cond-summary-c" class="group-meta">10 checks</span></summary>
-            <div class="group-body">
+          <!-- Category C: Exterior & Interior -->
+          <details class="category-accordion">
+            <summary>
+              <span class="category-name">Exterior & Interior Condition</span>
+              <span id="cond-summary-c" class="category-meta">10 checks</span>
+            </summary>
+            <div class="category-content">
               <div class="checks-grid">
-                <label class="check-item warning-tint"><span>Damp/musty smell or stained carpet (Flood)</span>
-                  <select id="cond-phys-flood-signs"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes (Warning)</option></select>
+                <label class="check-control"><span>Damp/musty smell or stained carpet (Flood)</span>
+                  <select id="cond-phys-flood-signs"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Rust at wheel arches or underbody</span>
+                <label class="check-control"><span>Rust at wheel arches or underbody</span>
                   <select id="cond-phys-rust"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Uneven panel gaps or paint mismatch</span>
+                <label class="check-control"><span>Uneven panel gaps or paint mismatch</span>
                   <select id="cond-phys-panel-gaps"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Oil or coolant leaks</span>
+                <label class="check-control"><span>Oil or coolant leaks</span>
                   <select id="cond-phys-leaks"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Exhaust smoke under revs</span>
+                <label class="check-control"><span>Exhaust smoke under revs</span>
                   <select id="cond-phys-smoke"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Rough engine idle</span>
+                <label class="check-control"><span>Rough engine idle</span>
                   <select id="cond-phys-idle"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Battery terminal corrosion</span>
+                <label class="check-control"><span>Battery terminal corrosion</span>
                   <select id="cond-phys-corrosion"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Air conditioner blows cold</span>
+                <label class="check-control"><span>AC blows cold</span>
                   <select id="cond-phys-ac"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Power windows and lights work</span>
+                <label class="check-control"><span>Power windows and lights work</span>
                   <select id="cond-phys-electrical"><option value="Unknown">Unknown</option><option value="Yes">Yes</option><option value="No">No</option></select>
                 </label>
-                <label class="check-item"><span>Pedal & steering wear matches odometer</span>
-                  <select id="cond-phys-wear-mismatch"><option value="Unknown">Unknown</option><option value="No">Normal wear</option><option value="Yes">Excessive wear (Mismatch)</option></select>
+                <label class="check-control"><span>Pedal/steering wear matches odometer</span>
+                  <select id="cond-phys-wear-mismatch"><option value="Unknown">Unknown</option><option value="No">Normal</option><option value="Yes">Excessive</option></select>
                 </label>
               </div>
             </div>
           </details>
 
           <!-- Category D: Accident History & Diagnostics -->
-          <details class="condition-group">
-            <summary><span class="group-num">D</span><strong>Accident History & Under Hood</strong><span id="cond-summary-d" class="group-meta">5 checks</span></summary>
-            <div class="group-body">
+          <details class="category-accordion">
+            <summary>
+              <span class="category-name">Accident History & Under Hood</span>
+              <span id="cond-summary-d" class="category-meta">5 checks</span>
+            </summary>
+            <div class="category-content">
               <div class="checks-grid">
-                <label class="check-item"><span>Major accident history</span>
+                <label class="check-control"><span>Major accident history</span>
                   <select id="cond-accident-status"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Repainted panels observed</span>
+                <label class="check-control"><span>Repainted panels</span>
                   <select id="cond-repainted-panels"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Airbag deployment indicator</span>
+                <label class="check-control"><span>Airbag deployment</span>
                   <select id="cond-airbag-deployed"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Tyre DOT manufacturing codes</span>
-                  <input type="text" id="cond-tyre-dot" placeholder="e.g. 2421 (Week 24, 2021)">
+                <label class="check-control"><span>Tyre DOT manufacturing codes</span>
+                  <input type="text" id="cond-tyre-dot" placeholder="e.g. 2421">
                 </label>
-                <label class="check-item"><span>OBD diagnostic / scan notes</span>
-                  <input type="text" id="cond-obd-notes" placeholder="e.g. No active DTC error codes">
+                <label class="check-control"><span>OBD scan notes</span>
+                  <input type="text" id="cond-obd-notes" placeholder="e.g. No active DTC codes">
                 </label>
               </div>
             </div>
           </details>
 
-          <!-- Category E: Test Drive Experience -->
-          <details class="condition-group">
-            <summary><span class="group-num">E</span><strong>Test Drive Observations</strong><span id="cond-summary-e" class="group-meta">4 checks</span></summary>
-            <div class="group-body">
+          <!-- Category E: Test Drive -->
+          <details class="category-accordion">
+            <summary>
+              <span class="category-name">Test Drive Observations</span>
+              <span id="cond-summary-e" class="category-meta">4 checks</span>
+            </summary>
+            <div class="category-content">
               <div class="checks-grid">
-                <label class="check-item"><span>Unusual engine or transmission noise</span>
+                <label class="check-control"><span>Unusual engine or gearbox noise</span>
                   <select id="cond-drive-engine-noise"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Hesitation or jerkiness on acceleration</span>
+                <label class="check-control"><span>Hesitation or jerking on acceleration</span>
                   <select id="cond-drive-hesitation"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Brakes pull to one side or feel spongy</span>
+                <label class="check-control"><span>Brakes pull or feel spongy</span>
                   <select id="cond-drive-brakes"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
-                <label class="check-item"><span>Excessive steering play or vibration</span>
+                <label class="check-control"><span>Steering play or vibration</span>
                   <select id="cond-drive-steering"><option value="Unknown">Unknown</option><option value="No">No</option><option value="Yes">Yes</option></select>
                 </label>
               </div>
             </div>
           </details>
 
-          <div class="condition-actions-bar">
-            <button type="button" id="save-condition-btn" class="btn-primary">Save inspection & update assessment</button>
+          <div class="checklist-actions">
+            <button type="button" id="save-condition-btn" class="btn-primary">Update assessment</button>
             <span id="condition-status" class="form-feedback"></span>
           </div>
         </form>
       </section>
 
-      <!-- Section 3: Recommendation & Financial Breakdown -->
-      <section id="overall-assessment-card" class="verdict-section">
-        <div class="verdict-asymmetric-grid">
-          <!-- Left: Authoritative Recommendation Stamp -->
-          <div class="verdict-primary-box">
-            <span class="verdict-label">Our Recommendation</span>
-            <div id="verdict-badge" class="verdict-stamp buy">BUY</div>
-            <div class="verdict-meta-row">
-              <span>Evidence Confidence</span>
-              <strong id="overall-confidence">—</strong>
+      <!-- 6. Before You Pay (India Legal Checklist — Collapsed) -->
+      <details class="secondary-accordion">
+        <summary>Before you pay — Used car checklist</summary>
+        <div class="accordion-content">
+          <div class="guide-grid">
+            <div class="guide-item">
+              <strong>01. RC & Parivahan match</strong>
+              <p>Verify original RC smart card, match physical chassis stamp under hood or floor against RC, and check transfer clearance on Parivahan Sewa.</p>
             </div>
-          </div>
-
-          <!-- Right: Financial & Exposure Breakdown -->
-          <div class="verdict-details-box">
-            <div class="financial-metric">
-              <span class="metric-caption">Estimated Near-Term Repairs</span>
-              <strong id="repair-range" class="metric-figure">₹0 – ₹0</strong>
-              <span class="metric-subtext">Estimated component repairs from inspection records</span>
+            <div class="guide-item">
+              <strong>02. Insurance & NCB history</strong>
+              <p>Ensure continuous insurance policy and check No Claim Bonus (NCB) records to uncover undisclosed accident repairs.</p>
             </div>
-            <div class="financial-metric">
-              <span class="metric-caption">Fair Price Reduction</span>
-              <strong id="negotiation-reduction" class="metric-figure">₹0</strong>
-              <span class="metric-subtext">Fair valuation discount to negotiate based on verified issues</span>
+            <div class="guide-item">
+              <strong>03. Hypothecation (HP) removal</strong>
+              <p>Verify Form 35 and Bank NOC to ensure active loan liens are formally removed from the registration certificate.</p>
+            </div>
+            <div class="guide-item">
+              <strong>04. Service invoices & PUC</strong>
+              <p>Examine stamped authorized workshop invoices to verify odometer progression and check valid emissions certificate.</p>
             </div>
           </div>
         </div>
-      </section>
+      </details>
 
-      <!-- Section 4: Categorized Findings -->
-      <section id="findings-categorized-section" class="findings-ledger">
-        <div class="section-label">Inspection Findings & Why</div>
-
-        <div class="ledger-stack">
-          <!-- Critical Flags -->
-          <div id="critical-group-card" class="ledger-row critical-row" hidden>
-            <div class="ledger-category">Critical Flags (<span id="critical-count">0</span>)</div>
-            <div class="ledger-content">
-              <ul id="critical-list" class="ledger-list"></ul>
+      <!-- 7. Add Inspection Report (Collapsed) -->
+      <details class="secondary-accordion">
+        <summary>+ Add inspection observation or report</summary>
+        <div class="accordion-content">
+          <form id="report-form" class="report-form">
+            <input id="report-vehicle-id" type="hidden">
+            <div class="form-row-4">
+              <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128" placeholder="e.g. MAL612..."></label>
+              <label>Source ID<input id="report-source-id" type="text" maxlength="128" placeholder="e.g. inspector-007" required></label>
+              <label>Source type<select id="report-source-type" required><option value="inspector">Inspector</option><option value="mechanic">Mechanic</option><option value="owner">Owner</option><option value="buyer">Buyer</option></select></label>
+              <label>Observed date<input id="report-observed-at" type="date" required></label>
             </div>
-          </div>
-
-          <!-- Warnings / Needs Attention -->
-          <div id="warning-group-card" class="ledger-row warning-row" hidden>
-            <div class="ledger-category">Needs Attention (<span id="warning-count">0</span>)</div>
-            <div class="ledger-content">
-              <ul id="warning-list" class="ledger-list"></ul>
+            <label class="field-label">Observation note<textarea id="report-text" maxlength="10000" rows="3" placeholder="Describe the physical observation or service record." required></textarea></label>
+            <div class="form-actions-inline">
+              <button type="submit" id="save-report-btn" class="btn-primary">Save report</button>
+              <span id="report-result" class="form-feedback"></span>
             </div>
-          </div>
-
-          <!-- Positive Indicators -->
-          <div id="info-group-card" class="ledger-row info-row" hidden>
-            <div class="ledger-category">Good Signs & Verified Baselines (<span id="info-count">0</span>)</div>
-            <div class="ledger-content">
-              <ul id="info-list" class="ledger-list"></ul>
-            </div>
-          </div>
-
-          <!-- Next Checks Checklist -->
-          <div id="action-group-card" class="ledger-row action-row">
-            <div class="ledger-category">Before You Pay (Next Checks)</div>
-            <div class="ledger-content">
-              <ul id="next-checks-list" class="ledger-list"></ul>
-            </div>
-          </div>
+          </form>
         </div>
-      </section>
+      </details>
 
-      <!-- Section 5: Historical Corroboration & LLM Explanation -->
-      <div class="analysis-split-grid">
-        <!-- Persistent Memory Finding -->
-        <article class="analysis-panel">
-          <div class="panel-header">
-            <div>
-              <div class="section-label">Vehicle History & Evidence</div>
-              <h3 id="focus-finding-title">Transmission shift behavior</h3>
-            </div>
-            <span id="finding-state" class="state-pill">sufficient</span>
-          </div>
-
-          <div class="panel-body">
-            <div class="evidence-score-block">
-              <span class="caption">Evidence confidence</span>
-              <strong id="confidence-value" class="score-figure">—</strong>
-              <p id="confidence-copy" class="caption-text">Evaluating historical memory bank…</p>
-            </div>
-
-            <button id="confidence-toggle" class="btn-text" type="button" aria-expanded="false">How is this calculated?</button>
-
-            <div id="confidence-details" class="details-docket" hidden>
-              <table class="metric-table">
-                <tbody>
-                  <tr>
-                    <td>Independent supporting sources</td>
-                    <td><strong id="support-count">0</strong> sources</td>
-                  </tr>
-                  <tr>
-                    <td>Independent contradicting sources</td>
-                    <td><strong id="contradiction-count">0</strong> sources</td>
-                  </tr>
-                  <tr>
-                    <td>Support credibility weight</td>
-                    <td><strong id="support-weight">0.00</strong></td>
-                  </tr>
-                  <tr>
-                    <td>Contradiction credibility weight</td>
-                    <td><strong id="contradiction-weight">0.00</strong></td>
-                  </tr>
-                </tbody>
-              </table>
-              <p class="disclaimer">Calculated from independent source identity and historical veracity. Not a subjective probability.</p>
-            </div>
-          </div>
-        </article>
-
-        <!-- LLM Explanation -->
-        <article class="analysis-panel">
-          <div class="panel-header">
-            <div>
-              <div class="section-label">Summary & Explanation</div>
-              <h3>Why this recommendation?</h3>
-            </div>
-            <span id="explanation-status" class="subtle-tag">Auxiliary AI Explanation</span>
-          </div>
-
-          <div class="panel-body">
-            <div id="explanation-content" class="explanation-text-block">
-              <p class="muted">Explanation will appear when evidence is available.</p>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <!-- Section 6: Chronological Observation Timeline -->
-      <section class="timeline-section">
-        <div class="section-header-row">
-          <div>
-            <div class="section-label">Audit Trail</div>
-            <h3 class="section-heading-clean">Historical Reports & Evidence Timeline</h3>
-          </div>
-          <span id="evidence-count" class="counter-badge">0 reports</span>
-        </div>
-        <div id="timeline" class="audit-timeline"></div>
-      </section>
-
-      <!-- Section 7: Add Additional Report -->
-      <section class="ingest-section">
-        <div class="section-header-row">
-          <div>
-            <div class="section-label">Record Additional Evidence</div>
-            <h3 class="section-heading-clean">Add an Observation or Mechanic Report</h3>
-          </div>
-          <span class="idempotent-flag">Audit Trail Verified</span>
-        </div>
-
-        <form id="report-form" class="ingest-form">
-          <input id="report-vehicle-id" type="hidden">
-          <div class="form-row-4">
-            <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128" placeholder="e.g. MAL612..."></label>
-            <label>Source ID<input id="report-source-id" type="text" maxlength="128" placeholder="e.g. inspector-007" required></label>
-            <label>Source type<select id="report-source-type" required><option value="inspector">Inspector</option><option value="mechanic">Mechanic</option><option value="owner">Owner</option><option value="buyer">Buyer</option></select></label>
-            <label>Observed date<input id="report-observed-at" type="date" required></label>
-          </div>
-          <label>Report observation<textarea id="report-text" maxlength="10000" rows="3" placeholder="Describe the physical observation or service record. Preserve factual terminology (e.g. 'Hard 2-to-3 shift observed under load' or 'No transmission issues observed')." required></textarea></label>
-          <div class="form-actions-inline">
-            <button type="submit" id="save-report-btn" class="btn-primary">Save report</button>
-            <span id="report-result" class="form-feedback"></span>
-          </div>
-        </form>
-      </section>
-
-      <!-- Section 8: Indian Market Document Checklist -->
-      <section class="compliance-section">
-        <div class="section-label">Buyer's Legal Checklist</div>
-        <h3 class="section-heading-clean">Essential Used-Car Checks in India</h3>
-        <div class="compliance-grid">
-          <div class="compliance-item">
-            <span class="compliance-title">01. RC & Parivahan NOC</span>
-            <p>Verify original RC smart card, match physical chassis stamp under hood against RC, and check transfer clearance on Parivahan Sewa.</p>
-          </div>
-          <div class="compliance-item">
-            <span class="compliance-title">02. Insurance & NCB History</span>
-            <p>Ensure continuous insurance cover and examine No Claim Bonus (NCB) records to uncover undisclosed accident repairs.</p>
-          </div>
-          <div class="compliance-item">
-            <span class="compliance-title">03. Hypothecation (HP) Removal</span>
-            <p>Verify Form 35 and Bank NOC to ensure active loan liens are formally removed from the registration certificate.</p>
-          </div>
-          <div class="compliance-item">
-            <span class="compliance-title">04. Service Invoices & PUC</span>
-            <p>Examine stamped authorized workshop invoices to cross-verify odometer mileage progression and valid emissions certificate.</p>
-          </div>
-        </div>
-      </section>
-
-      <p class="safety-disclaimer">
-        VeriCar assessments reflect the reports available to the system. Reports may be incomplete, inaccurate, outdated, or contradictory. Obtain an independent vehicle inspection before making a purchase decision.
+      <!-- Safety Disclaimer -->
+      <p class="disclaimer-text">
+        VeriCar assessments reflect the records available to the system. Always obtain an independent physical inspection before purchasing a used car.
       </p>
     </section>
   </main>
 
-  <!-- Restrained Document Footer -->
-  <footer class="document-footer">
-    <div class="footer-inner">
-      <span class="footer-copy">VeriCar — Used Car Evidence, History & Decision Support</span>
-      <span class="footer-meta">Deterministic verification & longitudinal provenance</span>
-    </div>
+  <footer class="site-footer">
+    <p>VeriCar — Used Car Inspection & Decision Support</p>
   </footer>
 
   <script src="/assets/app.js" defer></script>
