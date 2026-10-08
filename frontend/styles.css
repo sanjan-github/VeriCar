@@ -1216,24 +1216,16 @@ body {
   background-size: cover;
   position: relative;
 }
-
-.demo-image::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(41,34,30,.34), transparent 55%);
-}
-
 .demo-image-clean {
-  background-image: url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1000&q=82");
+
 }
 
 .demo-image-negotiate {
-  background-image: url("https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=82");
+
 }
 
 .demo-image-critical {
-  background-image: url("https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=1000&q=82");
+
 }
 
 .demo-card-body {
@@ -1494,3 +1486,259 @@ body {
   background: rgba(208,185,167,.16);
 }
 
+
+
+/* ==========================================================================
+   VeriCar visual system — 60 / 30 / 10
+   60% warm neutral canvas + surfaces
+   30% muted taupe/brown support
+   10% dark-brown accent
+   Flat colors only. No gradients. No photographic demo assets.
+   ========================================================================== */
+:root {
+  --vc-60: #f3eadf;
+  --vc-60-surface: #fbf7f2;
+  --vc-30: #d0b9a7;
+  --vc-30-mid: #b9937b;
+  --vc-30-dark: #8b5d42;
+  --vc-10: #714329;
+  --vc-10-soft: #ead8c8;
+  --vc-text: #29221e;
+  --vc-muted: #725f52;
+  --vc-border: #c8ad99;
+}
+
+html, body {
+  background: var(--vc-60) !important;
+  color: var(--vc-text) !important;
+}
+
+body {
+  background-image: none !important;
+}
+
+.site-header {
+  background: var(--vc-10) !important;
+  border-bottom: 1px solid var(--vc-30) !important;
+}
+
+.site-header .brand-name,
+.site-header .brand-context {
+  color: var(--vc-60) !important;
+}
+
+.intake-card,
+.verdict-card,
+.finding-group,
+.history-section,
+.secondary-accordion,
+.checklist-section,
+.category-accordion,
+.evidence-item,
+.register-drawer {
+  background: var(--vc-60-surface) !important;
+  border-color: var(--vc-border) !important;
+  box-shadow: none !important;
+}
+
+.intake-section,
+.vehicle-sheet {
+  background: transparent !important;
+}
+
+.intake-intro h1,
+.demo-heading h2,
+.section-title,
+.drawer-header h2,
+.vehicle-title {
+  color: var(--vc-10) !important;
+}
+
+.intake-intro .hero-subhead,
+.form-note,
+.section-subtitle,
+.muted,
+.muted-note,
+.financial-note,
+.site-disclaimer,
+.disclaimer-text,
+.demo-heading p,
+.existing-car {
+  color: var(--vc-muted) !important;
+}
+
+.register-form input,
+.register-form select,
+.report-form input,
+.report-form select,
+.report-form textarea,
+.existing-car input,
+.check-control select,
+.check-control input,
+.field-label input,
+.field-label textarea {
+  background: var(--vc-60-surface) !important;
+  color: var(--vc-text) !important;
+  border-color: var(--vc-border) !important;
+  box-shadow: none !important;
+}
+
+.btn-primary,
+#reg-submit-btn {
+  background: var(--vc-10) !important;
+  color: var(--vc-60) !important;
+  border-color: var(--vc-10) !important;
+  box-shadow: none !important;
+}
+
+.btn-secondary {
+  background: var(--vc-60-surface) !important;
+  color: var(--vc-10) !important;
+  border-color: var(--vc-border) !important;
+  box-shadow: none !important;
+}
+
+.demo-section {
+  margin-top: 42px;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.demo-card {
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  background: var(--vc-30-mid) !important;
+  color: var(--vc-text) !important;
+  border: 1px solid var(--vc-border) !important;
+  border-radius: 10px;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.demo-card:hover,
+.demo-card:focus-visible {
+  border-color: var(--vc-10) !important;
+  outline: 2px solid var(--vc-10);
+  outline-offset: 2px;
+}
+
+.demo-illustration {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  background: var(--vc-30) !important;
+}
+
+.demo-illustration svg {
+  width: 190px;
+  height: 112px;
+}
+
+.car-line,
+.doc-line {
+  fill: none;
+  stroke: var(--vc-10);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.check-line {
+  fill: none;
+  stroke: var(--vc-10);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.warn-line {
+  fill: none;
+  stroke: var(--vc-10);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.demo-card-body {
+  background: var(--vc-10) !important;
+  color: var(--vc-60) !important;
+  padding: 16px 18px 18px;
+}
+
+.demo-card-label {
+  color: var(--vc-30) !important;
+}
+
+.demo-card-body strong,
+.demo-card-body > span:not(.demo-card-label):not(.demo-card-cta),
+.demo-card-cta {
+  color: var(--vc-60) !important;
+}
+
+.vehicle-header {
+  border-bottom: 1px solid var(--vc-border) !important;
+}
+
+.inspection-id {
+  display: block;
+  margin-top: 5px;
+  color: var(--vc-muted);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.verdict-stamp.buy,
+.verdict-stamp.negotiate,
+.verdict-stamp.avoid {
+  background: var(--vc-10-soft) !important;
+  color: var(--vc-10) !important;
+  border-color: var(--vc-10) !important;
+}
+
+.finding-group.critical-group,
+.finding-group.warning-group,
+.finding-group.info-group,
+.finding-group.action-group {
+  background: var(--vc-60-surface) !important;
+  border-left-color: var(--vc-10) !important;
+}
+
+.category-content,
+.accordion-content {
+  background: var(--vc-30) !important;
+  background-image: none !important;
+}
+
+.spec-entry,
+.count-pill,
+.summary-pill,
+.state-pill {
+  background: var(--vc-30) !important;
+  color: var(--vc-text) !important;
+}
+
+.service-entry {
+  background: var(--vc-30) !important;
+  border-color: var(--vc-border) !important;
+}
+
+.site-disclaimer {
+  border-top-color: var(--vc-border) !important;
+}
+
+.report-form input:invalid,
+.report-form textarea:invalid,
+.report-form select:invalid {
+  box-shadow: none !important;
+}
+
+@media (max-width: 820px) {
+  .demo-grid {
+    grid-template-columns: 1fr;
+  }
+}
