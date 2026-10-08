@@ -99,30 +99,36 @@
         </div>
         <div id="demo-grid" class="demo-grid">
           <button class="demo-card" type="button" data-scenario="clean">
-            <span class="demo-image demo-image-clean" aria-hidden="true"></span>
+            <span class="demo-illustration" aria-hidden="true">
+              <svg viewBox="0 0 220 130" role="img"><path class="car-line" d="M35 86h150l-12-30-23-7H79L59 56 45 72z"/><circle class="car-line" cx="70" cy="88" r="11"/><circle class="car-line" cx="154" cy="88" r="11"/><path class="check-line" d="m92 68 9 9 19-20"/></svg>
+            </span>
             <span class="demo-card-body">
               <span class="demo-card-label">CLEAN HISTORY</span>
               <strong>Regularly serviced</strong>
-              <span>Consistent service records with no critical findings.</span>
-              <span class="demo-card-cta">View inspection →</span>
+              <span>Two scheduled services and no critical condition flags.</span>
+              <span class="demo-card-cta">Open clean inspection →</span>
             </span>
           </button>
           <button class="demo-card" type="button" data-scenario="negotiate">
-            <span class="demo-image demo-image-negotiate" aria-hidden="true"></span>
+            <span class="demo-illustration" aria-hidden="true">
+              <svg viewBox="0 0 220 130" role="img"><path class="car-line" d="M35 86h150l-12-30-23-7H79L59 56 45 72z"/><circle class="car-line" cx="70" cy="88" r="11"/><circle class="car-line" cx="154" cy="88" r="11"/><path class="warn-line" d="M110 54v22m0 9v2"/><path class="warn-line" d="M101 47h18l12 21H89z"/></svg>
+            </span>
             <span class="demo-card-body">
               <span class="demo-card-label">NEGOTIATE</span>
               <strong>Recurring repairs</strong>
-              <span>Service gaps and repeated repairs make the price worth discussing.</span>
-              <span class="demo-card-cta">View inspection →</span>
+              <span>Service gaps plus repeated engine-mount repairs.</span>
+              <span class="demo-card-cta">Open negotiation case →</span>
             </span>
           </button>
           <button class="demo-card" type="button" data-scenario="critical">
-            <span class="demo-image demo-image-critical" aria-hidden="true"></span>
+            <span class="demo-illustration" aria-hidden="true">
+              <svg viewBox="0 0 220 130" role="img"><path class="car-line" d="M35 86h150l-12-30-23-7H79L59 56 45 72z"/><circle class="car-line" cx="70" cy="88" r="11"/><circle class="car-line" cx="154" cy="88" r="11"/><rect class="doc-line" x="92" y="49" width="48" height="31" rx="2"/><path class="warn-line" d="m100 56 32 18m0-18-32 18"/></svg>
+            </span>
             <span class="demo-card-body">
               <span class="demo-card-label">HIGH RISK</span>
               <strong>Document discrepancy</strong>
-              <span>A vehicle identity mismatch changes the buying decision.</span>
-              <span class="demo-card-cta">View inspection →</span>
+              <span>Seeded VIN/RC mismatch that should stop a rushed purchase.</span>
+              <span class="demo-card-cta">Open risk case →</span>
             </span>
           </button>
         </div>
@@ -151,6 +157,7 @@
       <div class="vehicle-header">
         <div class="vehicle-info">
           <h2 id="vehicle-title" class="vehicle-title">—</h2>
+          <span id="inspection-id" class="inspection-id"></span>
           <div id="vehicle-badges" class="vehicle-specs"></div>
         </div>
         <div class="vehicle-actions">
@@ -469,7 +476,7 @@
             <input id="report-vehicle-id" type="hidden">
             <div class="form-row-4">
               <label>VIN <span>optional</span><input id="report-vin" type="text" maxlength="128" placeholder="e.g. MAL612..."></label>
-              <label>Source ID<input id="report-source-id" type="text" maxlength="128" placeholder="e.g. inspector-007" required></label>
+              <label>Source ID <span>optional</span><input id="report-source-id" type="text" maxlength="128" placeholder="e.g. inspector-007"></label>
               <label>Source type<select id="report-source-type" required><option value="inspector">Inspector</option><option value="mechanic">Mechanic</option><option value="owner">Owner</option><option value="buyer">Buyer</option></select></label>
               <label>Observed date<input id="report-observed-at" type="date" required></label>
             </div>
