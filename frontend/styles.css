@@ -890,3 +890,199 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* -------------------------------------------------------------------------
+   Consumer intake cleanup
+   The intake screen is the product entry point, not a dashboard.
+   ------------------------------------------------------------------------- */
+.site-header {
+  position: relative;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #121417;
+}
+
+.site-header-inner {
+  max-width: 1080px;
+  min-height: 64px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.brand-context {
+  margin-left: 14px;
+  color: #8e98a8;
+  font-size: 13px;
+}
+
+.main-content {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 28px 72px;
+}
+
+.intake-section {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.intake-intro {
+  max-width: 720px;
+  margin: 18px 0 28px;
+}
+
+.intake-intro .eyebrow {
+  margin: 0 0 10px;
+  color: #8e98a8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.intake-intro h1 {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -.035em;
+}
+
+.intake-intro .hero-subhead {
+  max-width: 620px;
+  margin: 14px 0 0;
+  color: #aeb6c3;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.intake-card {
+  display: block;
+  margin: 0;
+  padding: 28px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 12px;
+  background: #171a1f;
+  box-shadow: 0 18px 48px rgba(0,0,0,.18);
+}
+
+.intake-card .drawer-header {
+  margin-bottom: 22px;
+}
+
+.intake-card h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -.015em;
+}
+
+.form-note {
+  margin: 6px 0 0;
+  color: #8e98a8;
+  font-size: 13px;
+}
+
+.register-form label {
+  color: #c4cad4;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.register-form label > span {
+  color: #707988;
+  font-weight: 400;
+}
+
+.register-form input,
+.register-form select {
+  min-height: 44px;
+  margin-top: 7px;
+  border-radius: 7px;
+  border-color: #303640;
+  background: #111419;
+}
+
+.register-form input:focus,
+.register-form select:focus {
+  border-color: #8b95a5;
+  outline: 2px solid rgba(139,149,165,.16);
+}
+
+.form-actions-inline {
+  align-items: flex-end;
+}
+
+.form-actions-inline .btn-primary {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.existing-car {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 18px 0 0;
+  padding: 16px 18px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  color: #858f9e;
+  font-size: 13px;
+}
+
+.existing-car .search-form {
+  margin: 0;
+  flex: 0 1 430px;
+}
+
+.existing-car .search-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.existing-car input {
+  min-height: 40px;
+  background: #15181d;
+}
+
+.existing-car .btn-secondary {
+  white-space: nowrap;
+}
+
+#empty-state {
+  display: none !important;
+}
+
+.site-footer {
+  padding: 20px 28px 32px;
+  color: #626b78;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .main-content {
+    padding: 30px 16px 52px;
+  }
+
+  .site-header-inner {
+    padding: 0 16px;
+  }
+
+  .brand-context {
+    display: none;
+  }
+
+  .intake-card {
+    padding: 20px;
+  }
+
+  .existing-car {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .existing-car .search-form {
+    flex-basis: auto;
+  }
+
+  .existing-car .search-input-group {
+    flex-direction: column;
+  }
+}
