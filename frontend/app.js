@@ -911,7 +911,7 @@ if (elements.reportForm) {
     const body = {
       vehicle_id: (elements.reportVehicleId && elements.reportVehicleId.value) || state.vehicleId,
       vin: (elements.reportVin && elements.reportVin.value.trim()) || null,
-      source_id: (elements.reportSourceId && elements.reportSourceId.value.trim()) || "",
+      source_id: (elements.reportSourceId && elements.reportSourceId.value.trim()) || "user-entry",
       source_type: (elements.reportSourceType && elements.reportSourceType.value) || "inspector",
       observed_at: (elements.reportObservedAt && elements.reportObservedAt.value) || "",
       text: (elements.reportText && elements.reportText.value.trim()) || ""
@@ -1053,9 +1053,12 @@ if (typeof document !== "undefined" && typeof document.querySelectorAll === "fun
   });
 }
 
-// Default date to today
+// Report defaults: keep the form usable without a confusing native required-field popup.
 if (elements.reportObservedAt && !elements.reportObservedAt.value) {
   elements.reportObservedAt.value = new Date().toISOString().slice(0, 10);
+}
+if (elements.reportSourceId && !elements.reportSourceId.value) {
+  elements.reportSourceId.value = "user-entry";
 }
 
 // Initial checks. Never render an assessment/result screen until a real vehicle is loaded.
