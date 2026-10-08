@@ -213,3 +213,44 @@ def test_get_vehicle_assessment_includes_overall_assessment_when_available():
     assert body["overall_assessment"]["verdict"] in ("BUY", "NEGOTIATE", "AVOID")
     assert "confidence" in body["overall_assessment"]
     app.dependency_overrides.clear()
+
+
+def test_get_and_put_vehicle_condition():
+    import uuid
+    app.dependency_overrides.clear()
+    cid = f"VEH-COND-{uuid.uuid4().hex[:8]}"
+    db = getattr(app.state, "database", None)
+    if db is None:
+        db = Database(getattr(settings, "db_path", DEFAULT_DB_PATH))
+    db.save_car(Car(
+        car_id=cid,
+        brand="Tata",
+        model="Nexon",
+        manufacture_year=2022,
+        variant="XZ+",
+        fuel_type="Petrol",
+        transmission="Manual",
+        odometer_km=45000,
+        asking_price_inr=850000,
+    ))
+    with TestClient(app) as client:
+        # GET condition
+        res_get = client.get(f"/api/vehicles/{cid}/condition")
+        assert res_get.status_code == 200
+        cond_data = res_get.json()["condition"]
+        assert cond_data["car_id"] == cid
+        assert cond_data["accident_status"] == "Unknown"
+
+        # PUT updated condition
+        cond_data["accident_status"] = "Yes"
+        cond_data["documents"]["vin_matches_rc"] = "No"
+        res_put = client.put(f"/api/vehicles/{cid}/condition", json=cond_data)
+        assert res_put.status_code == 200
+        updated = res_put.json()
+        assert updated["status"] == "updated"
+        assert updated["condition"]["accident_status"] == "Yes"
+        assert updated["condition"]["documents"]["vin_matches_rc"] == "No"
+        # Overall assessment should recompute and reflect critical flags
+        assert updated["overall_assessment"] is not None
+        assert updated["overall_assessment"]["verdict"] == "AVOID"
+        assert len(updated["overall_assessment"]["critical_findings"]) >= 1

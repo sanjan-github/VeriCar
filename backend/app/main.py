@@ -805,12 +805,83 @@ async def get_vehicle_history(
         for row in reports
     ]
 
+    cond = db.get_condition(vehicle_id)
+    condition_payload = cond.to_record() if cond is not None else None
+
     return {
         "vehicle_id": vehicle_id,
         "vehicle": vehicle_payload,
+        "condition": condition_payload,
         "reports": report_payload,
         "report_count": len(report_payload),
         "history_status": "available" if report_payload else "empty",
+    }
+
+
+@app.get("/api/vehicles/{vehicle_id}/condition")
+def get_vehicle_condition(
+    vehicle_id: str,
+    db: Database = Depends(get_database),
+) -> dict:
+    """Return the saved physical and document condition record for a vehicle."""
+    vehicle = db.get_car(vehicle_id)
+    if vehicle is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": {
+                    "code": "VEHICLE_NOT_FOUND",
+                    "message": "Vehicle was not found.",
+                }
+            },
+        )
+    cond = db.get_condition(vehicle_id)
+    if cond is None:
+        cond = ConditionRecord.empty(vehicle_id)
+    return {
+        "vehicle_id": vehicle_id,
+        "condition": cond.to_record(),
+    }
+
+
+@app.put("/api/vehicles/{vehicle_id}/condition")
+def update_vehicle_condition(
+    vehicle_id: str,
+    payload: dict,
+    db: Database = Depends(get_database),
+) -> dict:
+    """Save or update the condition checklist for a vehicle and recompute assessment."""
+    vehicle = db.get_car(vehicle_id)
+    if vehicle is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": {
+                    "code": "VEHICLE_NOT_FOUND",
+                    "message": "Vehicle was not found.",
+                }
+            },
+        )
+    payload["car_id"] = vehicle_id
+    try:
+        cond_record = ConditionRecord.from_record(payload)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "error": {
+                    "code": "INVALID_CONDITION_PAYLOAD",
+                    "message": f"Invalid condition payload: {exc}",
+                }
+            },
+        ) from exc
+    db.save_condition(cond_record)
+    overall = _build_overall_assessment(vehicle_id, db)
+    return {
+        "status": "updated",
+        "vehicle_id": vehicle_id,
+        "condition": cond_record.to_record(),
+        "overall_assessment": overall,
     }
 
 

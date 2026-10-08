@@ -1,6 +1,7 @@
 const state = {
   vehicleId: "",
   vehicleRecord: null,
+  condition: null,
   assessment: null,
   overallAssessment: null,
   explanation: null,
@@ -92,7 +93,58 @@ const elements = {
   infoCount: $("#info-count"),
   infoList: $("#info-list"),
   actionGroupCard: $("#action-group-card"),
-  nextChecksList: $("#next-checks-list")
+  nextChecksList: $("#next-checks-list"),
+
+  // Condition checklist controls
+  conditionForm: $("#condition-form"),
+  saveConditionBtn: $("#save-condition-btn"),
+  conditionStatus: $("#condition-status"),
+  conditionSummaryBar: $("#condition-summary-bar"),
+  condSellerClaims: $("#cond-seller-claims"),
+  condRepairsCount: $("#cond-repairs-count"),
+  condServicesCount: $("#cond-services-count"),
+  condSummaryA: $("#cond-summary-a"),
+  condSummaryB: $("#cond-summary-b"),
+  condSummaryC: $("#cond-summary-c"),
+  condSummaryD: $("#cond-summary-d"),
+  condSummaryE: $("#cond-summary-e"),
+
+  condAccidentStatus: $("#cond-accident-status"),
+  condRepaintedPanels: $("#cond-repainted-panels"),
+  condAirbagDeployed: $("#cond-airbag-deployed"),
+  condTyreDot: $("#cond-tyre-dot"),
+  condObdNotes: $("#cond-obd-notes"),
+};
+
+const docElements = {
+  rc_match: $("#cond-doc-rc-match"),
+  vin_matches_rc: $("#cond-doc-vin-matches-rc"),
+  insurance_valid: $("#cond-doc-insurance-valid"),
+  insurance_claim_history: $("#cond-doc-insurance-claims"),
+  no_claim_bonus: $("#cond-doc-ncb"),
+  puc_valid: $("#cond-doc-puc-valid"),
+  loan_hypothecation_closed: $("#cond-doc-hypothecation-closed"),
+  form_29_30_available: $("#cond-doc-form-29-30"),
+};
+
+const physElements = {
+  flood_signs: $("#cond-phys-flood-signs"),
+  rust: $("#cond-phys-rust"),
+  panel_gaps_or_paint_mismatch: $("#cond-phys-panel-gaps"),
+  oil_or_coolant_leaks: $("#cond-phys-leaks"),
+  exhaust_smoke: $("#cond-phys-smoke"),
+  rough_idle: $("#cond-phys-idle"),
+  battery_corrosion: $("#cond-phys-corrosion"),
+  ac_works: $("#cond-phys-ac"),
+  lights_windows_work: $("#cond-phys-electrical"),
+  wear_mismatch: $("#cond-phys-wear-mismatch"),
+};
+
+const driveElements = {
+  engine_noise: $("#cond-drive-engine-noise"),
+  hesitation: $("#cond-drive-hesitation"),
+  brakes_pull_or_spongy: $("#cond-drive-brakes"),
+  steering_play: $("#cond-drive-steering"),
 };
 
 function setStatus(message, visible = true) {
@@ -325,6 +377,151 @@ function renderOverallAssessment(overall) {
   }
 }
 
+function updateConditionSummary() {
+  const repairs = Array.isArray(state.condition?.repairs) ? state.condition.repairs : [];
+  const services = Array.isArray(state.condition?.services) ? state.condition.services : [];
+
+  let unknownCount = 0;
+  let floodIndicators = 0;
+
+  // Documents
+  let docIssues = 0;
+  for (const [key, el] of Object.entries(docElements)) {
+    const val = el ? el.value : "Unknown";
+    if (val === "Unknown") unknownCount++;
+    if (key === "vin_matches_rc" && val === "No") docIssues++;
+    if (key === "rc_match" && val === "No") docIssues++;
+  }
+
+  // Physical
+  for (const [key, el] of Object.entries(physElements)) {
+    const val = el ? el.value : "Unknown";
+    if (val === "Unknown") unknownCount++;
+    if (key === "flood_signs" && val.startsWith("Yes")) floodIndicators++;
+    if (key === "rust" && val === "Yes") floodIndicators++;
+    if (key === "battery_corrosion" && val === "Yes") floodIndicators++;
+    if (key === "wear_mismatch" && val.startsWith("Yes")) floodIndicators++;
+  }
+
+  // Accident
+  if (elements.condAccidentStatus && elements.condAccidentStatus.value === "Unknown") unknownCount++;
+  if (elements.condRepaintedPanels && elements.condRepaintedPanels.value === "Unknown") unknownCount++;
+  if (elements.condAirbagDeployed && elements.condAirbagDeployed.value === "Unknown") unknownCount++;
+
+  // Test drive
+  for (const el of Object.values(driveElements)) {
+    const val = el ? el.value : "Unknown";
+    if (val === "Unknown") unknownCount++;
+  }
+
+  if (elements.condSummaryBar) {
+    elements.condSummaryBar.textContent =
+      repairs.length + " repairs · " +
+      services.length + " services · " +
+      floodIndicators + " flood flags · " +
+      unknownCount + " unknowns";
+  }
+
+  if (elements.condSummaryA) {
+    elements.condSummaryA.textContent = repairs.length + " repairs · " + services.length + " services";
+  }
+}
+
+function renderConditionForm(condition) {
+  if (!condition) {
+    if (elements.condRepairsCount) elements.condRepairsCount.textContent = "0";
+    if (elements.condServicesCount) elements.condServicesCount.textContent = "0";
+    return;
+  }
+  state.condition = condition;
+
+  if (elements.condSellerClaims) elements.condSellerClaims.value = condition.seller_claims || "";
+  const repairs = Array.isArray(condition.repairs) ? condition.repairs : [];
+  const services = Array.isArray(condition.services) ? condition.services : [];
+  if (elements.condRepairsCount) elements.condRepairsCount.textContent = String(repairs.length);
+  if (elements.condServicesCount) elements.condServicesCount.textContent = String(services.length);
+
+  // Documents
+  const docs = condition.documents || {};
+  for (const [key, el] of Object.entries(docElements)) {
+    if (el) el.value = docs[key] || "Unknown";
+  }
+
+  // Physical
+  const phys = condition.physical_inspection || {};
+  for (const [key, el] of Object.entries(physElements)) {
+    if (el) {
+      const v = phys[key] || "Unknown";
+      el.value = v === "Yes" && el.options && el.options[2] ? el.options[2].value : v;
+    }
+  }
+
+  // Accident / Structural
+  if (elements.condAccidentStatus) elements.condAccidentStatus.value = condition.accident_status || "Unknown";
+  if (elements.condRepaintedPanels) elements.condRepaintedPanels.value = condition.repainted_panels || "Unknown";
+  if (elements.condAirbagDeployed) elements.condAirbagDeployed.value = condition.airbag_deployed || "Unknown";
+  if (elements.condTyreDot) elements.condTyreDot.value = condition.tyre_dot_codes || "";
+  if (elements.condObdNotes) elements.condObdNotes.value = condition.obd_notes || "";
+
+  // Test drive
+  const drive = condition.test_drive || {};
+  for (const [key, el] of Object.entries(driveElements)) {
+    if (el) el.value = drive[key] || "Unknown";
+  }
+
+  updateConditionSummary();
+}
+
+async function saveCondition() {
+  if (!state.vehicleId) return;
+  if (elements.conditionStatus) elements.conditionStatus.textContent = "Saving condition & updating assessment…";
+  if (elements.saveConditionBtn) elements.saveConditionBtn.disabled = true;
+
+  const payload = {
+    car_id: state.vehicleId,
+    seller_claims: elements.condSellerClaims ? elements.condSellerClaims.value.trim() : null,
+    accident_status: elements.condAccidentStatus ? elements.condAccidentStatus.value : "Unknown",
+    repainted_panels: elements.condRepaintedPanels ? elements.condRepaintedPanels.value : "Unknown",
+    airbag_deployed: elements.condAirbagDeployed ? elements.condAirbagDeployed.value : "Unknown",
+    obd_notes: elements.condObdNotes ? elements.condObdNotes.value.trim() : null,
+    tyre_dot_codes: elements.condTyreDot ? elements.condTyreDot.value.trim() : null,
+    documents: {},
+    physical_inspection: {},
+    test_drive: {},
+    repairs: state.condition?.repairs || [],
+    services: state.condition?.services || [],
+  };
+
+  for (const [key, el] of Object.entries(docElements)) {
+    payload.documents[key] = el ? el.value : "Unknown";
+  }
+  for (const [key, el] of Object.entries(physElements)) {
+    const rawVal = el ? el.value : "Unknown";
+    payload.physical_inspection[key] = rawVal.startsWith("Yes") ? "Yes" : (rawVal.startsWith("Normal") ? "No" : rawVal);
+  }
+  for (const [key, el] of Object.entries(driveElements)) {
+    payload.test_drive[key] = el ? el.value : "Unknown";
+  }
+
+  try {
+    const res = await fetchJson("/api/vehicles/" + encodeURIComponent(state.vehicleId) + "/condition", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+    state.condition = res.condition;
+    if (res.overall_assessment) {
+      renderOverallAssessment(res.overall_assessment);
+    }
+    updateConditionSummary();
+    if (elements.conditionStatus) elements.conditionStatus.textContent = "Condition saved & assessment updated!";
+  } catch (err) {
+    if (elements.conditionStatus) elements.conditionStatus.textContent = err.message || "Failed to update condition.";
+  } finally {
+    if (elements.saveConditionBtn) elements.saveConditionBtn.disabled = false;
+  }
+}
+
 function renderAssessment(payload) {
   const finding = Array.isArray(payload.findings) ? payload.findings[0] : null;
 
@@ -475,6 +672,7 @@ async function loadVehicle(vehicleId) {
       elements.pdfButton.hidden = false;
     }
     renderHistory(history);
+    renderConditionForm(history.condition || null);
 
     try {
       const payload = await fetchJson(
@@ -529,6 +727,19 @@ if (elements.confidenceToggle && elements.confidenceDetails) {
     const expanded = elements.confidenceToggle.getAttribute("aria-expanded") === "true";
     elements.confidenceToggle.setAttribute("aria-expanded", String(!expanded));
     elements.confidenceDetails.hidden = expanded;
+  });
+}
+
+if (elements.saveConditionBtn) {
+  elements.saveConditionBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    saveCondition();
+  });
+}
+
+if (elements.conditionForm && typeof document !== "undefined" && typeof document.querySelectorAll === "function") {
+  elements.conditionForm.addEventListener("change", () => {
+    updateConditionSummary();
   });
 }
 
