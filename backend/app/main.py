@@ -950,12 +950,52 @@ async def get_vehicle_assessment_explanation(
             },
         )
 
-    assessment, memory_status = await _get_assessment(
-        vehicle_id=vehicle_id,
-        issue=issue,
-        memory_service=memory_service,
-        assessment_service=assessment_service,
-    )
+    try:
+        assessment, memory_status = await _get_assessment(
+            vehicle_id=vehicle_id,
+            issue=issue,
+            memory_service=memory_service,
+            assessment_service=assessment_service,
+        )
+    except HTTPException as exc:
+        if exc.status_code != status.HTTP_503_SERVICE_UNAVAILABLE:
+            raise
+        # Match the Streamlit behavior: deterministic assessment remains usable
+        # when Hindsight is unavailable; history/explanation are shown separately.
+        car_row = db.get_car(vehicle_id)
+        condition = db.get_condition(vehicle_id)
+        if car_row is None or condition is None:
+            raise
+        car_obj = Car(
+            car_id=car_row["car_id"],
+            brand=car_row["brand"],
+            model=car_row["model"],
+            manufacture_year=car_row["manufacture_year"],
+            manufacture_month=car_row["manufacture_month"],
+            registration_date=datetime.fromisoformat(car_row["registration_date"]).date() if car_row["registration_date"] else None,
+            purchase_date=datetime.fromisoformat(car_row["purchase_date"]).date() if car_row["purchase_date"] else None,
+            variant=car_row["variant"],
+            fuel_type=car_row["fuel_type"],
+            transmission=car_row["transmission"],
+            vin=car_row["vin"],
+            registration_state=car_row["registration_state"],
+            previous_owners=car_row["previous_owners"],
+            odometer_km=car_row["odometer_km"],
+            asking_price_inr=car_row["asking_price_inr"],
+        )
+        local_result = run_assessment(car_obj, condition, db, history_items=[])
+        if local_result.assessment is None:
+            return {
+                "vehicle_id": vehicle_id,
+                "memory_status": "unavailable",
+                "overall_assessment": _build_overall_assessment(vehicle_id, db),
+                "findings": [],
+                "explanation_status": "unavailable",
+                "explanation": None,
+            }
+        assessment = local_result.assessment
+        memory_status = "unavailable"
+
     overall = _build_overall_assessment(vehicle_id, db)
 
     if memory_status == "empty":
