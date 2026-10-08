@@ -733,9 +733,21 @@ async def _get_assessment(
 
 @app.get("/api/demo-scenarios")
 def get_demo_scenarios(db: Database = Depends(get_database)) -> dict:
-    """Return available demo scenarios and ensure they are seeded in SQLite."""
+    """Return complete seeded demo scenarios for the browser quick-start flow."""
     scenarios = seed_demo_scenarios(db)
-    return {"scenarios": scenarios}
+    result = []
+    for scenario in build_demo_scenarios():
+        overall = _build_overall_assessment(scenario.car.car_id, db)
+        result.append({
+            "key": scenario.key,
+            "name": scenario.name,
+            "description": scenario.description,
+            "car_id": scenario.car.car_id,
+            "vehicle": scenario.car.to_record(),
+            "condition": scenario.condition.to_record(),
+            "overall_assessment": overall,
+        })
+    return {"scenarios": result}
 
 
 @app.post("/api/vehicles", status_code=status.HTTP_201_CREATED)
@@ -916,14 +928,55 @@ async def get_vehicle_assessment(
             },
         )
 
-    assessment, memory_status = await _get_assessment(
-        vehicle_id=vehicle_id,
-        issue=issue,
-        memory_service=memory_service,
-        assessment_service=assessment_service,
-    )
-    overall = _build_overall_assessment(vehicle_id, db)
-    return _assessment_payload(vehicle_id, assessment, memory_status, overall)
+    try:
+        assessment, memory_status = await _get_assessment(
+            vehicle_id=vehicle_id,
+            issue=issue,
+            memory_service=memory_service,
+            assessment_service=assessment_service,
+        )
+        overall = _build_overall_assessment(vehicle_id, db)
+        return _assessment_payload(vehicle_id, assessment, memory_status, overall)
+    except HTTPException as exc:
+        if exc.status_code != status.HTTP_503_SERVICE_UNAVAILABLE:
+            raise
+        # The deterministic inspection remains usable when Hindsight is down.
+        car_row = db.get_car(vehicle_id)
+        condition = db.get_condition(vehicle_id)
+        if car_row is None or condition is None:
+            raise
+        car_obj = Car(
+            car_id=car_row["car_id"],
+            brand=car_row["brand"],
+            model=car_row["model"],
+            manufacture_year=car_row["manufacture_year"],
+            manufacture_month=car_row["manufacture_month"],
+            registration_date=datetime.fromisoformat(car_row["registration_date"]).date() if car_row["registration_date"] else None,
+            purchase_date=datetime.fromisoformat(car_row["purchase_date"]).date() if car_row["purchase_date"] else None,
+            variant=car_row["variant"],
+            fuel_type=car_row["fuel_type"],
+            transmission=car_row["transmission"],
+            vin=car_row["vin"],
+            registration_state=car_row["registration_state"],
+            previous_owners=car_row["previous_owners"],
+            odometer_km=car_row["odometer_km"],
+            asking_price_inr=car_row["asking_price_inr"],
+        )
+        local_result = run_assessment(car_obj, condition, db, history_items=[])
+        overall = _build_overall_assessment(vehicle_id, db)
+        if local_result.assessment is None:
+            return {
+                "vehicle_id": vehicle_id,
+                "memory_status": "unavailable",
+                "findings": [],
+                "overall_assessment": overall,
+            }
+        return _assessment_payload(
+            vehicle_id,
+            local_result.assessment,
+            "unavailable",
+            overall,
+        )
 
 
 @app.get("/api/vehicles/{vehicle_id}/assessment/explanation")
