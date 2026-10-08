@@ -640,9 +640,11 @@ function renderAssessment(payload) {
     const brand = state.vehicleRecord?.brand && state.vehicleRecord.brand !== "Unknown" ? state.vehicleRecord.brand : "";
     const model = state.vehicleRecord?.model && state.vehicleRecord.model !== "Unknown" ? state.vehicleRecord.model : "";
     const vehicleName = [brand, model].filter(Boolean).join(" ");
-    elements.vehicleTitle.textContent =
-      (vehicleName ? vehicleName + " · " : "") +
-      (payload.vehicle_id || state.vehicleId);
+    elements.vehicleTitle.textContent = vehicleName || "Vehicle inspection";
+    const inspectionId = document.getElementById("inspection-id");
+    if (inspectionId) {
+      inspectionId.textContent = "Inspection ID: " + (payload.vehicle_id || state.vehicleId);
+    }
   }
 
   const memoryStatusCopy = {
@@ -771,7 +773,13 @@ async function loadVehicle(vehicleId) {
     if (elements.registerDrawer) elements.registerDrawer.hidden = true;
     state.vehicleRecord = history.vehicle || null;
 
-    if (elements.vehicleTitle) elements.vehicleTitle.textContent = vehicleId;
+    if (elements.vehicleTitle) {
+      const brand = history.vehicle?.brand && history.vehicle.brand !== "Unknown" ? history.vehicle.brand : "";
+      const model = history.vehicle?.model && history.vehicle.model !== "Unknown" ? history.vehicle.model : "";
+      elements.vehicleTitle.textContent = [brand, model, history.vehicle?.variant].filter(Boolean).join(" ") || "Vehicle inspection";
+      const inspectionId = document.getElementById("inspection-id");
+      if (inspectionId) inspectionId.textContent = "Inspection ID: " + vehicleId;
+    }
     if (elements.reportVehicleId) elements.reportVehicleId.value = vehicleId;
     if (elements.vehicleBadges) renderVehicleSpecs(history.vehicle);
     if (history.vehicle?.vin && elements.reportVin) {
@@ -1028,7 +1036,8 @@ async function openDemoScenario(scenarioKey) {
     const payload = await fetchJson("/api/demo-scenarios", { headers: { Accept: "application/json" } });
     const scenario = (payload.scenarios || []).find((item) => item.key === scenarioKey);
     if (!scenario?.car_id) throw new Error("This demo scenario is unavailable.");
-    if (elements.vehicleInput) elements.vehicleInput.value = scenario.car_id;
+    // Demo selection is a direct quick-start action. Never put the internal
+    // demo ID into the user's existing-vehicle lookup field.
     await loadVehicle(scenario.car_id);
   } catch (error) {
     setStatus(error.message || "The demo scenario could not be opened.");
