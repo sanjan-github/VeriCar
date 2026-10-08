@@ -26,6 +26,7 @@ const $ = (selector) => (typeof document !== "undefined" && typeof document.quer
 
 const elements = {
   searchForm: $("#search-form"),
+  searchSection: $("#search-section"),
   vehicleInput: $("#vehicle-id"),
   searchButton: $("#search-form button") || $("#search-submit-btn"),
   searchSubmitBtn: $("#search-submit-btn"),
@@ -155,6 +156,7 @@ const driveElements = {
 };
 
 function showIntakeScreen() {
+  if (elements.searchSection) elements.searchSection.hidden = false;
   if (elements.vehicleView) elements.vehicleView.hidden = true;
   if (elements.emptyState) elements.emptyState.hidden = true;
   if (elements.registerDrawer) elements.registerDrawer.hidden = false;
@@ -163,6 +165,7 @@ function showIntakeScreen() {
 }
 
 function showVehicleScreen() {
+  if (elements.searchSection) elements.searchSection.hidden = true;
   if (elements.vehicleView) elements.vehicleView.hidden = false;
   if (elements.registerDrawer) elements.registerDrawer.hidden = true;
 }
