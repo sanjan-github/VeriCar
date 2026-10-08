@@ -292,6 +292,11 @@ def test_readiness_endpoint_returns_503_when_database_fails():
         app.dependency_overrides.clear()
 
 
+def test_vercel_defaults_database_to_writable_tmp_path():
+    cfg = Settings(env={"VERCEL": "1"})
+    assert cfg.db_path == "/tmp/vericar.db"
+
+
 def test_credential_and_database_values_are_trimmed():
     cfg = Settings(env={
         "HINDSIGHT_API_KEY": "  hindsight-key  ",

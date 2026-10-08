@@ -309,6 +309,16 @@ These rules form part of VeriCar's engineering contract and should be reviewed b
 
 ---
 
+## Deployment
+
+The canonical FastAPI application can be deployed to Vercel using the explicit Python entrypoint at `api/index.py`.
+
+For a hosted deployment, configure the optional `HINDSIGHT_BASE_URL`, `HINDSIGHT_API_KEY`, and `GROQ_API_KEY` environment variables as required. The application remains functional without those services, with their status reported explicitly as unavailable or unconfigured.
+
+**Persistence note:** the repository currently uses SQLite as its durable local application store. Vercel serverless instances do not provide durable shared SQLite storage across deployments and instances. A hosted production deployment therefore requires a persistent external database before treating submitted reports as durable production data. The Vercel surface is suitable for the portfolio/demo application flow until that storage layer is migrated.
+
+---
+
 ## Limitations & Future Work
 
 - **Indian Vehicle Registry Integrations**: VeriCar is designed for the Indian pre-owned car market. Direct integrations with VAHAN/mParivahan, insurance databases, and PUC portals are intentionally deferred until official, licensed APIs with verified provenance are available.
