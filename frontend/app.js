@@ -67,6 +67,9 @@ const elements = {
   regBrand: $("#reg-brand"),
   regModel: $("#reg-model"),
   regYear: $("#reg-year"),
+  regMonth: $("#reg-month"),
+  regRegistrationDate: $("#reg-registration-date"),
+  regPurchaseDate: $("#reg-purchase-date"),
   regVariant: $("#reg-variant"),
   regFuel: $("#reg-fuel"),
   regTransmission: $("#reg-transmission"),
@@ -110,6 +113,8 @@ const elements = {
   condSummaryE: $("#cond-summary-e"),
   addServiceBtn: $("#add-service-btn"),
   servicesList: $("#services-list"),
+  addRepairBtn: $("#add-repair-btn"),
+  repairsList: $("#repairs-list"),
 
   condAccidentStatus: $("#cond-accident-status"),
   condRepaintedPanels: $("#cond-repainted-panels"),
@@ -389,6 +394,50 @@ function renderOverallAssessment(overall) {
   }
 }
 
+function renderRepairs(repairs = []) {
+  if (!elements.repairsList) return;
+  elements.repairsList.innerHTML = "";
+  repairs.forEach((repair, index) => {
+    const row = document.createElement("div");
+    row.className = "service-entry";
+    row.innerHTML =
+      '<div class="service-entry-top"><strong>Repair ' + (index + 1) + '</strong>' +
+      '<button type="button" class="btn-text remove-repair" data-index="' + index + '">Remove</button></div>' +
+      '<div class="service-fields">' +
+      '<label>Date<input type="date" data-repair-field="observed_at" value="' + escapeHtml(repair.observed_at || "") + '"></label>' +
+      '<label>Odometer (km)<input type="number" min="0" data-repair-field="odometer_km" value="' + escapeHtml(repair.odometer_km ?? "") + '" placeholder="e.g. 68000"></label>' +
+      '<label>Category<select data-repair-field="category"><option>Engine</option><option>Transmission</option><option>AC</option><option>Electrical</option><option>Suspension</option><option>Brakes</option><option>Body / accident</option><option>Tyres</option><option>Other</option></select></label>' +
+      '<label>What was repaired<input type="text" data-repair-field="description" value="' + escapeHtml(repair.description || "") + '" placeholder="e.g. Engine mount replacement"></label>' +
+      '<label>Cost (₹)<input type="number" min="0" data-repair-field="cost_inr" value="' + escapeHtml(repair.cost_inr ?? "") + '" placeholder="Optional"></label>' +
+      '<label>Garage type<select data-repair-field="garage_type"><option>Authorized</option><option>Independent</option><option>Roadside</option><option>Unknown</option></select></label>' +
+      '</div>';
+    const category = row.querySelector('[data-repair-field="category"]');
+    if (category && repair.category) category.value = repair.category;
+    const garage = row.querySelector('[data-repair-field="garage_type"]');
+    if (garage && repair.garage_type) garage.value = repair.garage_type;
+    elements.repairsList.appendChild(row);
+  });
+}
+
+function readRepairs() {
+  if (!elements.repairsList) return [];
+  return Array.from(elements.repairsList.querySelectorAll(".service-entry")).map((row) => {
+    const value = (field) => row.querySelector('[data-repair-field="' + field + '"]')?.value.trim() || "";
+    const number = (field) => {
+      const v = value(field);
+      return v ? Number(v) : null;
+    };
+    return {
+      observed_at: value("observed_at"),
+      odometer_km: number("odometer_km"),
+      category: value("category") || "Other",
+      description: value("description"),
+      cost_inr: number("cost_inr"),
+      garage_type: value("garage_type") || "Unknown"
+    };
+  }).filter((repair) => repair.observed_at || repair.description || repair.cost_inr != null);
+}
+
 function renderServices(services = []) {
   if (!elements.servicesList) return;
   elements.servicesList.innerHTML = "";
@@ -493,6 +542,7 @@ function renderConditionForm(condition) {
   if (elements.condRepairsCount) elements.condRepairsCount.textContent = String(repairs.length);
   if (elements.condServicesCount) elements.condServicesCount.textContent = String(services.length);
   renderServices(services);
+  renderRepairs(Array.isArray(state.condition?.repairs) ? state.condition.repairs : []);
 
   // Documents
   const docs = condition.documents || {};
@@ -542,6 +592,7 @@ async function saveCondition() {
     physical_inspection: {},
     test_drive: {},
     repairs: state.condition?.repairs || [],
+    repairs: readRepairs(),
     services: readServices(),
   };
 
@@ -787,6 +838,24 @@ if (elements.confidenceToggle && elements.confidenceDetails) {
   });
 }
 
+if (elements.addRepairBtn) {
+  elements.addRepairBtn.addEventListener("click", () => {
+    const repairs = readRepairs();
+    repairs.push({ observed_at: new Date().toISOString().slice(0, 10), odometer_km: null, category: "Other", description: "", cost_inr: null, garage_type: "Unknown" });
+    renderRepairs(repairs);
+  });
+}
+
+if (elements.repairsList) {
+  elements.repairsList.addEventListener("click", (event) => {
+    const button = event.target.closest(".remove-repair");
+    if (!button) return;
+    const repairs = readRepairs();
+    repairs.splice(Number(button.dataset.index), 1);
+    renderRepairs(repairs);
+  });
+}
+
 if (elements.addServiceBtn) {
   elements.addServiceBtn.addEventListener("click", () => {
     const services = readServices();
@@ -895,6 +964,9 @@ if (elements.registerForm) {
     const brand = elements.regBrand ? elements.regBrand.value.trim() : "";
     const model = elements.regModel ? elements.regModel.value.trim() : "";
     const yearValue = elements.regYear ? elements.regYear.value.trim() : "";
+    const monthValue = elements.regMonth ? elements.regMonth.value : "";
+    const registrationDate = elements.regRegistrationDate ? elements.regRegistrationDate.value : "";
+    const purchaseDate = elements.regPurchaseDate ? elements.regPurchaseDate.value : "";
     const variant = elements.regVariant ? elements.regVariant.value.trim() : "";
     const fuelType = elements.regFuel ? elements.regFuel.value : "";
     const transmission = elements.regTransmission ? elements.regTransmission.value : "";
@@ -914,6 +986,9 @@ if (elements.registerForm) {
       brand: brand || null,
       model: model || null,
       manufacture_year: yearValue ? parseInt(yearValue, 10) : null,
+      manufacture_month: monthValue ? parseInt(monthValue, 10) : null,
+      registration_date: registrationDate || null,
+      purchase_date: purchaseDate || null,
       variant: variant || null,
       fuel_type: fuelType || null,
       transmission: transmission || null,
