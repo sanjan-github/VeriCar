@@ -944,7 +944,7 @@ if (elements.registerForm) {
 
 // Demo chips
 if (typeof document !== "undefined" && typeof document.querySelectorAll === "function") {
-  document.querySelectorAll(".demo-chip").forEach((btn) => {
+  document.querySelectorAll(".demo-card, .demo-chip").forEach((btn) => {
     btn.addEventListener("click", () => {
       const scenario = btn.dataset?.scenario || btn.getAttribute("data-scenario");
       if (scenario) {
