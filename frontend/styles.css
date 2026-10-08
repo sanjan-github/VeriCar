@@ -1381,3 +1381,57 @@ body {
     flex-direction: column;
   }
 }
+
+
+/* Final intake legibility pass. Keep all consumer-facing copy readable against the cream surface. */
+.intake-card .drawer-header h2,
+.intake-card .form-note,
+.register-form label,
+.register-form label > span,
+.register-form input,
+.register-form select,
+.existing-car,
+.existing-car input,
+.demo-heading p:not(.eyebrow) {
+  color: var(--vc-ink);
+}
+
+.register-form label {
+  color: #5d4638;
+}
+
+.register-form label > span {
+  color: #8b6f5c;
+}
+
+.register-form input::placeholder,
+.existing-car input::placeholder {
+  color: #8b7566;
+  opacity: 1;
+}
+
+.register-form input,
+.register-form select,
+.existing-car input {
+  color: var(--vc-ink);
+}
+
+.site-disclaimer {
+  max-width: 920px;
+  margin: 28px auto 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--vc-line);
+  color: #725f52;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.site-footer {
+  color: #725f52;
+}
+
+@media (max-width: 760px) {
+  .site-disclaimer {
+    margin-top: 22px;
+  }
+}
