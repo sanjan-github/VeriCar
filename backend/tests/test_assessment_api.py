@@ -124,7 +124,7 @@ def test_get_vehicle_assessment_returns_deterministic_evidence_state():
     app.dependency_overrides.clear()
 
 
-def test_get_vehicle_assessment_distinguishes_memory_unavailable():
+def test_get_vehicle_assessment_keeps_local_assessment_when_memory_unavailable():
     ensure_test_car("VEH-001")
     class UnavailableMemoryService:
         async def recall_vehicle_history(self, vin, query):
@@ -139,8 +139,10 @@ def test_get_vehicle_assessment_distinguishes_memory_unavailable():
             params={"issue": "transmission_shift_behavior"},
         )
 
-    assert response.status_code == 503
-    assert response.json()["detail"]["error"]["code"] == "MEMORY_UNAVAILABLE"
+    assert response.status_code == 200
+    body = response.json()
+    assert body["memory_status"] == "unavailable"
+    assert "overall_assessment" in body
     app.dependency_overrides.clear()
 
 
@@ -200,6 +202,12 @@ def test_get_demo_scenarios_returns_scenarios_and_seeds_db():
     assert "clean" in keys
     assert "negotiate" in keys
     assert "critical" in keys
+    critical = next(item for item in data["scenarios"] if item["key"] == "critical")
+    assert critical["vehicle"]["brand"] == "Tata"
+    assert critical["vehicle"]["model"] == "Nexon"
+    assert critical["vehicle"]["variant"] == "XZ+"
+    assert critical["condition"]["documents"]["vin_matches_rc"] == "No"
+    assert critical["condition"]["services"]
 
 
 def test_create_vehicle_registers_car_and_empty_condition():
