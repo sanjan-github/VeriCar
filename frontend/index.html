@@ -13,14 +13,15 @@
     <div class="site-header-inner">
       <a class="brand" href="/" aria-label="VeriCar home">
         <span class="brand-name">VERICAR</span>
-        <span class="brand-tag">Used Car Inspection</span>
       </a>
-      <div class="header-actions">
-        <button type="button" id="toggle-register-btn" class="btn-text">+ Register a car</button>
-        <!-- Internal status kept for health check polling without cluttering primary UI -->
-        <span id="api-status" hidden></span>
-        <span id="db-status" hidden></span>
-      </div>
+      <nav class="site-nav">
+        <a href="#search-section" class="nav-link">Find a car</a>
+        <a href="#reference-cases" class="nav-link">Examples</a>
+        <button type="button" id="toggle-register-btn" class="btn-text">+ Register car</button>
+      </nav>
+      <!-- Internal status kept for health check polling without cluttering primary UI -->
+      <span id="api-status" hidden></span>
+      <span id="db-status" hidden></span>
     </div>
   </header>
 
@@ -47,15 +48,15 @@
         <div class="demo-chips">
           <button type="button" class="demo-chip" data-scenario="DEMO-CLEAN">
             <span class="chip-verdict buy">BUY</span>
-            <span>Clean history</span>
+            <span>Clean</span>
           </button>
           <button type="button" class="demo-chip" data-scenario="DEMO-NEGOTIATE">
             <span class="chip-verdict negotiate">NEGOTIATE</span>
-            <span>Service gaps</span>
+            <span>Needs attention</span>
           </button>
           <button type="button" class="demo-chip" data-scenario="DEMO-CRITICAL">
             <span class="chip-verdict avoid">AVOID</span>
-            <span>VIN discrepancy</span>
+            <span>Serious issue</span>
           </button>
         </div>
       </div>
@@ -374,7 +375,7 @@
 
       <!-- 6. Before You Pay (India Legal Checklist — Collapsed) -->
       <details class="secondary-accordion">
-        <summary>Before you pay — Used car checklist</summary>
+        <summary>Before you pay</summary>
         <div class="accordion-content">
           <div class="guide-grid">
             <div class="guide-item">
@@ -399,7 +400,7 @@
 
       <!-- 7. Add Inspection Report (Collapsed) -->
       <details class="secondary-accordion">
-        <summary>+ Add inspection observation or report</summary>
+        <summary>+ Add inspection report</summary>
         <div class="accordion-content">
           <form id="report-form" class="report-form">
             <input id="report-vehicle-id" type="hidden">

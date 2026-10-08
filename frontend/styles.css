@@ -108,15 +108,20 @@ body {
   font-size: 16px;
 }
 
-.brand-tag {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.header-actions {
+.site-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: var(--text-main);
 }
 
 /* Main Container */
