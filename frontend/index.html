@@ -90,6 +90,45 @@
         </form>
       </section>
 
+      <section class="demo-section" aria-labelledby="demo-title">
+        <div class="demo-heading">
+          <div>
+            <p class="eyebrow">QUICK START</p>
+            <h2 id="demo-title">See VeriCar in action</h2>
+            <p>Try a pre-filled inspection. Each example has its own service and condition history.</p>
+          </div>
+        </div>
+        <div id="demo-grid" class="demo-grid">
+          <button class="demo-card" type="button" data-scenario="clean">
+            <span class="demo-image demo-image-clean" aria-hidden="true"></span>
+            <span class="demo-card-body">
+              <span class="demo-card-label">CLEAN HISTORY</span>
+              <strong>Regularly serviced</strong>
+              <span>Consistent service records with no critical findings.</span>
+              <span class="demo-card-cta">View inspection →</span>
+            </span>
+          </button>
+          <button class="demo-card" type="button" data-scenario="negotiate">
+            <span class="demo-image demo-image-negotiate" aria-hidden="true"></span>
+            <span class="demo-card-body">
+              <span class="demo-card-label">NEGOTIATE</span>
+              <strong>Recurring repairs</strong>
+              <span>Service gaps and repeated repairs make the price worth discussing.</span>
+              <span class="demo-card-cta">View inspection →</span>
+            </span>
+          </button>
+          <button class="demo-card" type="button" data-scenario="critical">
+            <span class="demo-image demo-image-critical" aria-hidden="true"></span>
+            <span class="demo-card-body">
+              <span class="demo-card-label">HIGH RISK</span>
+              <strong>Document discrepancy</strong>
+              <span>A vehicle identity mismatch changes the buying decision.</span>
+              <span class="demo-card-cta">View inspection →</span>
+            </span>
+          </button>
+        </div>
+      </section>
+
       <div class="existing-car">
         <span>Already have a VeriCar vehicle ID?</span>
         <form id="search-form" class="search-form">
@@ -234,6 +273,16 @@
               <div class="mini-metrics">
                 <span>Repairs: <strong id="cond-repairs-count">0</strong></span>
                 <span>Services: <strong id="cond-services-count">0</strong></span>
+              </div>
+              <div class="service-history-editor">
+                <div class="service-editor-heading">
+                  <div>
+                    <strong>Service history</strong>
+                    <p>Add the services you know about. Dates and mileage help establish whether maintenance was regular.</p>
+                  </div>
+                  <button type="button" id="add-service-btn" class="btn-secondary">+ Add service</button>
+                </div>
+                <div id="services-list" class="services-list"></div>
               </div>
             </div>
           </details>
