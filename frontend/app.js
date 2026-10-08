@@ -942,15 +942,26 @@ if (elements.registerForm) {
   });
 }
 
-// Demo chips
+// Demo scenarios: resolve the friendly scenario key to the real seeded vehicle ID.
+async function openDemoScenario(scenarioKey) {
+  if (!scenarioKey) return;
+  try {
+    setStatus("Opening demo inspection…");
+    const payload = await fetchJson("/api/demo-scenarios", { headers: { Accept: "application/json" } });
+    const scenario = (payload.scenarios || []).find((item) => item.key === scenarioKey);
+    if (!scenario?.car_id) throw new Error("This demo scenario is unavailable.");
+    if (elements.vehicleInput) elements.vehicleInput.value = scenario.car_id;
+    await loadVehicle(scenario.car_id);
+  } catch (error) {
+    setStatus(error.message || "The demo scenario could not be opened.");
+  }
+}
+
 if (typeof document !== "undefined" && typeof document.querySelectorAll === "function") {
   document.querySelectorAll(".demo-card, .demo-chip").forEach((btn) => {
     btn.addEventListener("click", () => {
       const scenario = btn.dataset?.scenario || btn.getAttribute("data-scenario");
-      if (scenario) {
-        if (elements.vehicleInput) elements.vehicleInput.value = scenario;
-        loadVehicle(scenario);
-      }
+      openDemoScenario(scenario);
     });
   });
 }
