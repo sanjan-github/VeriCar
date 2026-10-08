@@ -40,6 +40,37 @@ def memory(*, memory_id, text, metadata, tags=None):
     )
 
 
+def test_update_vehicle_condition_persists_service_details():
+    app.dependency_overrides.clear()
+    ensure_test_car("VEH-SERVICE-001")
+    payload = {
+        "car_id": "VEH-SERVICE-001",
+        "services": [
+            {
+                "observed_at": "2026-01-15",
+                "odometer_km": 42000,
+                "description": "Annual service, engine oil and filters",
+                "gap_notes": "Invoice INV-1042",
+                "provider": "Tata Authorized Service Centre",
+                "cost_inr": 6800,
+            }
+        ],
+        "repairs": [],
+        "documents": {},
+        "physical_inspection": {},
+        "test_drive": {},
+    }
+    with TestClient(app) as client:
+        response = client.put("/api/vehicles/VEH-SERVICE-001/condition", json=payload)
+
+    assert response.status_code == 200
+    service = response.json()["condition"]["services"][0]
+    assert service["provider"] == "Tata Authorized Service Centre"
+    assert service["cost_inr"] == 6800
+    assert service["description"].startswith("Annual service")
+    assert service["odometer_km"] == 42000
+
+
 def test_get_vehicle_assessment_returns_deterministic_evidence_state():
     app.dependency_overrides.clear()
     ensure_test_car("VEH-001")
