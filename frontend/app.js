@@ -653,6 +653,7 @@ async function loadVehicle(vehicleId) {
     );
     state.vehicleId = vehicleId;
     state.history = history;
+    if (elements.registerDrawer) elements.registerDrawer.hidden = true;
     state.vehicleRecord = history.vehicle || null;
 
     if (elements.vehicleTitle) elements.vehicleTitle.textContent = vehicleId;
@@ -812,32 +813,51 @@ if (elements.registerForm) {
     if (elements.regStatus) elements.regStatus.textContent = "Saving vehicle record…";
 
     const carId = elements.regCarId ? elements.regCarId.value.trim() : "";
+    const brand = elements.regBrand ? elements.regBrand.value.trim() : "";
+    const model = elements.regModel ? elements.regModel.value.trim() : "";
+    const yearValue = elements.regYear ? elements.regYear.value.trim() : "";
+    const variant = elements.regVariant ? elements.regVariant.value.trim() : "";
+    const fuelType = elements.regFuel ? elements.regFuel.value : "";
+    const transmission = elements.regTransmission ? elements.regTransmission.value : "";
+    const odometerValue = elements.regOdometer ? elements.regOdometer.value.trim() : "";
+    const priceValue = elements.regPrice ? elements.regPrice.value.trim() : "";
+    const ownersValue = elements.regOwners ? elements.regOwners.value.trim() : "";
+    const registrationState = elements.regState ? elements.regState.value.trim().toUpperCase() : "";
+    const vin = elements.regVin ? elements.regVin.value.trim() : "";
+
+    if (![carId, brand, model, yearValue, variant, fuelType, transmission, odometerValue, priceValue, ownersValue, registrationState, vin].some(Boolean)) {
+      if (elements.regStatus) elements.regStatus.textContent = "Add at least one detail about the car to continue.";
+      return;
+    }
+
     const payload = {
-      car_id: carId,
-      brand: (elements.regBrand && elements.regBrand.value.trim()) || "",
-      model: (elements.regModel && elements.regModel.value.trim()) || "",
-      manufacture_year: elements.regYear ? parseInt(elements.regYear.value, 10) : 2022,
-      variant: (elements.regVariant && elements.regVariant.value.trim()) || null,
-      fuel_type: (elements.regFuel && elements.regFuel.value) || null,
-      transmission: (elements.regTransmission && elements.regTransmission.value) || null,
-      odometer_km: elements.regOdometer && elements.regOdometer.value ? parseInt(elements.regOdometer.value, 10) : null,
-      asking_price_inr: elements.regPrice && elements.regPrice.value ? parseInt(elements.regPrice.value, 10) : null,
-      previous_owners: elements.regOwners && elements.regOwners.value ? parseInt(elements.regOwners.value, 10) : 1,
-      registration_state: (elements.regState && elements.regState.value.trim().toUpperCase()) || null,
-      vin: (elements.regVin && elements.regVin.value.trim()) || null,
+      car_id: carId || null,
+      brand: brand || null,
+      model: model || null,
+      manufacture_year: yearValue ? parseInt(yearValue, 10) : null,
+      variant: variant || null,
+      fuel_type: fuelType || null,
+      transmission: transmission || null,
+      odometer_km: odometerValue ? parseInt(odometerValue, 10) : null,
+      asking_price_inr: priceValue ? parseInt(priceValue, 10) : null,
+      previous_owners: ownersValue ? parseInt(ownersValue, 10) : null,
+      registration_state: registrationState || null,
+      vin: vin || null,
     };
 
     try {
-      await fetchJson("/api/vehicles", {
+      const created = await fetchJson("/api/vehicles", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
       });
-      if (elements.regStatus) elements.regStatus.textContent = "Vehicle registered successfully!";
+      const createdCarId = created.car_id || carId;
+      if (elements.regStatus) elements.regStatus.textContent = "Car saved.";
       elements.registerForm.reset();
+      if (elements.regDrawer) elements.regDrawer.hidden = true;
       if (elements.registerDrawer) elements.registerDrawer.hidden = true;
-      if (elements.vehicleInput) elements.vehicleInput.value = carId;
-      await loadVehicle(carId);
+      if (elements.vehicleInput) elements.vehicleInput.value = createdCarId;
+      await loadVehicle(createdCarId);
     } catch (error) {
       if (elements.regStatus) elements.regStatus.textContent = error.message || "Failed to register vehicle.";
     }
