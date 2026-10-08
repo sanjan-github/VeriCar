@@ -26,21 +26,42 @@
   </header>
 
   <main class="page-container">
+    <div class="workspace-shell">
+      <aside class="workspace-rail" aria-label="Workspace navigation">
+        <div class="rail-kicker">WORKSPACE</div>
+        <nav class="rail-nav">
+          <a class="rail-link is-active" href="#search-section"><span class="rail-icon">↗</span><span>Vehicle review</span></a>
+          <a class="rail-link" href="#reference-cases"><span class="rail-icon">◎</span><span>Reference cases</span></a>
+          <a class="rail-link" href="#findings-categorized-section"><span class="rail-icon">≡</span><span>Findings ledger</span></a>
+          <a class="rail-link" href="#report-form"><span class="rail-icon">＋</span><span>Add evidence</span></a>
+        </nav>
+        <div class="rail-spacer"></div>
+        <div class="rail-system">
+          <div class="rail-kicker">SYSTEM</div>
+          <div class="system-row"><span class="system-dot"></span><span>Local records</span><strong>READY</strong></div>
+          <div class="system-row"><span class="system-dot accent"></span><span>Rule engine</span><strong>LIVE</strong></div>
+        </div>
+      </aside>
+      <div class="workspace-content">
+        <div class="workspace-toolbar">
+          <div><span class="toolbar-overline">ASSESSMENT CONSOLE</span><span class="toolbar-context">/ Current workspace</span></div>
+          <div class="toolbar-meta"><span class="toolbar-clock">LOCAL / IST</span><span class="toolbar-divider"></span><span>Evidence-first workflow</span></div>
+        </div>
     <!-- Lead Section: Golden Ratio Split (61.8% Lookup & Intro / 38.2% Reference Cases Index) -->
     <section class="lead-section" id="search-section">
       <div class="lead-primary">
         <div class="section-label">Vehicle Verification</div>
-        <h1 class="lead-headline">Verify a used car before purchase.</h1>
+        <h1 class="lead-headline">Make the next vehicle decision with evidence.</h1>
         <p class="lead-description">
-          Evaluate recorded vehicle condition, reconcile historical inspection notes across multiple sources, and review deterministic findings backed by durable records.
+          Search a vehicle record, inspect its assessment, and keep every observation in one durable workspace.
         </p>
 
         <!-- Primary Lookup Input -->
         <form id="search-form" class="lookup-form">
-          <label for="vehicle-id" class="lookup-label">Enter Vehicle Identifier</label>
+          <label for="vehicle-id" class="lookup-label">Open a vehicle workspace</label>
           <div class="lookup-input-group">
             <input id="vehicle-id" name="vehicle-id" type="text" placeholder="e.g. DEMO-CLEAN, DEMO-NEGOTIATE, or custom ID" autocomplete="off" required>
-            <button type="submit" id="search-submit-btn" class="btn-primary">Review vehicle</button>
+            <button type="submit" id="search-submit-btn" class="btn-primary">Open record</button>
           </div>
         </form>
 
@@ -361,6 +382,8 @@
         VeriCar assessments reflect the reports available to the system. Reports may be incomplete, inaccurate, outdated, or contradictory. Obtain an independent vehicle inspection before making a purchase decision.
       </p>
     </section>
+      </div>
+    </div>
   </main>
 
   <!-- Restrained Document Footer -->
