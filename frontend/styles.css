@@ -1086,3 +1086,18 @@ body {
     flex-direction: column;
   }
 }
+
+
+/* Visibility contract: result UI must never occupy the intake screen. */
+#vehicle-view[hidden],
+#pdf-button[hidden],
+#status-banner[hidden],
+#empty-state[hidden],
+#register-drawer[hidden] {
+  display: none !important;
+}
+
+body.intake-mode #vehicle-view {
+  display: none !important;
+}
+
