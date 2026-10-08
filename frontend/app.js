@@ -299,6 +299,9 @@ function renderVehicleSpecs(car) {
   const knownModel = car.model && car.model !== "Unknown" ? car.model : "";
   if (knownBrand || knownModel) badges.push([knownBrand, knownModel, car.variant].filter(Boolean).join(" "));
   if (car.manufacture_year && Number(car.manufacture_year) > 0) badges.push("Year: " + car.manufacture_year);
+  if (car.manufacture_month) badges.push("Built: " + new Date(2000, Number(car.manufacture_month) - 1, 1).toLocaleString(undefined, { month: "short" }));
+  if (car.registration_date) badges.push("Registered: " + formatDate(car.registration_date));
+  if (car.purchase_date) badges.push("Purchased: " + formatDate(car.purchase_date));
   if (car.fuel_type) badges.push(car.fuel_type);
   if (car.transmission) badges.push(car.transmission);
   if (car.odometer_km != null) badges.push(Number(car.odometer_km).toLocaleString("en-IN") + " km");
