@@ -275,8 +275,10 @@ function renderVehicleSpecs(car) {
   }
 
   const badges = [];
-  if (car.brand && car.model) badges.push(car.brand + " " + car.model + (car.variant ? " " + car.variant : ""));
-  if (car.manufacture_year) badges.push("Year: " + car.manufacture_year);
+  const knownBrand = car.brand && car.brand !== "Unknown" ? car.brand : "";
+  const knownModel = car.model && car.model !== "Unknown" ? car.model : "";
+  if (knownBrand || knownModel) badges.push([knownBrand, knownModel, car.variant].filter(Boolean).join(" "));
+  if (car.manufacture_year && Number(car.manufacture_year) > 0) badges.push("Year: " + car.manufacture_year);
   if (car.fuel_type) badges.push(car.fuel_type);
   if (car.transmission) badges.push(car.transmission);
   if (car.odometer_km != null) badges.push(Number(car.odometer_km).toLocaleString("en-IN") + " km");
@@ -525,8 +527,11 @@ function renderAssessment(payload) {
   state.explanation = payload.explanation || null;
 
   if (elements.vehicleTitle) {
+    const brand = state.vehicleRecord?.brand && state.vehicleRecord.brand !== "Unknown" ? state.vehicleRecord.brand : "";
+    const model = state.vehicleRecord?.model && state.vehicleRecord.model !== "Unknown" ? state.vehicleRecord.model : "";
+    const vehicleName = [brand, model].filter(Boolean).join(" ");
     elements.vehicleTitle.textContent =
-      (state.vehicleRecord?.brand ? state.vehicleRecord.brand + " " + state.vehicleRecord.model + " · " : "") +
+      (vehicleName ? vehicleName + " · " : "") +
       (payload.vehicle_id || state.vehicleId);
   }
 
