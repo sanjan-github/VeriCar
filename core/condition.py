@@ -71,6 +71,8 @@ class Service:
     odometer_km: int | None
     description: str
     gap_notes: str | None = None
+    provider: str | None = None
+    cost_inr: int | None = None
 
 
 @dataclass
@@ -136,6 +138,8 @@ class ConditionRecord:
                     odometer_km=item.get("odometer_km"),
                     description=item["description"],
                     gap_notes=item.get("gap_notes"),
+                    provider=item.get("provider"),
+                    cost_inr=item.get("cost_inr"),
                 )
                 for item in record.get("services", [])
             ],
