@@ -30,7 +30,7 @@ from core.assessment_pipeline import run_assessment
 from core.condition import ConditionRecord
 from core.database import Database, DEFAULT_DB_PATH
 from core.demo_scenarios import build_demo_scenarios
-from core.models import Car
+from core.models import Car, new_car_id
 from core.profile_seed import seed_expected_profiles
 
 
@@ -741,11 +741,13 @@ def create_vehicle(
     db: Database = Depends(get_database),
 ) -> dict:
     """Register or update a vehicle in SQLite and initialize a condition record."""
+    # A vehicle does not need a VIN or a complete specification to be registered.
+    # Missing core fields remain explicit internal "Unknown" values until the user adds them.
     car = Car(
-        car_id=payload.car_id.strip(),
-        brand=payload.brand.strip(),
-        model=payload.model.strip(),
-        manufacture_year=payload.manufacture_year,
+        car_id=payload.car_id.strip() if payload.car_id else new_car_id(),
+        brand=payload.brand.strip() if payload.brand else "Unknown",
+        model=payload.model.strip() if payload.model else "Unknown",
+        manufacture_year=payload.manufacture_year if payload.manufacture_year is not None else 0,
         variant=payload.variant.strip() if payload.variant else None,
         fuel_type=payload.fuel_type.strip() if payload.fuel_type else None,
         transmission=payload.transmission.strip() if payload.transmission else None,
