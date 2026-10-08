@@ -14,93 +14,94 @@
       <a class="brand" href="/" aria-label="VeriCar home">
         <span class="brand-name">VERICAR</span>
       </a>
-      <nav class="site-nav">
-        <a href="#search-section" class="nav-link">Find a car</a>
-        <a href="#reference-cases" class="nav-link">Examples</a>
-        <button type="button" id="toggle-register-btn" class="btn-text">+ Register car</button>
-      </nav>
-      <!-- Internal status kept for health check polling without cluttering primary UI -->
+      <span class="brand-context">Used-car inspection</span>
       <span id="api-status" hidden></span>
       <span id="db-status" hidden></span>
     </div>
   </header>
 
   <main class="main-content">
-    <!-- Notification Banner -->
     <div id="status-banner" class="notification-bar" hidden role="status"></div>
 
-    <!-- Simple Hero & Search Section -->
-    <section class="hero-section" id="search-section">
-      <h1 class="hero-headline">Know the car before you buy it.</h1>
-      <p class="hero-subhead">
-        Condition checks, recorded history, and unbiased purchase recommendations.
-      </p>
-
-      <form id="search-form" class="search-form">
-        <div class="search-input-group">
-          <input id="vehicle-id" name="vehicle-id" type="text" placeholder="Enter vehicle ID (e.g. DEMO-CLEAN)" autocomplete="off" required>
-          <button type="submit" id="search-submit-btn" class="btn-primary">Check car</button>
-        </div>
-      </form>
-
-      <div class="demo-strip" id="reference-cases">
-        <span class="demo-label">Or try an example:</span>
-        <div class="demo-chips">
-          <button type="button" class="demo-chip" data-scenario="DEMO-CLEAN">
-            <span class="chip-verdict buy">BUY</span>
-            <span>Clean</span>
-          </button>
-          <button type="button" class="demo-chip" data-scenario="DEMO-NEGOTIATE">
-            <span class="chip-verdict negotiate">NEGOTIATE</span>
-            <span>Needs attention</span>
-          </button>
-          <button type="button" class="demo-chip" data-scenario="DEMO-CRITICAL">
-            <span class="chip-verdict avoid">AVOID</span>
-            <span>Serious issue</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Collapsible Vehicle Registration Drawer -->
-    <section id="register-drawer" class="register-drawer" hidden>
-      <div class="drawer-header">
-        <h2>Register a car to inspect</h2>
-        <button type="button" id="reg-cancel-btn" class="btn-text">Close</button>
+    <!-- Primary intake: users can start with whatever information they have. -->
+    <section id="search-section" class="intake-section">
+      <div class="intake-intro">
+        <p class="eyebrow">USED-CAR CHECK</p>
+        <h1>Tell us what you know about the car.</h1>
+        <p class="hero-subhead">
+          You do not need the VIN. Add the details you have now and fill in the rest later.
+        </p>
       </div>
 
-      <form id="register-form" class="register-form">
-        <div class="form-row-3">
-          <label>Vehicle ID (Unique)<input id="reg-car-id" type="text" placeholder="e.g. VEH-102" required></label>
-          <label>Make / Brand<input id="reg-brand" type="text" placeholder="e.g. Tata, Hyundai, Maruti" required></label>
-          <label>Model<input id="reg-model" type="text" placeholder="e.g. Nexon, Creta, Swift" required></label>
-        </div>
-        <div class="form-row-4">
-          <label>Manufacture Year<input id="reg-year" type="number" min="1980" max="2035" value="2022" required></label>
-          <label>Variant <span>optional</span><input id="reg-variant" type="text" placeholder="e.g. XZ+, SX(O)"></label>
-          <label>Fuel Type<select id="reg-fuel"><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="CNG">CNG</option><option value="Hybrid">Hybrid</option></select></label>
-          <label>Transmission<select id="reg-transmission"><option value="Manual">Manual</option><option value="Automatic">Automatic</option><option value="DCT">DCT</option><option value="AMT">AMT</option><option value="CVT">CVT</option></select></label>
-        </div>
-        <div class="form-row-4">
-          <label>Odometer (km)<input id="reg-odometer" type="number" min="0" placeholder="e.g. 45000"></label>
-          <label>Asking Price (₹)<input id="reg-price" type="number" min="0" placeholder="e.g. 850000"></label>
-          <label>Previous Owners<input id="reg-owners" type="number" min="0" value="1"></label>
-          <label>Registration State<input id="reg-state" type="text" placeholder="e.g. MH, KA, DL" maxlength="4"></label>
-        </div>
-        <div class="form-row-2">
-          <label>VIN / Chassis Number <span>optional</span><input id="reg-vin" type="text" placeholder="e.g. MAT612345N..."></label>
-          <div class="form-actions-inline">
-            <button type="submit" id="reg-submit-btn" class="btn-primary">Save car</button>
-            <span id="reg-status" class="form-feedback"></span>
+      <section id="register-drawer" class="register-drawer intake-card">
+        <div class="drawer-header">
+          <div>
+            <h2>Car details</h2>
+            <p class="form-note">Only the information you have is needed. Missing fields stay unknown.</p>
           </div>
         </div>
-      </form>
-    </section>
 
-    <!-- Empty State Guide -->
-    <div id="empty-state" class="empty-state-wrap">
-      <p class="empty-hint">Enter a vehicle ID above or select a sample car to see its inspection results.</p>
-    </div>
+        <form id="register-form" class="register-form">
+          <div class="form-row-3">
+            <label>Vehicle ID <span>optional</span><input id="reg-car-id" type="text" placeholder="Leave blank to create one"></label>
+            <label>Brand <span>optional</span><input id="reg-brand" type="text" placeholder="e.g. Tata, Hyundai, Maruti"></label>
+            <label>Model <span>optional</span><input id="reg-model" type="text" placeholder="e.g. Nexon, Creta, Swift"></label>
+          </div>
+
+          <div class="form-row-4">
+            <label>Manufacture year <span>optional</span><input id="reg-year" type="number" min="1980" max="2050" placeholder="e.g. 2022"></label>
+            <label>Variant <span>optional</span><input id="reg-variant" type="text" placeholder="e.g. XZ+, SX(O)"></label>
+            <label>Fuel type <span>optional</span>
+              <select id="reg-fuel">
+                <option value="">Not provided</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Electric">Electric</option>
+                <option value="CNG">CNG</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+            </label>
+            <label>Transmission <span>optional</span>
+              <select id="reg-transmission">
+                <option value="">Not provided</option>
+                <option value="Manual">Manual</option>
+                <option value="Automatic">Automatic</option>
+                <option value="DCT">DCT</option>
+                <option value="AMT">AMT</option>
+                <option value="CVT">CVT</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="form-row-4">
+            <label>Odometer <span>optional</span><input id="reg-odometer" type="number" min="0" placeholder="e.g. 45000 km"></label>
+            <label>Asking price <span>optional</span><input id="reg-price" type="number" min="0" placeholder="e.g. ₹8,50,000"></label>
+            <label>Previous owners <span>optional</span><input id="reg-owners" type="number" min="0" placeholder="e.g. 1"></label>
+            <label>Registration state <span>optional</span><input id="reg-state" type="text" placeholder="e.g. MH, KA, DL" maxlength="4"></label>
+          </div>
+
+          <div class="form-row-2">
+            <label>VIN / Chassis number <span>optional</span><input id="reg-vin" type="text" placeholder="Add it if you have it"></label>
+            <div class="form-actions-inline">
+              <button type="submit" id="reg-submit-btn" class="btn-primary">Continue with these details</button>
+              <span id="reg-status" class="form-feedback"></span>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <div class="existing-car">
+        <span>Already have a VeriCar vehicle ID?</span>
+        <form id="search-form" class="search-form">
+          <div class="search-input-group">
+            <input id="vehicle-id" name="vehicle-id" type="text" placeholder="Enter vehicle ID" autocomplete="off" required>
+            <button type="submit" id="search-submit-btn" class="btn-secondary">Open vehicle</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="empty-state" class="empty-state-wrap" hidden></div>
+    </section>
 
     <!-- Main Vehicle Inspection Sheet -->
     <section id="vehicle-view" class="vehicle-sheet" hidden>
@@ -427,7 +428,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>VeriCar — Used Car Inspection & Decision Support</p>
+    <p>VeriCar — Used-car evidence and decision support.</p>
   </footer>
 
   <script src="/assets/app.js" defer></script>
