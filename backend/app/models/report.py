@@ -48,6 +48,9 @@ class VehicleCreateRequest(BaseModel):
     brand: str | None = Field(default=None, max_length=100)
     model: str | None = Field(default=None, max_length=100)
     manufacture_year: int | None = Field(default=None, ge=1980, le=2050)
+    manufacture_month: int | None = Field(default=None, ge=1, le=12)
+    registration_date: date | None = None
+    purchase_date: date | None = None
     variant: str | None = Field(default=None, max_length=100)
     fuel_type: str | None = Field(default=None, max_length=50)
     transmission: str | None = Field(default=None, max_length=50)
