@@ -4,64 +4,43 @@
 
 :root {
   color-scheme: light;
+  --font-sans: "Avenir Next", "Segoe UI", Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Consolas, monospace;
 
-  /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", Menlo, monospace;
+  --bg-page: #f3eadf;
+  --bg-surface: #fbf7f2;
+  --bg-subtle: #d0b9a7;
+  --text-main: #29221e;
+  --text-muted: #725f52;
+  --text-subtle: #8b7566;
+  --border-line: rgba(113, 67, 41, .22);
+  --border-strong: rgba(113, 67, 41, .36);
 
-  /* Neutrals */
-  --bg-page: #fbfbf9;
-  --bg-surface: #ffffff;
-  --bg-subtle: #f4f4f0;
-  --text-main: #191c1f;
-  --text-muted: #5e646a;
-  --text-subtle: #899097;
-  --border-line: #e3e4df;
-  --border-strong: #cacbc5;
+  --color-buy: #714329;
+  --bg-buy: #dce8de;
+  --border-buy: #8b5d42;
 
-  /* Semantic Verdicts */
-  --color-buy: #137333;
-  --bg-buy: #e6f4ea;
-  --border-buy: #ceead6;
+  --color-negotiate: #8b5d42;
+  --bg-negotiate: #ead8c8;
+  --border-negotiate: #b08463;
 
-  --color-negotiate: #b06000;
-  --bg-negotiate: #fef7e0;
-  --border-negotiate: #feefc3;
+  --color-avoid: #714329;
+  --bg-avoid: #ead5cc;
+  --border-avoid: #8b5d42;
 
-  --color-avoid: #c5221f;
-  --bg-avoid: #fce8e6;
-  --border-avoid: #fad2cf;
-
-  /* Layout */
-  --max-width: 860px;
-  --radius: 6px;
+  --max-width: 1080px;
+  --radius: 10px;
   --radius-pill: 999px;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg-page: #121518;
-    --bg-surface: #1a1e23;
-    --bg-subtle: #242930;
-    --text-main: #f0f3f6;
-    --text-muted: #9da5b0;
-    --text-subtle: #6d7682;
-    --border-line: #2e343d;
-    --border-strong: #424a56;
-
-    --color-buy: #81c995;
-    --bg-buy: rgba(19, 115, 51, 0.2);
-    --border-buy: #137333;
-
-    --color-negotiate: #fdd663;
-    --bg-negotiate: rgba(176, 96, 0, 0.2);
-    --border-negotiate: #b06000;
-
-    --color-avoid: #f28b82;
-    --bg-avoid: rgba(197, 34, 31, 0.2);
-    --border-avoid: #c5221f;
-  }
+  --vc-brown-900: #714329;
+  --vc-brown-700: #8b5d42;
+  --vc-brown-500: #b08463;
+  --vc-taupe-500: #b9937b;
+  --vc-taupe-300: #d0b9a7;
+  --vc-taupe-200: #b5a192;
+  --vc-cream: #f3eadf;
+  --vc-ink: #29221e;
+  --vc-line: rgba(113, 67, 41, .22);
 }
 
 *, *::before, *::after {
