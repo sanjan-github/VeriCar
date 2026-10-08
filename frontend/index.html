@@ -47,6 +47,15 @@
           <div><span class="toolbar-overline">ASSESSMENT CONSOLE</span><span class="toolbar-context">/ Current workspace</span></div>
           <div class="toolbar-meta"><span class="toolbar-clock">LOCAL / IST</span><span class="toolbar-divider"></span><span>Evidence-first workflow</span></div>
         </div>
+        <section class="workflow-strip" aria-label="VeriCar workflow">
+          <div class="workflow-heading"><span class="section-label">Guided workflow</span><strong>One record, from setup to decision.</strong></div>
+          <ol class="workflow-steps">
+            <li class="workflow-step is-current"><span>01</span><strong>Vehicle setup</strong></li>
+            <li class="workflow-step"><span>02</span><strong>Condition input</strong></li>
+            <li class="workflow-step"><span>03</span><strong>Review & history</strong></li>
+            <li class="workflow-step"><span>04</span><strong>Assessment</strong></li>
+          </ol>
+        </section>
     <!-- Lead Section: Golden Ratio Split (61.8% Lookup & Intro / 38.2% Reference Cases Index) -->
     <section class="lead-section" id="search-section">
       <div class="lead-primary">
@@ -74,7 +83,8 @@
 
       <!-- Reference Cases Editorial Index (38.2%) -->
       <aside class="lead-secondary" id="reference-cases">
-        <div class="section-label">Reference Cases</div>
+        <div class="section-label">Synthetic demo · labelled</div>
+        <p class="demo-note">Explore populated workflows without claiming a real vehicle record.</p>
         <div class="reference-index">
           <button type="button" class="reference-row demo-chip" data-scenario="DEMO-CLEAN">
             <span class="reference-num">01</span>
@@ -142,6 +152,27 @@
           </div>
         </div>
       </form>
+    </section>
+
+    <section class="feature-console" aria-label="Condition input preview">
+      <div class="feature-console-header">
+        <div><div class="section-label">02 · Condition input</div><h2 class="console-title">Capture what you know — and keep the unknowns honest.</h2></div>
+        <span class="console-status">Draft workspace</span>
+      </div>
+      <div class="unknown-callout"><span class="unknown-mark">?</span><div><strong>Unknown values are valid.</strong><p>VeriCar keeps unknown values unknown instead of guessing. Unknown is not treated as No; it remains missing evidence and can lower confidence.</p></div></div>
+      <div class="condition-grid">
+        <details class="condition-card" open><summary><span class="condition-index">A</span><span><strong>Seller & history</strong><small>Repairs, services, seller claims</small></span><span class="condition-count">0 / 30 repairs</span></summary><div class="condition-body"><div class="mini-fields"><label>Repairs recorded<input type="number" min="0" max="30" placeholder="0–30"></label><label>Services recorded<input type="number" min="0" max="40" placeholder="0–40"></label></div><label>Seller claim<textarea rows="2" placeholder="Never accidented · Full service history"></textarea></label></div></details>
+        <details class="condition-card"><summary><span class="condition-index">B</span><span><strong>Accident & condition</strong><small>Declarations and physical signals</small></span><span class="condition-count">3 checks</span></summary><div class="condition-body"><div class="triad-fields"><label>Accident history<select><option>Unknown</option><option>Yes</option><option>No</option></select></label><label>Repainted panels<select><option>Unknown</option><option>Yes</option><option>No</option></select></label><label>Airbag deployed<select><option>Unknown</option><option>Yes</option><option>No</option></select></label></div></div></details>
+        <details class="condition-card"><summary><span class="condition-index">C</span><span><strong>Documents</strong><small>RC, insurance, PUC, hypothecation</small></span><span class="condition-count">8 checks</span></summary><div class="condition-body"><div class="checklist-preview"><span>RC matches vehicle details</span><span>Insurance validity</span><span>VIN / chassis and RC match</span><span>Pending challans</span></div></div></details>
+        <details class="condition-card"><summary><span class="condition-index">D</span><span><strong>Exterior & interior</strong><small>Physical inspection signals</small></span><span class="condition-count">Unknown-ready</span></summary><div class="condition-body"><div class="checklist-preview"><span>Flood signs</span><span>Rust / leaks</span><span>Panel gaps / paint mismatch</span><span>AC, lights and windows</span></div></div></details>
+        <details class="condition-card"><summary><span class="condition-index">E</span><span><strong>Under hood & test drive</strong><small>OBD, tyres, what you felt or heard</small></span><span class="condition-count">Observation only</span></summary><div class="condition-body"><label>OBD / mechanic notes<textarea rows="2" placeholder="Record diagnostic codes or observations; do not guess at a diagnosis."></textarea></label><div class="checklist-preview"><span>Engine noise</span><span>Hesitation</span><span>Brakes pull / spongy</span><span>Steering play</span></div></div></details>
+      </div>
+      <div class="condition-footer"><div class="condition-summary"><span>Review summary</span><strong>0 repairs · 0 services · 0 flood indicators · unknown checks pending</strong></div><button type="button" class="btn-primary ghost-action">Save condition & run the check later</button></div>
+    </section>
+
+    <section class="capability-board" aria-label="Product capabilities">
+      <div class="capability-intro"><div class="section-label">What the workspace covers</div><h2 class="console-title">From evidence capture to a decision you can explain.</h2><p>Every layer stays visible: structured records, historical context, deterministic assessment, and optional explanation.</p></div>
+      <div class="capability-list"><div><span>03</span><strong>Historical check</strong><small>Matched · changed · contradiction · insufficient · no history · unavailable</small></div><div><span>04</span><strong>Memory insights</strong><small>Influential evidence, longitudinal changes, and model-level observations</small></div><div><span>05</span><strong>India-specific checks</strong><small>RC, VIN, insurance, PUC, challans and explicit integration boundaries</small></div><div><span>06</span><strong>Assessment & why</strong><small>BUY · NEGOTIATE · AVOID with evidence completeness confidence</small></div><div><span>07</span><strong>Before you pay</strong><small>Next checks, repair range and negotiation reduction from recorded inputs</small></div><div><span>08</span><strong>History & report</strong><small>Chronological reports, recalled notes, AI explanation and PDF export</small></div></div>
     </section>
 
     <!-- Global Status Banner -->
