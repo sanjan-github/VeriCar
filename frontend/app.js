@@ -108,6 +108,8 @@ const elements = {
   condSummaryC: $("#cond-summary-c"),
   condSummaryD: $("#cond-summary-d"),
   condSummaryE: $("#cond-summary-e"),
+  addServiceBtn: $("#add-service-btn"),
+  servicesList: $("#services-list"),
 
   condAccidentStatus: $("#cond-accident-status"),
   condRepaintedPanels: $("#cond-repainted-panels"),
@@ -387,6 +389,46 @@ function renderOverallAssessment(overall) {
   }
 }
 
+function renderServices(services = []) {
+  if (!elements.servicesList) return;
+  elements.servicesList.innerHTML = "";
+  services.forEach((service, index) => {
+    const row = document.createElement("div");
+    row.className = "service-entry";
+    row.innerHTML =
+      '<div class="service-entry-top"><strong>Service ' + (index + 1) + '</strong>' +
+      '<button type="button" class="btn-text remove-service" data-index="' + index + '">Remove</button></div>' +
+      '<div class="service-fields">' +
+      '<label>Date<input type="date" data-service-field="observed_at" value="' + escapeHtml(service.observed_at || "") + '"></label>' +
+      '<label>Odometer (km)<input type="number" min="0" data-service-field="odometer_km" value="' + escapeHtml(service.odometer_km ?? "") + '" placeholder="e.g. 45000"></label>' +
+      '<label>Workshop / provider<input type="text" data-service-field="provider" value="' + escapeHtml(service.provider || "") + '" placeholder="e.g. Tata service centre"></label>' +
+      '<label>Service details<input type="text" data-service-field="description" value="' + escapeHtml(service.description || "") + '" placeholder="e.g. Annual service, oil + filters"></label>' +
+      '<label>Cost (₹)<input type="number" min="0" data-service-field="cost_inr" value="' + escapeHtml(service.cost_inr ?? "") + '" placeholder="Optional"></label>' +
+      '<label>Invoice / notes<input type="text" data-service-field="gap_notes" value="' + escapeHtml(service.gap_notes || "") + '" placeholder="Optional reference or notes"></label>' +
+      '</div>';
+    elements.servicesList.appendChild(row);
+  });
+}
+
+function readServices() {
+  if (!elements.servicesList) return [];
+  return Array.from(elements.servicesList.querySelectorAll(".service-entry")).map((row) => {
+    const value = (field) => row.querySelector('[data-service-field="' + field + '"]')?.value.trim() || "";
+    const number = (field) => {
+      const v = value(field);
+      return v ? Number(v) : null;
+    };
+    return {
+      observed_at: value("observed_at"),
+      odometer_km: number("odometer_km"),
+      provider: value("provider") || null,
+      description: value("description"),
+      cost_inr: number("cost_inr"),
+      gap_notes: value("gap_notes") || null
+    };
+  }).filter((service) => service.observed_at || service.description || service.provider);
+}
+
 function updateConditionSummary() {
   const repairs = Array.isArray(state.condition?.repairs) ? state.condition.repairs : [];
   const services = Array.isArray(state.condition?.services) ? state.condition.services : [];
@@ -450,6 +492,7 @@ function renderConditionForm(condition) {
   const services = Array.isArray(condition.services) ? condition.services : [];
   if (elements.condRepairsCount) elements.condRepairsCount.textContent = String(repairs.length);
   if (elements.condServicesCount) elements.condServicesCount.textContent = String(services.length);
+  renderServices(services);
 
   // Documents
   const docs = condition.documents || {};
@@ -499,7 +542,7 @@ async function saveCondition() {
     physical_inspection: {},
     test_drive: {},
     repairs: state.condition?.repairs || [],
-    services: state.condition?.services || [],
+    services: readServices(),
   };
 
   for (const [key, el] of Object.entries(docElements)) {
@@ -741,6 +784,24 @@ if (elements.confidenceToggle && elements.confidenceDetails) {
     const expanded = elements.confidenceToggle.getAttribute("aria-expanded") === "true";
     elements.confidenceToggle.setAttribute("aria-expanded", String(!expanded));
     elements.confidenceDetails.hidden = expanded;
+  });
+}
+
+if (elements.addServiceBtn) {
+  elements.addServiceBtn.addEventListener("click", () => {
+    const services = readServices();
+    services.push({ observed_at: new Date().toISOString().slice(0, 10), odometer_km: null, provider: "", description: "", cost_inr: null, gap_notes: "" });
+    renderServices(services);
+  });
+}
+
+if (elements.servicesList) {
+  elements.servicesList.addEventListener("click", (event) => {
+    const button = event.target.closest(".remove-service");
+    if (!button) return;
+    const services = readServices();
+    services.splice(Number(button.dataset.index), 1);
+    renderServices(services);
   });
 }
 
