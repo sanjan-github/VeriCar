@@ -1236,10 +1236,6 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .demo-image {
-    min-height: 170px;
-  }
-
   .service-fields {
     grid-template-columns: 1fr 1fr;
   }
