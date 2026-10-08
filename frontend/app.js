@@ -859,7 +859,6 @@ if (elements.registerForm) {
       const createdCarId = created.car_id || carId;
       if (elements.regStatus) elements.regStatus.textContent = "Car saved.";
       elements.registerForm.reset();
-      if (elements.regDrawer) elements.regDrawer.hidden = true;
       if (elements.registerDrawer) elements.registerDrawer.hidden = true;
       if (elements.vehicleInput) elements.vehicleInput.value = createdCarId;
       await loadVehicle(createdCarId);
