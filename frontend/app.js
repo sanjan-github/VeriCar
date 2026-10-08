@@ -147,6 +147,19 @@ const driveElements = {
   steering_play: $("#cond-drive-steering"),
 };
 
+function showIntakeScreen() {
+  if (elements.vehicleView) elements.vehicleView.hidden = true;
+  if (elements.emptyState) elements.emptyState.hidden = true;
+  if (elements.registerDrawer) elements.registerDrawer.hidden = false;
+  if (elements.pdfButton) elements.pdfButton.hidden = true;
+  if (elements.statusBanner) elements.statusBanner.hidden = true;
+}
+
+function showVehicleScreen() {
+  if (elements.vehicleView) elements.vehicleView.hidden = false;
+  if (elements.registerDrawer) elements.registerDrawer.hidden = true;
+}
+
 function setStatus(message, visible = true) {
   if (!elements.statusBanner) return;
   elements.statusBanner.textContent = message;
@@ -545,7 +558,7 @@ function renderAssessment(payload) {
       memoryStatusCopy[payload.memory_status] || "Historical memory status unavailable";
   }
 
-  if (elements.vehicleView) elements.vehicleView.hidden = false;
+  showVehicleScreen();
   if (elements.emptyState) elements.emptyState.hidden = true;
   if (elements.reportVehicleId) elements.reportVehicleId.value = payload.vehicle_id || state.vehicleId;
 
@@ -667,7 +680,7 @@ async function loadVehicle(vehicleId) {
     if (history.vehicle?.vin && elements.reportVin) {
       elements.reportVin.value = history.vehicle.vin;
     }
-    if (elements.vehicleView) elements.vehicleView.hidden = false;
+    showVehicleScreen();
     if (elements.pdfButton) {
       elements.pdfButton.href = "/api/vehicles/" + encodeURIComponent(vehicleId) + "/assessment/report.pdf";
       elements.pdfButton.hidden = false;
@@ -886,5 +899,6 @@ if (elements.reportObservedAt && !elements.reportObservedAt.value) {
   elements.reportObservedAt.value = new Date().toISOString().slice(0, 10);
 }
 
-// Initial checks
+// Initial checks. Never render an assessment/result screen until a real vehicle is loaded.
+showIntakeScreen();
 checkBackend();
