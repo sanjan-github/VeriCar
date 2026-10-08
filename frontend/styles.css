@@ -1613,3 +1613,53 @@ body {
   .condition-body { padding-left: 14px; }
   .mini-fields, .triad-fields, .checklist-preview { grid-template-columns: 1fr; }
 }
+
+/* UI correction pass: setup first, progressive disclosure, no fake live-state chrome. */
+.workspace-content .lead-primary::before { content: "01 / SETUP"; margin-bottom: 28px; }
+.workspace-content .lead-section { gap: 48px; padding-bottom: 42px; }
+.workspace-content .lead-headline { max-width: 560px; font-size: clamp(36px, 4.5vw, 58px); line-height: 1; }
+.workspace-content .lead-description { max-width: 480px; font-size: 15px; }
+.workspace-content .lookup-form { margin-top: 26px; }
+.workflow-strip { margin-bottom: 28px; padding: 12px 0; }
+.workflow-heading strong { font-size: 14px; }
+.workflow-step { padding: 0 14px; }
+
+.demo-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin: 0 0 12px; }
+.demo-control label { display: grid; gap: 5px; color: var(--color-muted); font-family: var(--font-mono); font-size: 9px; letter-spacing: .05em; text-transform: uppercase; }
+.demo-control select { min-height: 38px; min-width: 0; padding: 0 10px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-ink); font-family: var(--font-body); font-size: 12px; }
+.demo-load-button { min-height: 38px; padding: 0 14px; font-size: 11px; }
+
+.feature-console, .capability-board { margin-top: 24px; padding: 0; overflow: clip; }
+.feature-console-summary, .capability-summary { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 18px 22px; cursor: pointer; list-style: none; }
+.feature-console-summary::-webkit-details-marker, .capability-summary::-webkit-details-marker { display: none; }
+.feature-console-summary > span:nth-child(2), .capability-summary > span:nth-child(2) { display: grid; gap: 4px; }
+.feature-console-summary strong, .capability-summary strong { font-size: 14px; }
+.feature-console-summary small, .capability-summary small { color: var(--color-muted); font-size: 11px; line-height: 1.4; }
+.summary-action { color: var(--color-accent); font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.feature-console[open] .feature-console-summary, .capability-board[open] .capability-summary { border-bottom: 1px solid var(--color-line); }
+.feature-console-header, .feature-console > .unknown-callout, .feature-console > .condition-grid, .feature-console > .condition-footer { margin-left: 30px; margin-right: 30px; }
+.feature-console-header { padding-top: 24px; }
+.capability-board { grid-template-columns: 1fr; gap: 22px; }
+.capability-intro { padding: 22px 30px 0; }
+.capability-list { margin: 0 30px 26px; }
+.preview-action { min-height: 42px; opacity: .55; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .workspace-content .lead-section { gap: 30px; }
+  .workspace-content .lead-headline { font-size: 48px; }
+  .workflow-steps { overflow-x: clip; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .workflow-step { padding: 0 8px; }
+  .workflow-step::after { display: none; }
+  .demo-control { grid-template-columns: 1fr; }
+  .demo-load-button { width: 100%; }
+  .feature-console-header, .feature-console > .unknown-callout, .feature-console > .condition-grid, .feature-console > .condition-footer { margin-left: 22px; margin-right: 22px; }
+  .capability-intro { padding-left: 22px; padding-right: 22px; }
+  .capability-list { margin-left: 22px; margin-right: 22px; }
+}
+
+@media (max-width: 480px) {
+  .workflow-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .workflow-step strong { font-size: 10px; line-height: 1.2; }
+  .feature-console-summary, .capability-summary { grid-template-columns: 28px minmax(0, 1fr); padding: 16px; }
+  .summary-action { grid-column: 2; justify-self: start; }
+}
